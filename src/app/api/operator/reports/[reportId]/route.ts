@@ -1,11 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
+// Handler untuk method GET
 export async function GET(
-  request: Request,
+  request: NextRequest, // Menggunakan tipe NextRequest yang benar
   context: { params: { reportId: string } }
 ) {
-  // Rute ini sudah dilindungi oleh middleware, hanya operator yang bisa akses.
   try {
     const reportId = context.params.reportId;
     if (!reportId) {
@@ -14,18 +14,11 @@ export async function GET(
 
     const stmt = db.prepare(`
       SELECT
-        r.id,
-        r.latitude,
-        r.longitude,
-        r.status,
-        r.created_at,
-        r.media_url,
-        u.phone_number
+        r.id, r.latitude, r.longitude, r.status, r.created_at, r.media_url, u.phone_number
       FROM reports r
       JOIN users u ON r.user_id = u.id
       WHERE r.id = ?
     `);
-
     const report = stmt.get(reportId);
 
     if (!report) {
@@ -35,16 +28,16 @@ export async function GET(
     return NextResponse.json(report);
 
   } catch (error) {
-    console.error(`[API Get Report #${context.params.reportId}] Error:`, error);
+    console.error(`[API Get Report] Error:`, error);
     return NextResponse.json({ message: 'Terjadi kesalahan pada server.' }, { status: 500 });
   }
 }
 
+// Handler untuk method PATCH
 export async function PATCH(
-  request: Request,
+  request: NextRequest, // Menggunakan tipe NextRequest yang benar
   context: { params: { reportId: string } }
 ) {
-  // Middleware melindungi rute ini
   try {
     const reportId = context.params.reportId;
     const { status } = await request.json();
@@ -58,22 +51,21 @@ export async function PATCH(
     const info = stmt.run(status, reportId);
 
     if (info.changes === 0) {
-      return NextResponse.json({ message: 'Laporan tidak ditemukan atau tidak ada perubahan.' }, { status: 404 });
+      return NextResponse.json({ message: 'Laporan tidak ditemukan.' }, { status: 404 });
     }
 
     // Siarkan pembaruan status melalui WebSocket
     if (global.wss) {
-      console.log(`Broadcasting status update for report #${reportId}`);
       global.wss.broadcast(JSON.stringify({ 
         type: 'STATUS_UPDATE', 
         payload: { reportId: parseInt(reportId), newStatus: status } 
       }));
     }
 
-    return NextResponse.json({ message: `Status laporan #${reportId} berhasil diperbarui menjadi ${status}.` });
+    return NextResponse.json({ message: `Status laporan #${reportId} berhasil diperbarui.` });
 
   } catch (error) {
-    console.error(`[API Update Report #${params.reportId}] Error:`, error);
+    console.error(`[API Update Report] Error:`, error);
     return NextResponse.json({ message: 'Terjadi kesalahan pada server.' }, { status: 500 });
   }
 }
