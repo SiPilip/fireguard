@@ -35,7 +35,7 @@ export async function GET(
     return NextResponse.json(report);
 
   } catch (error) {
-    console.error(`[API Get Report #${params.reportId}] Error:`, error);
+    console.error(`[API Get Report #${context.params.reportId}] Error:`, error);
     return NextResponse.json({ message: 'Terjadi kesalahan pada server.' }, { status: 500 });
   }
 }
