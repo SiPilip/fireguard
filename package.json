@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node server.js",
     "build": "next build",
-    "start": "next start",
+    "start": "NODE_ENV=production node server.js",
     "lint": "eslint",
     "db:setup": "node scripts/setup-db.mjs"
   },
@@ -18,7 +18,8 @@
     "next": "15.5.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "react-leaflet": "^5.0.0"
+    "react-leaflet": "^5.0.0",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -31,6 +32,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/ws": "^8.18.1",
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
     "tailwindcss": "^4",

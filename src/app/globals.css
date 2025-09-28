@@ -24,3 +24,29 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@keyframes highlight-and-fade {
+  0% {
+    background-color: rgba(239, 68, 68, 0.3); /* Warna highlight merah transparan */
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+@keyframes pulse-bg {
+  0%, 100% {
+    background-color: rgba(239, 68, 68, 0.3);
+  }
+  50% {
+    background-color: rgba(239, 68, 68, 0.1);
+  }
+}
+
+.animate-highlight {
+  animation: highlight-and-fade 5s ease-out forwards;
+}
+
+.animate-pulse-new {
+  animation: pulse-bg 2s infinite;
+}

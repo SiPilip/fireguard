@@ -1,45 +1,48 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError('');
+    setError("");
 
     // Validasi dasar nomor telepon
     if (!/^\d{10,15}$/.test(phoneNumber)) {
-      setError('Nomor telepon tidak valid. Harap masukkan 10-15 digit angka.');
+      setError("Nomor telepon tidak valid. Harap masukkan 10-15 digit angka.");
       setIsLoading(false);
       return;
     }
 
     try {
-      const response = await fetch('/api/auth/otp/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/auth/otp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phoneNumber }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Gagal mengirim OTP.');
+        throw new Error(data.message || "Gagal mengirim OTP.");
       }
+
+      // Tampilkan OTP di konsol browser untuk tujuan demo
+      console.log("====================================");
+      console.log(`[KHUSUS DEMO] Kode verifikasi Anda adalah: ${data.otp}`);
+      console.log("====================================");
 
       // Arahkan ke halaman verifikasi OTP
       router.push(`/login/verify?phone=${encodeURIComponent(phoneNumber)}`);
-
     } catch (err: any) {
       setError(err.message);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -55,7 +58,10 @@ export default function LoginPage() {
         </p>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label htmlFor="phone" className="mb-2 block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="phone"
+              className="mb-2 block text-sm font-medium text-gray-700"
+            >
               Nomor Telepon
             </label>
             <input
@@ -75,7 +81,7 @@ export default function LoginPage() {
             disabled={isLoading}
             className="w-full rounded-md bg-red-600 px-4 py-3 font-semibold text-white shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-400"
           >
-            {isLoading ? 'Mengirim...' : 'Kirim Kode Verifikasi'}
+            {isLoading ? "Mengirim..." : "Kirim Kode Verifikasi"}
           </button>
         </form>
       </div>

@@ -35,7 +35,11 @@ export async function POST(request: Request) {
     );
     stmt.run(phoneNumber, hashedOtp, expiresAt.toISOString());
 
-    return NextResponse.json({ message: 'OTP berhasil dikirim (simulasi).' });
+    // ================== PERINGATAN KEAMANAN ==================
+    // Mengirim OTP kembali ke klien SANGAT TIDAK AMAN.
+    // Ini hanya dilakukan untuk tujuan DEMO agar aplikasi bisa diuji di Vercel.
+    // Di lingkungan produksi, HAPUS `otp` dari response dan gunakan layanan pengiriman nyata.
+    return NextResponse.json({ message: 'OTP berhasil dikirim (simulasi).', otp: otp });
 
   } catch (error) {
     console.error('[API Send OTP] Error:', error);

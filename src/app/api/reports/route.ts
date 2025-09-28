@@ -53,7 +53,23 @@ export async function POST(request: NextRequest) {
     );
     const info = stmt.run(user.id, parseFloat(latitude), parseFloat(longitude), mediaUrl);
 
-    // Kirim notifikasi real-time (akan diimplementasikan nanti)
+    // 5. Kirim notifikasi real-time melalui WebSocket
+    const newReport = {
+        id: info.lastInsertRowid,
+        latitude: parseFloat(latitude),
+        longitude: parseFloat(longitude),
+        media_url: mediaUrl,
+        status: 'Pending',
+        created_at: new Date().toISOString(),
+        phone_number: user.phone, // Ambil dari token
+    };
+
+    // Akses instance WSS dari global dan broadcast
+    if (global.wss) {
+        console.log('Broadcasting new report to all clients...');
+        global.wss.broadcast(JSON.stringify({ type: 'NEW_REPORT', payload: newReport }));
+    }
+
 
     return NextResponse.json({ message: 'Laporan berhasil dikirim!', reportId: info.lastInsertRowid }, { status: 201 });
 

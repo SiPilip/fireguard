@@ -1,52 +1,51 @@
-'use client';
+"use client";
 
-import { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 function VerifyPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const phoneNumber = searchParams.get('phone');
+  const phoneNumber = searchParams.get("phone");
 
-  const [otp, setOtp] = useState('');
+  const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!phoneNumber) {
       // Jika tidak ada nomor telepon di URL, kembali ke halaman login
-      router.replace('/login');
+      router.replace("/login");
     }
   }, [phoneNumber, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError('');
+    setError("");
 
     if (!/\d{6}/.test(otp)) {
-      setError('Kode OTP harus 6 digit angka.');
+      setError("Kode OTP harus 6 digit angka.");
       setIsLoading(false);
       return;
     }
 
     try {
-      const response = await fetch('/api/auth/otp/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/auth/otp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phoneNumber, otp }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Gagal memverifikasi OTP.');
+        throw new Error(data.message || "Gagal memverifikasi OTP.");
       }
 
       // Jika berhasil, arahkan ke halaman utama (dashboard)
       // Untuk sekarang, kita arahkan ke halaman root
-      router.replace('/');
-
+      router.replace("/");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -70,7 +69,10 @@ function VerifyPageContent() {
         </p>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label htmlFor="otp" className="mb-2 block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="otp"
+              className="mb-2 block text-sm font-medium text-gray-700"
+            >
               Kode OTP (6 Digit)
             </label>
             <input
@@ -90,7 +92,7 @@ function VerifyPageContent() {
             disabled={isLoading}
             className="w-full rounded-md bg-red-600 px-4 py-3 font-semibold text-white shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-400"
           >
-            {isLoading ? 'Memverifikasi...' : 'Verifikasi & Masuk'}
+            {isLoading ? "Memverifikasi..." : "Verifikasi & Masuk"}
           </button>
         </form>
       </div>
@@ -100,9 +102,9 @@ function VerifyPageContent() {
 
 // Bungkus dengan Suspense karena menggunakan useSearchParams
 export default function VerifyPage() {
-    return (
-        <Suspense fallback={<div>Loading...</div>}>
-            <VerifyPageContent />
-        </Suspense>
-    );
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <VerifyPageContent />
+    </Suspense>
+  );
 }
