@@ -117,8 +117,8 @@ export default function ReportDetailView({ reportId }: ReportDetailViewProps) {
       <div className="rounded-lg bg-gray-800 p-4 shadow-lg">
         <h2 className="text-xl font-bold mb-3">Ubah Status</h2>
         <div className="flex flex-col space-y-2">
-          <button onClick={() => handleStatusChange('In Progress')} disabled={report.status === 'In Progress' || isUpdating} className="rounded-md bg-blue-600 px-3 py-2 font-medium text-white hover:bg-blue-700 disabled:bg-gray-500">Tandai "Dalam Penanganan"</button>
-          <button onClick={() => handleStatusChange('Resolved')} disabled={report.status === 'Resolved' || isUpdating} className="rounded-md bg-green-600 px-3 py-2 font-medium text-white hover:bg-green-700 disabled:bg-gray-500">Tandai "Selesai"</button>
+          <button onClick={() => handleStatusChange('In Progress')} disabled={report.status === 'In Progress' || isUpdating} className="rounded-md bg-blue-600 px-3 py-2 font-medium text-white hover:bg-blue-700 disabled:bg-gray-500">Tandai &quot;Dalam Penanganan&quot;</button>
+          <button onClick={() => handleStatusChange('Resolved')} disabled={report.status === 'Resolved' || isUpdating} className="rounded-md bg-green-600 px-3 py-2 font-medium text-white hover:bg-green-700 disabled:bg-gray-500">Tandai &quot;Selesai&quot;</button>
           {updateError && <p className="text-red-400 text-sm mt-2">{updateError}</p>}
         </div>
       </div>

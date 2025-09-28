@@ -6,7 +6,7 @@ import L from 'leaflet';
 import { useEffect, useMemo } from 'react';
 
 // Fix untuk ikon marker yang tidak muncul di React-Leaflet
-// @ts-ignore
+// @ts-expect-error: Workaround for React-Leaflet icon issue in Next.js
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
