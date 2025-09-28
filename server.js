@@ -13,6 +13,8 @@ const { createServer } = require('http');
 const { parse } = require('url');
 const next = require('next');
 const { WebSocketServer } = require('ws');
+const fs = require('fs');
+const path = require('path');
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
@@ -24,13 +26,25 @@ const handle = app.getRequestHandler();
 app.prepare().then(() => {
   const server = createServer(async (req, res) => {
     const parsedUrl = parse(req.url, true);
-    console.log(`[HTTP Server] Request received for: ${req.method} ${parsedUrl.pathname}`);
-    try {
-      await handle(req, res, parsedUrl);
-    } catch (err) {
-      console.error('Error handling request:', err);
-      res.statusCode = 500;
-      res.end('internal server error');
+    const { pathname } = parsedUrl;
+
+    // Penanganan khusus untuk file yang diunggah
+    if (pathname.startsWith('/uploads/')) {
+      const filePath = path.join(__dirname, 'public', pathname);
+      
+      // Cek apakah file ada sebelum menyajikannya
+      fs.access(filePath, fs.constants.F_OK, (err) => {
+        if (err) {
+          // Jika file tidak ada, biarkan Next.js yang menangani (akan 404)
+          return handle(req, res, parsedUrl);
+        }
+        // Sajikan file secara manual
+        const readStream = fs.createReadStream(filePath);
+        readStream.pipe(res);
+      });
+    } else {
+      // Untuk semua request lain, serahkan pada Next.js
+      return handle(req, res, parsedUrl);
     }
   });
 

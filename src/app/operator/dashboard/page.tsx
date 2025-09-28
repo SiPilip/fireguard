@@ -56,6 +56,7 @@ export default function OperatorDashboard() {
   const [error, setError] = useState("");
   const [isMonitorMode, setIsMonitorMode] = useState(false);
   const [selectedReportId, setSelectedReportId] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const alarmIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const stopAlarm = useCallback(() => {
@@ -135,6 +136,28 @@ export default function OperatorDashboard() {
     acknowledgeReport(reportId);
   };
 
+  const handleDeleteAllReports = async () => {
+    const confirmed = window.confirm(
+      "Anda yakin ingin menghapus SEMUA laporan? Tindakan ini tidak dapat dibatalkan."
+    );
+    if (confirmed) {
+      setIsDeleting(true);
+      setError('');
+      try {
+        const response = await fetch('/api/operator/reports', { method: 'DELETE' });
+        if (!response.ok) {
+          throw new Error('Gagal menghapus laporan.');
+        }
+        setReports([]);
+        setSelectedReportId(null);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setIsDeleting(false);
+      }
+    }
+  };
+
   const handleLogout = async () => {
     stopAlarm();
     await fetch("/api/auth/logout", { method: "POST" });
@@ -174,8 +197,15 @@ export default function OperatorDashboard() {
 
       <main className="container mx-auto flex-grow grid grid-cols-1 lg:grid-cols-3 gap-4 p-4 overflow-hidden">
         <div className="lg:col-span-1 bg-gray-800 rounded-lg shadow-lg flex flex-col overflow-hidden">
-          <h2 className="text-lg font-bold p-4 border-b border-gray-700 flex-shrink-0">
-            Laporan Masuk
+          <h2 className="text-lg font-bold p-4 border-b border-gray-700 flex-shrink-0 flex items-center justify-between">
+            <span>Laporan Masuk</span>
+            <button 
+              onClick={handleDeleteAllReports}
+              disabled={isLoading || isDeleting || reports.length === 0}
+              className="text-xs bg-red-800 hover:bg-red-700 text-white font-semibold py-1 px-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isDeleting ? 'Menghapus...' : 'Hapus Semua'}
+            </button>
           </h2>
           <div className="overflow-y-auto p-2 space-y-2 flex-grow">
             {isLoading ? (

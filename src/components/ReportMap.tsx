@@ -3,7 +3,7 @@
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 
 // Fix untuk ikon marker yang tidak muncul di React-Leaflet
 // @ts-ignore
@@ -54,6 +54,19 @@ function GetLocationButton({ setPosition }: { setPosition: (position: [number, n
 export default function ReportMap({ position, setPosition }: ReportMapProps) {
   const defaultPosition: [number, number] = [-2.976, 104.775]; // Default: Palembang
 
+  const eventHandlers = useMemo(
+    () => ({
+      dragend(e: L.DragEndEvent) {
+        const { lat, lng } = e.target.getLatLng();
+        setPosition([lat, lng]);
+      },
+    }),
+    [setPosition],
+  );
+
+  // Hanya tampilkan tombol GetLocation jika setPosition tersedia (bukan mode display-only)
+  const isInteractive = !!setPosition;
+
   return (
     <MapContainer center={position || defaultPosition} zoom={13} style={{ height: '100%', width: '100%' }}>
       <TileLayer
@@ -62,11 +75,16 @@ export default function ReportMap({ position, setPosition }: ReportMapProps) {
       />
       {position && (
         <>
-          <Marker position={position}></Marker>
+          <Marker 
+            position={position}
+            draggable={isInteractive}
+            eventHandlers={isInteractive ? eventHandlers : undefined}
+          >
+          </Marker>
           <ChangeView center={position} />
         </>      
       )}
-      <GetLocationButton setPosition={setPosition} />
+      {isInteractive && <GetLocationButton setPosition={setPosition} />}
     </MapContainer>
   );
 }

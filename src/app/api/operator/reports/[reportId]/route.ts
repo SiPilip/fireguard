@@ -3,11 +3,11 @@ import { db } from '@/lib/db';
 
 export async function GET(
   request: Request,
-  { params }: { params: { reportId: string } }
+  context: { params: { reportId: string } }
 ) {
   // Rute ini sudah dilindungi oleh middleware, hanya operator yang bisa akses.
   try {
-    const reportId = params.reportId;
+    const reportId = context.params.reportId;
     if (!reportId) {
       return NextResponse.json({ message: 'ID Laporan diperlukan.' }, { status: 400 });
     }
@@ -42,11 +42,11 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { reportId: string } }
+  context: { params: { reportId: string } }
 ) {
   // Middleware melindungi rute ini
   try {
-    const reportId = params.reportId;
+    const reportId = context.params.reportId;
     const { status } = await request.json();
 
     const allowedStatus = ['Pending', 'In Progress', 'Resolved'];

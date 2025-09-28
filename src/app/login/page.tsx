@@ -1,13 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from 'react';
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
+  const [isVerifying, setIsVerifying] = useState(true);
   const router = useRouter();
+
+  useEffect(() => {
+    const verifySession = async () => {
+      try {
+        const response = await fetch('/api/auth/me');
+        if (response.ok) {
+          const data = await response.json();
+          if (!data.isOperator) {
+            router.replace('/'); // Langsung arahkan ke dasbor pengguna
+          } else {
+            // Jika yang login adalah operator, biarkan di halaman ini
+            setIsVerifying(false);
+          }
+        } else {
+          // Tidak ada sesi valid, tampilkan form login
+          setIsVerifying(false);
+        }
+      } catch (error) {
+        setIsVerifying(false);
+      }
+    };
+    verifySession();
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +70,14 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
+
+  if (isVerifying) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center bg-gray-100">
+        <p className="text-gray-600">Memverifikasi sesi...</p>
+      </main>
+    );
+  }
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gray-100 p-8">

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { calculateETA, ETAResult } from '@/lib/geo';
 
 // Tipe data untuk laporan
 interface Report {
@@ -30,16 +31,23 @@ export default function ReportDetailView({ reportId }: ReportDetailViewProps) {
   const [error, setError] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateError, setUpdateError] = useState('');
+  const [etaInfo, setEtaInfo] = useState<ETAResult | null>(null);
 
   useEffect(() => {
     if (reportId) {
       const fetchReport = async () => {
         setIsLoading(true);
+        setEtaInfo(null); // Reset ETA info on new report selection
         try {
           const response = await fetch(`/api/operator/reports/${reportId}`);
           if (!response.ok) throw new Error('Gagal memuat detail laporan.');
           const data = await response.json();
           setReport(data);
+
+          // Hitung ETA setelah data laporan didapat
+          const etaResult = calculateETA(data.latitude, data.longitude);
+          setEtaInfo(etaResult);
+
         } catch (err: any) { setError(err.message); }
         finally { setIsLoading(false); }
       };
@@ -80,6 +88,13 @@ export default function ReportDetailView({ reportId }: ReportDetailViewProps) {
               {report.status}
             </span>
           </p>
+          {etaInfo && (
+            <div className="mt-3 pt-3 border-t border-gray-700 text-sm space-y-1">
+              <p><strong>Pos Terdekat:</strong> {etaInfo.nearestStation.name}</p>
+              <p><strong>Jarak (Garis Lurus):</strong> {etaInfo.distanceKm} km</p>
+              <p><strong>Estimasi Waktu Tiba:</strong> {etaInfo.etaMinutes} menit</p>
+            </div>
+          )}
         </div>
       </div>
 
