@@ -102,11 +102,12 @@ export default function OperatorDashboard() {
 
   // Koneksi WebSocket
   useEffect(() => {
-    const ws = new WebSocket(
-      `${window.location.protocol === "https" ? "wss" : "ws"}://${
-        window.location.host
-      }`
-    );
+    // Cek protokol saat ini untuk menentukan wss atau ws
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const wsUrl = `${wsProtocol}://${window.location.host}`;
+
+    const ws = new WebSocket(wsUrl);
+
     ws.onmessage = (event) => {
       const message = JSON.parse(event.data);
       if (message.type === "NEW_REPORT") {
