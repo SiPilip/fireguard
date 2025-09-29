@@ -1,91 +1,50 @@
-import Database from 'better-sqlite3';
-import path from 'path';
+import { createClient } from '@libsql/client';
 import bcrypt from 'bcrypt';
+import 'dotenv/config'; // Untuk memuat variabel dari .env saat menjalankan lokal
 
 const SALT_ROUNDS = 10;
 
 async function setup() {
-  // Skrip ini harus dijalankan dari root folder proyek Next.js (`fireguard-app`)
-  const dbPath = path.resolve('fireguard.db');
-  const db = new Database(dbPath);
+  if (!process.env.TURSO_DATABASE_URL || !process.env.TURSO_AUTH_TOKEN) {
+    throw new Error('TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables must be set.');
+  }
 
-  console.log('Menjalankan skrip setup database...');
+  const db = createClient({
+    url: process.env.TURSO_DATABASE_URL,
+    authToken: process.env.TURSO_AUTH_TOKEN,
+  });
 
-  // Hapus tabel yang ada untuk memastikan setup yang bersih (baik untuk pengembangan)
-  db.exec(`DROP TABLE IF EXISTS reports;`);
-  db.exec(`DROP TABLE IF EXISTS operators;`);
-  db.exec(`DROP TABLE IF EXISTS users;`);
-  db.exec(`DROP TABLE IF EXISTS otp_attempts;`);
-  console.log('Tabel yang ada telah dihapus.');
+  console.log('Running database setup script on Turso...');
 
-  // Buat tabel users
-  // Menyimpan informasi pengguna biasa yang membuat laporan
-  const createUsersTable = db.prepare(`
-    CREATE TABLE users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      phone_number TEXT NOT NULL UNIQUE,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-  createUsersTable.run();
-  console.log('Tabel "users" berhasil dibuat.');
+  const schema = [
+    `DROP TABLE IF EXISTS reports;`,
+    `DROP TABLE IF EXISTS operators;`,
+    `DROP TABLE IF EXISTS users;`,
+    `DROP TABLE IF EXISTS otp_attempts;`,
+    `CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, phone_number TEXT NOT NULL UNIQUE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`,
+    `CREATE TABLE operators (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`,
+    `CREATE TABLE reports (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, latitude REAL NOT NULL, longitude REAL NOT NULL, address TEXT, media_url TEXT, status TEXT NOT NULL DEFAULT 'Pending', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (user_id) REFERENCES users (id));`,
+    `CREATE TABLE otp_attempts (id INTEGER PRIMARY KEY AUTOINCREMENT, phone_number TEXT NOT NULL, otp_hash TEXT NOT NULL, expires_at TIMESTAMP NOT NULL);`
+  ];
 
-  // Buat tabel operators
-  // Menyimpan informasi operator yang mengelola laporan
-  const createOperatorsTable = db.prepare(`
-    CREATE TABLE operators (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT NOT NULL UNIQUE,
-      password_hash TEXT NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-  createOperatorsTable.run();
-  console.log('Tabel "operators" berhasil dibuat.');
+  try {
+    await db.batch(schema, 'write');
+    console.log('Tables created successfully.');
 
-  // Buat tabel reports
-  // Menyimpan semua laporan yang dikirim oleh pengguna
-  const createReportsTable = db.prepare(`
-    CREATE TABLE reports (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
-      latitude REAL NOT NULL,
-      longitude REAL NOT NULL,
-      address TEXT,
-      media_url TEXT,
-      status TEXT NOT NULL DEFAULT 'Pending', -- Contoh status: Pending, In Progress, Resolved
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users (id)
-    )
-  `);
-  createReportsTable.run();
-  console.log('Tabel "reports" berhasil dibuat.');
+    // Buat operator default
+    const defaultPassword = 'operator123';
+    const hashedPassword = await bcrypt.hash(defaultPassword, SALT_ROUNDS);
+    await db.execute({
+      sql: 'INSERT INTO operators (username, password_hash) VALUES (?, ?)',
+      args: ['operator', hashedPassword]
+    });
+    console.log('Default operator created (username: operator, password: operator123).');
 
-  // Buat tabel otp_attempts
-  // Menyimpan percobaan OTP yang dikirimkan
-  const createOtpAttemptsTable = db.prepare(`
-    CREATE TABLE otp_attempts (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      phone_number TEXT NOT NULL,
-      otp_hash TEXT NOT NULL,
-      expires_at TIMESTAMP NOT NULL
-    )
-  `);
-  createOtpAttemptsTable.run();
-  console.log('Tabel "otp_attempts" berhasil dibuat.');
+    console.log('Database setup complete!');
 
-  // Buat operator default
-  const defaultPassword = 'operator123';
-  const hashedPassword = await bcrypt.hash(defaultPassword, SALT_ROUNDS);
-  const insertOperator = db.prepare('INSERT INTO operators (username, password_hash) VALUES (?, ?)');
-  insertOperator.run('operator', hashedPassword);
-  console.log('Operator default (username: operator, password: operator123) berhasil dibuat.');
-
-  console.log('Setup database selesai!');
-  db.close();
+  } catch (e) {
+    console.error('Failed to setup database:', e);
+  }
 }
 
-setup().catch(err => {
-  console.error('Gagal menjalankan setup database:', err);
-  process.exit(1);
-});
+setup();

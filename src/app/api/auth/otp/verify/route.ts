@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { NextRequest, NextResponse } from 'next/server';
+import { queryRow, execute, executeAndGetLastInsertId } from '@/lib/db';
 import { verifyOtp } from '@/lib/auth';
 import * as jose from 'jose';
 import { serialize } from 'cookie';
@@ -7,46 +7,41 @@ import { serialize } from 'cookie';
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-jwt-key-for-dev';
 const COOKIE_NAME = 'auth_token';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const { phoneNumber, otp } = await request.json();
-
     if (!phoneNumber || !otp) {
       return NextResponse.json({ message: 'Nomor telepon dan OTP diperlukan.' }, { status: 400 });
     }
 
-    // 1. Ambil percobaan OTP terbaru dari database
-    const stmt = db.prepare(
-      'SELECT otp_hash, expires_at FROM otp_attempts WHERE phone_number = ? ORDER BY id DESC LIMIT 1'
+    const attempt = await queryRow<{ otp_hash: string; expires_at: string }>(
+      'SELECT otp_hash, expires_at FROM otp_attempts WHERE phone_number = ? ORDER BY id DESC LIMIT 1',
+      [phoneNumber]
     );
-    const attempt = stmt.get(phoneNumber) as { otp_hash: string; expires_at: string } | undefined;
 
     if (!attempt) {
       return NextResponse.json({ message: 'OTP tidak ditemukan atau sudah kedaluwarsa.' }, { status: 400 });
     }
 
-    // 2. Cek apakah OTP sudah kedaluwarsa
     if (new Date() > new Date(attempt.expires_at)) {
       return NextResponse.json({ message: 'OTP sudah kedaluwarsa.' }, { status: 400 });
     }
 
-    // 3. Verifikasi OTP
-    const isValid = verifyOtp(otp, attempt.otp_hash);
-    if (!isValid) {
+    if (!verifyOtp(otp, attempt.otp_hash)) {
       return NextResponse.json({ message: 'Kode OTP salah.' }, { status: 400 });
     }
 
-    // 4. Hapus OTP yang sudah terpakai
-    db.prepare('DELETE FROM otp_attempts WHERE phone_number = ?').run(phoneNumber);
+    await execute('DELETE FROM otp_attempts WHERE phone_number = ?', [phoneNumber]);
 
-    // 5. Cari atau buat pengguna baru
-    let user = db.prepare('SELECT id, phone_number FROM users WHERE phone_number = ?').get(phoneNumber) as { id: number; phone_number: string } | undefined;
+    let user = await queryRow<{ id: number; phone_number: string }>(
+        'SELECT id, phone_number FROM users WHERE phone_number = ?', [phoneNumber]
+    );
+
     if (!user) {
-      const result = db.prepare('INSERT INTO users (phone_number) VALUES (?)').run(phoneNumber);
-      user = { id: result.lastInsertRowid as number, phone_number: phoneNumber };
+      const newUserId = await executeAndGetLastInsertId('INSERT INTO users (phone_number) VALUES (?)', [phoneNumber]);
+      user = { id: newUserId, phone_number: phoneNumber };
     }
 
-    // 6. Buat JWT (JSON Web Token) menggunakan jose
     const secret = new TextEncoder().encode(JWT_SECRET);
     const token = await new jose.SignJWT({ id: user.id, phone: user.phone_number })
       .setProtectedHeader({ alg: 'HS256' })
@@ -54,12 +49,11 @@ export async function POST(request: Request) {
       .setExpirationTime('7d')
       .sign(secret);
 
-    // 7. Atur cookie di browser
     const serializedCookie = serialize(COOKIE_NAME, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       path: '/',
-      maxAge: 60 * 60 * 24 * 7, // 7 hari
+      maxAge: 60 * 60 * 24 * 7,
     });
 
     return new NextResponse(JSON.stringify({ message: 'Login berhasil!' }), {

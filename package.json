@@ -10,9 +10,10 @@
     "db:setup": "node scripts/setup-db.mjs"
   },
   "dependencies": {
+    "@libsql/client": "^0.15.15",
     "bcrypt": "^6.0.0",
-    "better-sqlite3": "^12.4.1",
     "cookie": "^1.0.2",
+    "dotenv": "^17.2.2",
     "jose": "^6.1.0",
     "leaflet": "^1.9.4",
     "next": "15.5.4",
