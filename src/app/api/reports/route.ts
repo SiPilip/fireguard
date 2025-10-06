@@ -22,24 +22,27 @@ export async function POST(request: NextRequest) {
     const latitude = formData.get("latitude") as string;
     const longitude = formData.get("longitude") as string;
     const mediaFile = formData.get("media") as File | null;
+    const notes = formData.get("notes") as string | null;
+    const contact = formData.get("contact") as string | null;
 
     if (!latitude || !longitude || !mediaFile) {
       return NextResponse.json(
-        { message: "Data laporan tidak lengkap." },
+        { message: "Data laporan tidak lengkap (lokasi dan media wajib)." },
         { status: 400 }
       );
     }
 
+    // ... (kode upload file tetap sama)
     const uploadsDir = path.join(process.cwd(), "public", "uploads");
     await mkdir(uploadsDir, { recursive: true });
     const buffer = Buffer.from(await mediaFile.arrayBuffer());
     const filename = `${Date.now()}-${mediaFile.name.replace(/\s/g, "_")}`;
-    // await writeFile(path.join(uploadsDir, filename), buffer);
+    await writeFile(path.join(uploadsDir, filename), buffer);
     const mediaUrl = `/uploads/${filename}`;
 
     const reportId = await executeAndGetLastInsertId(
-      "INSERT INTO reports (user_id, latitude, longitude, media_url) VALUES (?, ?, ?, ?)",
-      [user.id, parseFloat(latitude), parseFloat(longitude), mediaUrl]
+      "INSERT INTO reports (user_id, latitude, longitude, media_url, notes, contact) VALUES (?, ?, ?, ?, ?, ?)",
+      [user.id, parseFloat(latitude), parseFloat(longitude), mediaUrl, notes, contact]
     );
 
     if (global.wss) {
@@ -55,6 +58,8 @@ export async function POST(request: NextRequest) {
       global.wss.broadcast(
         JSON.stringify({ type: "NEW_REPORT", payload: newReport })
       );
+    } else {
+      console.warn("WebSocket server (global.wss) not available. Cannot broadcast new report.");
     }
 
     return NextResponse.json(

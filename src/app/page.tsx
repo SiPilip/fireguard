@@ -1,125 +1,241 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import {
+  FaClock,
+  FaEnvelope,
+  FaFire,
+  FaMapMarkerAlt,
+  FaMobileAlt,
+  FaPhone,
+  FaRoute,
+} from "react-icons/fa";
 
-// Mendefinisikan tipe data untuk riwayat laporan pengguna
-interface MyReport {
-  id: number;
-  status: string;
-  created_at: string;
-  media_url: string;
-}
+// Komponen untuk Halaman Landing FireGuard
 
-export default function HomePage() {
+const Navbar = () => {
   const router = useRouter();
-  const [myReports, setMyReports] = useState<MyReport[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    const fetchMyReports = async () => {
-      try {
-        const response = await fetch('/api/reports/my-reports');
-        if (!response.ok) {
-          throw new Error('Gagal memuat riwayat laporan.');
-        }
-        const data = await response.json();
-        setMyReports(data);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchMyReports();
+    // Cek cookie di sisi client untuk menentukan status login
+    const token = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("auth_token="));
+    setIsLoggedIn(!!token);
   }, []);
 
   const handleLogout = async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      router.push('/login');
-    } catch (error) {
-      console.error('Gagal untuk logout:', error);
-      alert('Gagal untuk logout. Silakan coba lagi.');
-    }
-  };
-
-  const getStatusClass = (status: string) => {
-    switch (status) {
-      case 'Pending':
-        return 'bg-yellow-500 text-white';
-      case 'In Progress':
-        return 'bg-blue-500 text-white';
-      case 'Resolved':
-        return 'bg-green-500 text-white';
-      default:
-        return 'bg-gray-500 text-white';
-    }
+    await fetch("/api/auth/logout", { method: "POST" });
+    setIsLoggedIn(false);
+    router.push("/"); // Refresh halaman
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm sticky top-0 z-10">
-        <nav className="container mx-auto flex items-center justify-between p-4">
-          <h1 className="text-xl font-bold text-red-600">FireGuard</h1>
-          <button
-            onClick={handleLogout}
-            className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+    <nav className="fixed top-0 w-full bg-white bg-opacity-90 backdrop-blur-md border-b border-gray-200 z-50">
+      <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-xl font-bold text-red-600"
+        >
+          <FaFire />
+          <span>FireGuard</span>
+        </Link>
+        <div className="hidden md:flex items-center gap-8">
+          <Link href="#features" className="text-gray-600 hover:text-red-600">
+            Fitur
+          </Link>
+          <Link href="#contact" className="text-gray-600 hover:text-red-600">
+            Kontak
+          </Link>
+          <Link
+            href="/operator/login"
+            className="text-gray-600 hover:text-red-600"
           >
-            Logout
-          </button>
-        </nav>
-      </header>
-
-      <main className="container mx-auto p-4 sm:p-6 md:p-8 space-y-8">
-        {/* Bagian untuk membuat laporan baru */}
-        <div className="rounded-lg bg-white p-6 shadow text-center">
-          <h2 className="mb-4 text-2xl font-bold text-gray-800">Ada Keadaan Darurat?</h2>
-          <p className="text-gray-600 mb-6 max-w-xl mx-auto">
-            Laporkan kejadian kebakaran di sekitar Anda dengan cepat dan akurat.
-          </p>
-          <button
-            onClick={() => router.push('/report/new')}
-            className="w-full sm:w-auto rounded-lg bg-red-600 px-8 py-3 text-center font-semibold text-white shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-transform transform hover:scale-105"
-          >
-            Buat Laporan Baru
-          </button>
+            Operator
+          </Link>
         </div>
-
-        {/* Bagian untuk riwayat laporan */}
-        <div className="rounded-lg bg-white p-6 shadow">
-          <h2 className="mb-4 text-2xl font-bold text-gray-800">Riwayat Laporan Anda</h2>
-          {isLoading ? (
-            <p className="text-center text-gray-500 py-8">Memuat riwayat...</p>
-          ) : error ? (
-            <p className="text-center text-red-500 py-8">{error}</p>
+        <div className="hidden md:flex items-center gap-4">
+          {isLoggedIn ? (
+            <>
+              <button
+                onClick={() => router.push("/dashboard")}
+                className="font-semibold text-gray-600 hover:text-red-600"
+              >
+                Dashboard
+              </button>
+              <button
+                onClick={handleLogout}
+                className="font-semibold text-gray-600 hover:text-red-600"
+              >
+                Logout
+              </button>
+            </>
           ) : (
-            <div className="space-y-4">
-              {myReports.length > 0 ? (
-                myReports.map((report) => (
-                  <div key={report.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-md border border-gray-200 p-4 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center gap-4">
-                        <img src={report.media_url} alt={`Laporan ${report.id}`} className="h-16 w-16 rounded-md object-cover bg-gray-200" />
-                        <div>
-                            <p className="font-semibold text-gray-800">Laporan #{report.id}</p>
-                            <p className="text-sm text-gray-500">
-                                Dibuat pada: {new Date(report.created_at).toLocaleString('id-ID')}
-                            </p>
-                        </div>
-                    </div>
-                    <div className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusClass(report.status)}`}>
-                      {report.status}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-center text-gray-500 py-8">Anda belum pernah membuat laporan.</p>
-              )}
-            </div>
+            <button
+              onClick={() => router.push("/login")}
+              className="font-semibold text-gray-600 hover:text-red-600"
+            >
+              Login
+            </button>
           )}
+          <button
+            onClick={() => router.push("/report/new")}
+            className="bg-red-600 text-white px-5 py-2 rounded-full font-semibold hover:bg-red-700 transition-colors"
+          >
+            Lapor Darurat
+          </button>
         </div>
+      </div>
+    </nav>
+  );
+};
+
+const HeroSection = () => {
+  const router = useRouter();
+  return (
+    <section
+      id="home"
+      className="pt-24 pb-12 md:pt-32 md:pb-20 bg-gray-900 text-white"
+    >
+      <div className="container mx-auto px-6 text-center">
+        <h1 className="text-4xl md:text-6xl font-extrabold leading-tight mb-4">
+          Sistem Cepat Tanggap
+          <span className="block bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-yellow-500">
+            Kebakaran Palembang
+          </span>
+        </h1>
+        <p className="text-lg md:text-xl text-gray-300 max-w-3xl mx-auto mb-8">
+          Teknologi LBS terdepan untuk respons darurat kebakaran yang cepat dan
+          efisien di Kota Palembang.
+        </p>
+        <div className="flex justify-center gap-4">
+          <button
+            onClick={() => router.push("/report/new")}
+            className="bg-red-600 text-white px-8 py-3 rounded-full font-bold text-lg hover:bg-red-700 transition-transform hover:scale-105"
+          >
+            Lapor Darurat
+          </button>
+          <Link
+            href="#features"
+            className="border-2 border-gray-500 text-white px-8 py-3 rounded-full font-bold text-lg hover:bg-gray-700 transition-colors"
+          >
+            Pelajari Fitur
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const FeatureCard = ({
+  icon,
+  title,
+  description,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}) => (
+  <div className="bg-white p-6 rounded-lg shadow-lg text-center transform hover:-translate-y-2 transition-transform">
+    <div className="inline-block bg-red-100 text-red-600 p-4 rounded-full mb-4 text-3xl">
+      {icon}
+    </div>
+    <h3 className="text-xl font-bold mb-2 text-gray-800">{title}</h3>
+    <p className="text-gray-600">{description}</p>
+  </div>
+);
+
+const FeaturesSection = () => (
+  <section id="features" className="py-20 bg-gray-50">
+    <div className="container mx-auto px-6">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-800">
+          Fitur Unggulan
+        </h2>
+        <p className="text-gray-600 mt-2">
+          Teknologi canggih untuk keamanan maksimal Anda.
+        </p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <FeatureCard
+          icon={<FaMapMarkerAlt />}
+          title="Lokasi Real-time"
+          description="Deteksi lokasi otomatis menggunakan GPS untuk pelaporan yang akurat dan cepat."
+        />
+        <FeatureCard
+          icon={<FaRoute />}
+          title="Rute Tercepat"
+          description="Algoritma cerdas untuk menentukan rute tercepat dari pos damkar terdekat ke lokasi Anda."
+        />
+        <FeatureCard
+          icon={<FaClock />}
+          title="Estimasi Waktu"
+          description="Perhitungan ETA yang akurat untuk membantu koordinasi dan persiapan di lokasi."
+        />
+        <FeatureCard
+          icon={<FaMobileAlt />}
+          title="Akses Mudah"
+          description="Dapat diakses dari berbagai perangkat, baik desktop maupun smartphone, tanpa perlu instalasi."
+        />
+      </div>
+    </div>
+  </section>
+);
+
+const ContactSection = () => (
+  <section id="contact" className="py-20 bg-gray-800 text-white">
+    <div className="container mx-auto px-6">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold">Kontak Darurat</h2>
+        <p className="text-gray-400 mt-2">
+          Simpan dan gunakan nomor ini hanya dalam keadaan darurat.
+        </p>
+      </div>
+      <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+        <div className="bg-gray-700 p-6 rounded-lg">
+          <FaPhone className="text-4xl text-red-500 mx-auto mb-3" />
+          <h3 className="text-xl font-bold">Hotline Damkar</h3>
+          <p className="text-2xl font-mono text-yellow-400">113</p>
+        </div>
+        <div className="bg-gray-700 p-6 rounded-lg">
+          <FaEnvelope className="text-4xl text-red-500 mx-auto mb-3" />
+          <h3 className="text-xl font-bold">Email</h3>
+          <p className="text-lg text-yellow-400">damkar@palembang.go.id</p>
+        </div>
+        <div className="bg-gray-700 p-6 rounded-lg">
+          <FaMapMarkerAlt className="text-4xl text-red-500 mx-auto mb-3" />
+          <h3 className="text-xl font-bold">Alamat Pusat</h3>
+          <p className="text-lg text-gray-300">Jl. Merdeka No.1, Palembang</p>
+        </div>
+      </div>
+    </div>
+  </section>
+);
+
+const Footer = () => (
+  <footer className="bg-gray-900 text-gray-400 py-8">
+    <div className="container mx-auto px-6 text-center">
+      <p>
+        &copy; {new Date().getFullYear()} FireGuard Palembang. Dikembangkan
+        untuk keselamatan warga.
+      </p>
+    </div>
+  </footer>
+);
+
+export default function LandingPage() {
+  return (
+    <div className="bg-white">
+      <Navbar />
+      <main>
+        <HeroSection />
+        <FeaturesSection />
+        <ContactSection />
       </main>
+      <Footer />
     </div>
   );
 }

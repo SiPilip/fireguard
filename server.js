@@ -1,7 +1,12 @@
 // Global error handler untuk mencegah server crash karena error spesifik dari WebSocket
 process.on('uncaughtException', (err) => {
-  if (err.code === 'WS_ERR_INVALID_CLOSE_CODE') {
-    console.warn('Caught a non-critical WebSocket error due to hot-reloading. Ignoring to prevent crash.');
+  // Di mode development, beberapa error WebSocket yang tidak kritis bisa muncul karena hot-reloading.
+  // Kita tangkap di sini agar server tidak crash.
+  const isDev = process.env.NODE_ENV !== 'production';
+  const nonCriticalErrors = ['WS_ERR_INVALID_CLOSE_CODE', 'WS_ERR_INVALID_UTF8'];
+
+  if (isDev && nonCriticalErrors.includes(err.code)) {
+    console.warn(`Caught a non-critical WebSocket error (${err.code}) due to hot-reloading. Ignoring to prevent crash.`);
   } else {
     // Untuk error lainnya, biarkan server crash agar kita tahu ada masalah serius
     console.error('Uncaught Exception, shutting down:', err);
@@ -55,7 +60,17 @@ app.prepare().then(() => {
   global.wss = wss;
 
   server.on('upgrade', (request, socket, head) => {
-    console.log('Attempting to upgrade connection to WebSocket...');
+    const { pathname } = parse(request.url, true);
+
+    // Only handle upgrades to our WebSocket endpoint '/ws'
+    if (pathname !== '/ws') {
+      // For other paths, we can destroy the socket if we are not handling them.
+      // This prevents the connection from hanging.
+      socket.destroy();
+      return;
+    }
+
+    console.log('Attempting to upgrade connection to application WebSocket...');
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit('connection', ws, request);
     });
@@ -64,12 +79,32 @@ app.prepare().then(() => {
   // Definisikan listener di instance wss tunggal
   wss.on('connection', (ws, request) => {
     console.log('A new client connected to WebSocket.');
+    ws.isAlive = true;
+
+    ws.on('pong', () => {
+      ws.isAlive = true;
+    });
+
     ws.on('close', () => {
       console.log('Client disconnected.');
     });
+
     ws.on('error', (error) => {
         console.error('WebSocket Instance Error:', error);
     });
+  });
+
+  const interval = setInterval(() => {
+    wss.clients.forEach((ws) => {
+      if (ws.isAlive === false) return ws.terminate();
+
+      ws.isAlive = false;
+      ws.ping(() => {});
+    });
+  }, 30000);
+
+  wss.on('close', () => {
+    clearInterval(interval);
   });
 
   // Definisikan fungsi broadcast di instance wss

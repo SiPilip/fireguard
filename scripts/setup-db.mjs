@@ -23,7 +23,7 @@ async function setup() {
     `DROP TABLE IF EXISTS otp_attempts;`,
     `CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, phone_number TEXT NOT NULL UNIQUE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`,
     `CREATE TABLE operators (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`,
-    `CREATE TABLE reports (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, latitude REAL NOT NULL, longitude REAL NOT NULL, address TEXT, media_url TEXT, status TEXT NOT NULL DEFAULT 'Pending', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (user_id) REFERENCES users (id));`,
+    `CREATE TABLE reports (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, latitude REAL NOT NULL, longitude REAL NOT NULL, address TEXT, media_url TEXT, status TEXT NOT NULL DEFAULT 'submitted', notes TEXT, contact TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (user_id) REFERENCES users (id));`,
     `CREATE TABLE otp_attempts (id INTEGER PRIMARY KEY AUTOINCREMENT, phone_number TEXT NOT NULL, otp_hash TEXT NOT NULL, expires_at TIMESTAMP NOT NULL);`
   ];
 

@@ -26,6 +26,36 @@ export interface ETAResult {
 }
 
 /**
+ * Mendapatkan alamat dari koordinat menggunakan Nominatim (OpenStreetMap).
+ * @param lat Latitude
+ * @param lon Longitude
+ * @returns String alamat lengkap atau pesan error.
+ */
+export async function getAddressFromCoordinates(lat: number, lon: number): Promise<string> {
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`,
+      {
+        headers: {
+          'User-Agent': 'FireGuardApp/1.0 (https://github.com/your-repo)' // Aturan penggunaan Nominatim
+        }
+      }
+    );
+    if (!response.ok) {
+      throw new Error(`Nominatim API failed with status ${response.status}`);
+    }
+    const data = await response.json();
+    if (data && data.display_name) {
+      return data.display_name;
+    }
+    return "Alamat detail tidak ditemukan.";
+  } catch (error) {
+    console.error("Reverse geocoding error:", error);
+    return "Tidak dapat mengambil data alamat saat ini.";
+  }
+}
+
+/**
  * Menghitung pos damkar terdekat dan estimasi waktu tiba (ETA).
  * @param reportLat Latitude dari lokasi kejadian.
  * @param reportLon Longitude dari lokasi kejadian.
