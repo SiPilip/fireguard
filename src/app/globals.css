@@ -5,13 +5,6 @@
   --foreground: #171717;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -22,75 +15,18 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
 
-@keyframes highlight-and-fade {
-  0% {
-    background-color: rgba(239, 68, 68, 0.3); /* Warna highlight merah transparan */
-  }
-  100% {
-    background-color: transparent;
-  }
+.routing-line {
+  z-index: 1000;
 }
 
-@keyframes pulse-bg {
-  0%, 100% {
-    background-color: rgba(239, 68, 68, 0.3);
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-poppins), sans-serif;
   }
-  50% {
-    background-color: rgba(239, 68, 68, 0.1);
+  
+  body {
+    font-family: var(--font-roboto), sans-serif;
   }
-}
-
-.animate-highlight {
-  animation: highlight-and-fade 5s ease-out forwards;
-}
-
-.animate-pulse-new {
-  animation: pulse-bg 2s infinite;
-}
-
-/* Toast Animations */
-@keyframes slide-in-right {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes scale-in {
-  from {
-    transform: scale(0.9);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.animate-slide-in-right {
-  animation: slide-in-right 0.3s ease-out;
-}
-
-.animate-fade-in {
-  animation: fade-in 0.2s ease-out;
-}
-
-.animate-scale-in {
-  animation: scale-in 0.3s ease-out;
 }

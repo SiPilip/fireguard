@@ -7,7 +7,7 @@ import { useEffect } from "react";
 interface RoutingMachineProps {
   start: [number, number];
   end: [number, number];
-  onRouteFound: (summary: L.Routing.Summary) => void;
+  onRouteFound: (summary: any) => void;
 }
 
 const RoutingMachine = ({ start, end, onRouteFound }: RoutingMachineProps) => {
@@ -18,19 +18,16 @@ const RoutingMachine = ({ start, end, onRouteFound }: RoutingMachineProps) => {
 
     const routingControl = L.Routing.control({
       waypoints: [L.latLng(start[0], start[1]), L.latLng(end[0], end[1])],
-      routeWhileDragging: false, // Nonaktifkan update saat dragging untuk performa
       lineOptions: {
-        styles: [{ color: "#6FA1EC", weight: 4 }],
+        styles: [{ color: "#FF5733", weight: 6, opacity: 0.9, className: 'routing-line' }],
+        extendToWaypoints: false,
+        missingRouteTolerance: 5,
       },
-      show: false, // Sembunyikan panel instruksi default
+      show: false,
       addWaypoints: false,
-      fitSelectedRoutes: true,
-      plan: new L.Routing.Plan(
-        [L.latLng(start[0], start[1]), L.latLng(end[0], end[1])],
-        {
-          createMarker: () => false, // Sembunyikan marker dari routing machine
-        }
-      ),
+      plan: new L.Routing.Plan([L.latLng(start[0], start[1]), L.latLng(end[0], end[1])], {
+        createMarker: () => false,
+      }),
     })
       .on("routesfound", (e) => {
         if (e.routes && e.routes.length > 0) {

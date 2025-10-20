@@ -101,7 +101,7 @@ export default function LoginPage() {
               id="phone"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
-              className="w-full rounded-md border border-gray-300 p-3 text-gray-900 shadow-sm focus:border-red-500 focus:ring-red-500"
+              className="w-full rounded-md border border-gray-300 p-3 text-gray-900 shadow-sm focus:border-red-500 focus:ring-red-500 placeholder:text-gray-600"
               placeholder="Contoh: 081234567890"
               required
               disabled={isLoading}

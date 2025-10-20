@@ -1,28 +1,27 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
-import Link from "next/link";
-import dynamic from "next/dynamic";
+import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import {
+  FaArrowLeft,
   FaMapMarkerAlt,
   FaClock,
   FaCheckCircle,
   FaTruck,
   FaTimesCircle,
-  FaArrowLeft,
   FaImage,
+  FaStickyNote,
   FaPhone,
   FaUser,
-} from "react-icons/fa";
+  FaSpinner,
+  FaExclamationTriangle,
+} from 'react-icons/fa';
 
-const SimpleMap = dynamic(() => import("@/components/SimpleMap"), {
+const SimpleMap = dynamic(() => import('@/components/SimpleMap'), {
   ssr: false,
-  loading: () => (
-    <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
-      <p className="text-gray-600">Loading map...</p>
-    </div>
-  ),
+  loading: () => <div className="h-64 w-full animate-pulse bg-gray-200 rounded-lg"></div>,
 });
 
 interface Report {
@@ -30,72 +29,100 @@ interface Report {
   latitude: number;
   longitude: number;
   description: string;
-  status: "pending" | "verified" | "on_the_way" | "resolved" | "rejected";
+  status: 'submitted' | 'verified' | 'dispatched' | 'arrived' | 'completed' | 'false';
   created_at: string;
   updated_at: string;
+  address?: string;
+  notes?: string;
+  contact?: string;
+  media_url?: string;
+  user: {
+    phone: string;
+  };
   admin_notes?: string;
-  location_name?: string;
-  photo_url?: string;
-  user_phone?: string;
 }
 
 const statusConfig = {
-  pending: {
-    label: "Menunggu Verifikasi",
-    color: "bg-yellow-100 text-yellow-800 border-yellow-300",
+  submitted: {
+    label: 'Menunggu Verifikasi',
+    color: 'text-yellow-600',
+    bgColor: 'bg-yellow-100',
     icon: FaClock,
-    iconColor: "text-yellow-600",
   },
   verified: {
-    label: "Terverifikasi",
-    color: "bg-blue-100 text-blue-800 border-blue-300",
+    label: 'Terverifikasi',
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-100',
     icon: FaCheckCircle,
-    iconColor: "text-blue-600",
   },
-  on_the_way: {
-    label: "Petugas Dalam Perjalanan",
-    color: "bg-purple-100 text-purple-800 border-purple-300",
+  dispatched: {
+    label: 'Unit Dalam Perjalanan',
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-100',
     icon: FaTruck,
-    iconColor: "text-purple-600",
   },
-  resolved: {
-    label: "Selesai",
-    color: "bg-green-100 text-green-800 border-green-300",
+  arrived: {
+    label: 'Unit Telah Tiba',
+    color: 'text-indigo-600',
+    bgColor: 'bg-indigo-100',
     icon: FaCheckCircle,
-    iconColor: "text-green-600",
   },
-  rejected: {
-    label: "Ditolak",
-    color: "bg-red-100 text-red-800 border-red-300",
+  completed: {
+    label: 'Selesai',
+    color: 'text-green-600',
+    bgColor: 'bg-green-100',
+    icon: FaCheckCircle,
+  },
+  false: {
+    label: 'Laporan Palsu',
+    color: 'text-red-600',
+    bgColor: 'bg-red-100',
     icon: FaTimesCircle,
-    iconColor: "text-red-600",
   },
 };
 
+const TimelineItem = ({ icon: Icon, color, title, time, isLast = false }) => (
+  <div className="flex">
+    <div className="flex flex-col items-center mr-4">
+      <div>
+        <div className={`flex items-center justify-center w-10 h-10 rounded-full ${color}`}>
+          <Icon className="w-5 h-5 text-white" />
+        </div>
+      </div>
+      {!isLast && <div className="w-px h-full bg-gray-300"></div>}
+    </div>
+    <div className="pb-8">
+      <p className="mb-1 text-sm font-semibold text-gray-800">{title}</p>
+      <p className="text-xs text-gray-500">{time}</p>
+    </div>
+  </div>
+);
+
 export default function ReportDetailPage() {
+  const router = useRouter();
   const params = useParams();
   const reportId = params?.reportId as string;
 
   const [report, setReport] = useState<Report | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (reportId) {
       fetchReportDetail();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reportId]);
 
   const fetchReportDetail = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/reports/my-reports?id=${reportId}`);
+      const response = await fetch(`/api/operator/reports/${reportId}`);
       if (!response.ok) {
-        throw new Error("Gagal mengambil detail laporan");
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Gagal mengambil detail laporan');
       }
       const data = await response.json();
-      setReport(data.report);
+      setReport(data);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -104,72 +131,19 @@ export default function ReportDetailPage() {
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
     const date = new Date(dateString);
-    return date.toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+    return date.toLocaleDateString('id-ID', {
+      day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
     });
-  };
-
-  const getTimelineData = (status: Report["status"], createdAt: string, updatedAt: string) => {
-    const timeline = [
-      {
-        status: "pending",
-        label: "Laporan Diterima",
-        description: "Laporan Anda telah diterima sistem",
-        timestamp: createdAt,
-      },
-    ];
-
-    if (status === "rejected") {
-      timeline.push({
-        status: "rejected",
-        label: "Laporan Ditolak",
-        description: "Laporan ditolak oleh admin",
-        timestamp: updatedAt,
-      });
-      return timeline;
-    }
-
-    if (["verified", "on_the_way", "resolved"].includes(status)) {
-      timeline.push({
-        status: "verified",
-        label: "Terverifikasi",
-        description: "Laporan telah diverifikasi oleh operator",
-        timestamp: updatedAt,
-      });
-    }
-
-    if (["on_the_way", "resolved"].includes(status)) {
-      timeline.push({
-        status: "on_the_way",
-        label: "Petugas Berangkat",
-        description: "Petugas pemadam kebakaran dalam perjalanan",
-        timestamp: updatedAt,
-      });
-    }
-
-    if (status === "resolved") {
-      timeline.push({
-        status: "resolved",
-        label: "Selesai Ditangani",
-        description: "Kebakaran telah berhasil ditangani",
-        timestamp: updatedAt,
-      });
-    }
-
-    return timeline;
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
-          <p className="mt-4 text-gray-600">Memuat detail laporan...</p>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="flex items-center space-x-3">
+          <FaSpinner className="animate-spin text-red-600 h-8 w-8" />
+          <p className="text-gray-700 text-lg">Memuat Laporan...</p>
         </div>
       </div>
     );
@@ -177,16 +151,14 @@ export default function ReportDetailPage() {
 
   if (error || !report) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <FaTimesCircle className="mx-auto text-red-600 mb-4" size={48} />
-          <p className="text-red-600 font-semibold">{error || "Laporan tidak ditemukan"}</p>
-          <Link
-            href="/dashboard"
-            className="inline-block mt-4 text-red-600 hover:text-red-700 font-semibold"
-          >
-            ← Kembali ke Dashboard
-          </Link>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center p-8 bg-white rounded-2xl shadow-lg">
+          <FaExclamationTriangle className="mx-auto text-red-500 h-12 w-12 mb-4" />
+          <p className="text-red-600 font-semibold text-lg">{error || 'Laporan tidak ditemukan'}</p>
+          <button onClick={() => router.back()} className="mt-6 inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors">
+            <FaArrowLeft />
+            <span>Kembali</span>
+          </button>
         </div>
       </div>
     );
@@ -194,178 +166,116 @@ export default function ReportDetailPage() {
 
   const statusInfo = statusConfig[report.status];
   const StatusIcon = statusInfo.icon;
-  const timelineData = getTimelineData(report.status, report.created_at, report.updated_at);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
+    <div className="min-h-screen bg-gray-100">
+      <header className="bg-white shadow-sm sticky top-0 z-30">
+        <div className="container mx-auto flex items-center justify-between px-8 py-4">
           <div className="flex items-center gap-4">
-            <Link
-              href="/dashboard"
-              className="text-red-600 hover:text-red-700 transition-colors"
-            >
+            <button onClick={() => router.back()} className="text-gray-600 hover:text-red-600">
               <FaArrowLeft size={20} />
-            </Link>
+            </button>
             <div>
-              <h1 className="text-xl font-bold text-gray-800">
-                Detail Laporan #{report.id}
-              </h1>
-              <p className="text-sm text-gray-600">
-                {formatDate(report.created_at)}
-              </p>
+              <h1 className="text-xl font-bold text-gray-800">Detail Laporan #{report.id}</h1>
+              <p className="text-sm text-gray-500">Dilaporkan pada {formatDate(report.created_at)}</p>
             </div>
+          </div>
+          <div className={`px-4 py-2 rounded-full text-sm font-semibold ${statusInfo.bgColor} ${statusInfo.color} flex items-center gap-2`}>
+            <StatusIcon />
+            <span>{statusInfo.label}</span>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Status Badge */}
-        <div className="mb-6">
-          <span
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border ${statusInfo.color}`}
-          >
-            <StatusIcon size={16} />
-            {statusInfo.label}
-          </span>
-        </div>
-
-        {/* Map */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-lg font-bold text-gray-800 mb-4">Lokasi Kebakaran</h2>
-          <div className="rounded-lg overflow-hidden">
-            <SimpleMap
-              latitude={report.latitude}
-              longitude={report.longitude}
-              zoom={15}
-            />
-          </div>
-          <div className="mt-4 flex items-start gap-2 text-gray-600">
-            <FaMapMarkerAlt className="mt-1 flex-shrink-0" size={16} />
-            <div>
-              <p className="font-semibold text-gray-800">
-                {report.location_name || "Lokasi"}
-              </p>
-              <p className="text-sm">
-                Koordinat: {report.latitude}, {report.longitude}
-              </p>
+      <main className="container mx-auto p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column (Main Details) */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Map */}
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h2 className="text-lg font-bold text-gray-800 mb-4">Lokasi Kejadian</h2>
+            <div className="h-80 w-full rounded-lg overflow-hidden border-2 border-gray-200">
+              <SimpleMap latitude={report.latitude} longitude={report.longitude} zoom={16} />
             </div>
-          </div>
-        </div>
-
-        {/* Description */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-lg font-bold text-gray-800 mb-4">Deskripsi Laporan</h2>
-          <p className="text-gray-700">{report.description}</p>
-        </div>
-
-        {/* Photo */}
-        {report.photo_url && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-            <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-              <FaImage />
-              Foto Kejadian
-            </h2>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={report.photo_url}
-              alt="Foto kebakaran"
-              className="w-full rounded-lg"
-            />
-          </div>
-        )}
-
-        {/* Admin Notes */}
-        {report.admin_notes && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-            <h2 className="text-lg font-bold text-gray-800 mb-4">Update dari Admin</h2>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-white font-bold">A</span>
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-blue-900 mb-2">Operator FireGuard</p>
-                  <p className="text-blue-800">{report.admin_notes}</p>
-                  <p className="text-xs text-blue-600 mt-2">
-                    {formatDate(report.updated_at)}
-                  </p>
-                </div>
+            <div className="mt-4 flex items-start gap-3 text-gray-700">
+              <FaMapMarkerAlt className="mt-1 text-red-600" />
+              <div>
+                <p className="font-semibold">{report.address || 'Alamat tidak tersedia'}</p>
+                <p className="text-xs text-gray-500">{report.latitude}, {report.longitude}</p>
               </div>
             </div>
           </div>
-        )}
 
-        {/* Timeline */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-lg font-bold text-gray-800 mb-6">Timeline Proses</h2>
-          <div className="space-y-6">
-            {timelineData.map((item, index) => {
-              const isLast = index === timelineData.length - 1;
-              const itemStatusInfo = statusConfig[item.status as Report["status"]];
-              const ItemIcon = itemStatusInfo.icon;
+          {/* Description & Media */}
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h2 className="text-lg font-bold text-gray-800 mb-4">Detail Laporan</h2>
+            <p className="text-gray-600 mb-6">{report.description}</p>
+            {report.media_url && (
+              <div>
+                <h3 className="font-semibold text-gray-700 mb-2 flex items-center gap-2"><FaImage /> Bukti Foto/Video</h3>
+                <img src={report.media_url} alt="Bukti Laporan" className="w-full max-w-md rounded-lg border" />
+              </div>
+            )}
+          </div>
 
-              return (
-                <div key={index} className="flex gap-4 relative">
-                  {/* Vertical Line */}
-                  {!isLast && (
-                    <div className="absolute left-4 top-10 bottom-0 w-0.5 bg-gray-200"></div>
-                  )}
+          {/* Admin Notes */}
+          {report.admin_notes && (
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <h2 className="text-lg font-bold text-gray-800 mb-4">Catatan dari Operator</h2>
+              <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
+                <p className="text-blue-800">{report.admin_notes}</p>
+              </div>
+            </div>
+          )}
+        </div>
 
-                  {/* Icon */}
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      isLast ? "bg-red-600" : "bg-gray-300"
-                    }`}
-                  >
-                    <ItemIcon className="text-white" size={14} />
-                  </div>
+        {/* Right Column (Timeline & Info) */}
+        <div className="space-y-8">
+          {/* Timeline */}
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h2 className="text-lg font-bold text-gray-800 mb-6">Riwayat Status</h2>
+            <div className="-ml-1">
+              <TimelineItem icon={FaClock} color="bg-yellow-500" title="Laporan Dibuat" time={formatDate(report.created_at)} />
+              {['verified', 'dispatched', 'arrived', 'completed', 'false'].includes(report.status) && (
+                <TimelineItem icon={FaCheckCircle} color="bg-blue-500" title="Laporan Diverifikasi" time={formatDate(report.updated_at)} />
+              )}
+              {['dispatched', 'arrived', 'completed'].includes(report.status) && (
+                <TimelineItem icon={FaTruck} color="bg-purple-500" title="Unit Dikirim" time={formatDate(report.updated_at)} />
+              )}
+              {['arrived', 'completed'].includes(report.status) && (
+                <TimelineItem icon={FaCheckCircle} color="bg-indigo-500" title="Unit Tiba" time={formatDate(report.updated_at)} />
+              )}
+              {report.status === 'completed' && (
+                <TimelineItem icon={FaCheckCircle} color="bg-green-500" title="Selesai" time={formatDate(report.updated_at)} isLast />
+              )}
+              {report.status === 'false' && (
+                <TimelineItem icon={FaTimesCircle} color="bg-red-500" title="Laporan Palsu" time={formatDate(report.updated_at)} isLast />
+              )}
+            </div>
+          </div>
 
-                  {/* Content */}
-                  <div className="flex-1 pb-2">
-                    <p className="font-semibold text-gray-800">{item.label}</p>
-                    <p className="text-sm text-gray-600">{item.description}</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {formatDate(item.timestamp)}
-                    </p>
-                  </div>
+          {/* Reporter Info */}
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h2 className="text-lg font-bold text-gray-800 mb-4">Informasi Pelapor</h2>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 text-gray-700">
+                <FaUser className="text-red-600" />
+                <span>{report.user?.phone || 'N/A'}</span>
+              </div>
+              {report.contact && (
+                <div className="flex items-center gap-3 text-gray-700">
+                  <FaPhone className="text-red-600" />
+                  <span>{report.contact}</span>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Contact Info */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-bold text-gray-800 mb-4">Informasi Pelapor</h2>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 text-gray-700">
-              <FaPhone className="text-red-600" size={16} />
-              <span>{report.user_phone || "Tidak tersedia"}</span>
-            </div>
-            <div className="flex items-center gap-3 text-gray-700">
-              <FaUser className="text-red-600" size={16} />
-              <span>Pengguna FireGuard</span>
+              )}
+              {report.notes && (
+                <div className="flex items-start gap-3 text-gray-700 pt-2 border-t">
+                  <FaStickyNote className="mt-1 text-red-600" />
+                  <span>{report.notes}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
-
-        {/* Emergency Button */}
-        {report.status !== "resolved" && report.status !== "rejected" && (
-          <div className="mt-6 bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-            <p className="text-red-800 font-semibold mb-3">
-              Situasi semakin darurat?
-            </p>
-            <a
-              href="tel:113"
-              className="inline-block bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors"
-            >
-              Hubungi Damkar 113
-            </a>
-          </div>
-        )}
       </main>
     </div>
   );

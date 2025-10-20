@@ -1,26 +1,31 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   FaFire,
-  FaMapMarkerAlt,
+  FaChartBar,
+  FaFileAlt,
+  FaPlus,
+  FaUserCircle,
+  FaBell,
+  FaCog,
+  FaSignOutAlt,
+  FaHome,
   FaClock,
   FaCheckCircle,
   FaTruck,
   FaTimesCircle,
   FaExclamationCircle,
-  FaArrowLeft,
-  FaEye,
-} from "react-icons/fa";
+} from 'react-icons/fa';
 
 interface Report {
   id: number;
   latitude: number;
   longitude: number;
   description: string;
-  status: "submitted" | "verified" | "dispatched" | "arrived" | "completed" | "false";
+  status: 'submitted' | 'verified' | 'dispatched' | 'arrived' | 'completed' | 'false';
   created_at: string;
   updated_at: string;
   admin_notes?: string;
@@ -34,76 +39,81 @@ interface User {
 
 const statusConfig = {
   submitted: {
-    label: "Menunggu Verifikasi",
-    color: "bg-yellow-100 text-yellow-800 border-yellow-300",
+    label: 'Menunggu Verifikasi',
+    color: 'bg-yellow-500',
     icon: FaClock,
-    iconColor: "text-yellow-600",
   },
   verified: {
-    label: "Terverifikasi",
-    color: "bg-blue-100 text-blue-800 border-blue-300",
+    label: 'Terverifikasi',
+    color: 'bg-blue-500',
     icon: FaCheckCircle,
-    iconColor: "text-blue-600",
   },
   dispatched: {
-    label: "Unit Dalam Perjalanan",
-    color: "bg-purple-100 text-purple-800 border-purple-300",
+    label: 'Unit Dalam Perjalanan',
+    color: 'bg-purple-500',
     icon: FaTruck,
-    iconColor: "text-purple-600",
   },
   arrived: {
-    label: "Unit Telah Tiba",
-    color: "bg-indigo-100 text-indigo-800 border-indigo-300",
+    label: 'Unit Telah Tiba',
+    color: 'bg-indigo-500',
     icon: FaCheckCircle,
-    iconColor: "text-indigo-600",
   },
   completed: {
-    label: "Selesai",
-    color: "bg-green-100 text-green-800 border-green-300",
+    label: 'Selesai',
+    color: 'bg-green-500',
     icon: FaCheckCircle,
-    iconColor: "text-green-600",
   },
   false: {
-    label: "Laporan Palsu",
-    color: "bg-red-100 text-red-800 border-red-300",
+    label: 'Laporan Palsu',
+    color: 'bg-red-500',
     icon: FaTimesCircle,
-    iconColor: "text-red-600",
   },
 };
+
+const StatCard = ({ title, value, icon: Icon, color, bgColor }) => (
+  <div className="bg-white p-6 rounded-2xl shadow-lg flex items-center justify-between transform hover:-translate-y-1 transition-transform duration-300">
+    <div>
+      <p className="text-sm text-gray-500 font-medium">{title}</p>
+      <p className={`text-3xl font-bold ${color}`}>{value}</p>
+    </div>
+    <div className={`p-4 rounded-full ${bgColor}`}>
+      <Icon className={`w-6 h-6`} style={{ color }} />
+    </div>
+  </div>
+);
 
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [reports, setReports] = useState<Report[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   useEffect(() => {
     checkAuth();
     fetchReports();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const checkAuth = async () => {
     try {
-      const response = await fetch("/api/auth/me");
+      const response = await fetch('/api/auth/me');
       if (!response.ok) {
-        router.push("/login");
+        router.push('/login');
         return;
       }
       const userData = await response.json();
       setUser(userData);
     } catch {
-      router.push("/login");
+      router.push('/login');
     }
   };
 
   const fetchReports = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch("/api/reports/my-reports");
+      const response = await fetch('/api/reports/my-reports');
       if (!response.ok) {
-        throw new Error("Gagal mengambil data laporan");
+        throw new Error('Gagal mengambil data laporan');
       }
       const data = await response.json();
       setReports(data.reports || []);
@@ -116,281 +126,121 @@ export default function DashboardPage() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+    return date.toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
   };
 
-  const getTimelineSteps = (currentStatus: Report["status"]) => {
-    const steps = [
-      { status: "submitted" as const, label: "Dilaporkan" },
-      { status: "verified" as const, label: "Diverifikasi" },
-      { status: "dispatched" as const, label: "Unit Dikirim" },
-      { status: "arrived" as const, label: "Unit Tiba" },
-      { status: "completed" as const, label: "Selesai" },
-    ];
-
-    const statusOrder: Report["status"][] = ["submitted", "verified", "dispatched", "arrived", "completed"];
-    const currentIndex = statusOrder.indexOf(currentStatus);
-
-    if (currentStatus === "false") {
-      return [
-        { status: "submitted" as const, label: "Dilaporkan", active: true, completed: true },
-        { status: "false" as const, label: "Laporan Palsu", active: true, completed: true },
-      ];
-    }
-
-    return steps.map((step, index) => ({
-      ...step,
-      active: index === currentIndex,
-      completed: index < currentIndex,
-    }));
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout');
+    router.push('/login');
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link
-                href="/"
-                className="flex items-center gap-2 text-xl font-bold text-red-600 hover:text-red-700"
-              >
-                <FaArrowLeft size={20} />
-              </Link>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                  <FaFire className="text-red-600" />
-                  Dashboard Saya
-                </h1>
-                <p className="text-sm text-gray-600">
-                  {user?.phone || "Loading..."}
-                </p>
-              </div>
-            </div>
-            <Link
-              href="/report/new"
-              className="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors"
-            >
-              + Lapor Baru
-            </Link>
-          </div>
+    <div className="flex min-h-screen bg-gray-100">
+      {/* Sidebar */}
+      <aside className="w-64 bg-white shadow-lg flex flex-col">
+        <div className="flex items-center justify-center h-20 border-b">
+          <FaFire className="text-red-600 text-3xl" />
+          <span className="ml-2 text-2xl font-bold text-gray-800">FireGuard</span>
         </div>
-      </header>
+        <nav className="flex-1 px-4 py-6 space-y-2">
+          <Link href="/" className="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-200 rounded-lg">
+            <FaHome className="text-gray-600" />
+            <span className="ml-3">Landing Page</span>
+          </Link>
+          <Link href="/dashboard" className="flex items-center px-4 py-3 text-gray-700 bg-red-100 rounded-lg font-semibold">
+            <FaChartBar className="text-red-600" />
+            <span className="ml-3">Dashboard</span>
+          </Link>
+          <Link href="/report/new" className="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-200 rounded-lg">
+            <FaPlus className="text-gray-600" />
+            <span className="ml-3">Lapor Baru</span>
+          </Link>
+        </nav>
+        <div className="px-4 py-6 border-t">
+          <button onClick={handleLogout} className="flex items-center w-full px-4 py-3 text-gray-600 hover:bg-gray-200 rounded-lg">
+            <FaSignOutAlt />
+            <span className="ml-3">Logout</span>
+          </button>
+        </div>
+      </aside>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Laporan</p>
-                <p className="text-2xl font-bold text-gray-800">{reports.length}</p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <FaFire className="text-blue-600" size={24} />
-              </div>
-            </div>
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <header className="bg-white shadow-sm h-20 flex items-center justify-between px-8">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Dashboard Saya</h1>
+            <p className="text-sm text-gray-500">Selamat datang, {user?.phone || 'Pengguna'}</p>
+          </div>
+          <div className="flex items-center space-x-6">
+            <FaBell className="text-gray-500 h-6 w-6 cursor-pointer hover:text-red-600" />
+            <FaCog className="text-gray-500 h-6 w-6 cursor-pointer hover:text-red-600" />
+            <FaUserCircle className="text-gray-500 h-8 w-8 cursor-pointer hover:text-red-600" />
+          </div>
+        </header>
+
+        {/* Content Area */}
+        <main className="flex-1 p-8 overflow-y-auto">
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <StatCard title="Total Laporan" value={reports.length} icon={FaFileAlt} color="#3B82F6" bgColor="bg-blue-100" />
+            <StatCard title="Menunggu" value={reports.filter((r) => r.status === 'submitted').length} icon={FaClock} color="#F59E0B" bgColor="bg-yellow-100" />
+            <StatCard title="Dalam Proses" value={reports.filter((r) => ['verified', 'dispatched', 'arrived'].includes(r.status)).length} icon={FaTruck} color="#8B5CF6" bgColor="bg-purple-100" />
+            <StatCard title="Selesai" value={reports.filter((r) => r.status === 'completed').length} icon={FaCheckCircle} color="#10B981" bgColor="bg-green-100" />
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Menunggu</p>
-                <p className="text-2xl font-bold text-yellow-600">
-                  {reports.filter((r) => r.status === "submitted").length}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <FaClock className="text-yellow-600" size={24} />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Dalam Proses</p>
-                <p className="text-2xl font-bold text-purple-600">
-                  {reports.filter((r) => r.status === "verified" || r.status === "dispatched" || r.status === "arrived").length}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <FaTruck className="text-purple-600" size={24} />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Selesai</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {reports.filter((r) => r.status === "completed").length}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <FaCheckCircle className="text-green-600" size={24} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Reports List */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-800">Riwayat Laporan</h2>
-            <p className="text-sm text-gray-600 mt-1">
-              Semua laporan kebakaran yang Anda laporkan
-            </p>
-          </div>
-
-          <div className="p-6">
+          {/* Reports List */}
+          <div className="bg-white rounded-2xl shadow-lg p-8">
+            <h2 className="text-xl font-bold text-gray-800 mb-6">Riwayat Laporan Anda</h2>
             {isLoading ? (
-              <div className="text-center py-12">
+              <div className="text-center py-16">
                 <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
                 <p className="mt-4 text-gray-600">Memuat laporan...</p>
               </div>
             ) : error ? (
-              <div className="text-center py-12">
-                <FaExclamationCircle className="mx-auto text-red-600 mb-4" size={48} />
+              <div className="text-center py-16">
+                <FaExclamationCircle className="mx-auto text-red-500 mb-4 h-12 w-12" />
                 <p className="text-red-600 font-semibold">{error}</p>
               </div>
             ) : reports.length === 0 ? (
-              <div className="text-center py-12">
-                <FaFire className="mx-auto text-gray-400 mb-4" size={48} />
-                <p className="text-gray-600 font-semibold">Belum ada laporan</p>
-                <p className="text-gray-500 text-sm mt-2">
-                  Laporan yang Anda buat akan muncul di sini
-                </p>
-                <Link
-                  href="/report/new"
-                  className="inline-block mt-4 bg-red-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors"
-                >
+              <div className="text-center py-16">
+                <FaFire className="mx-auto text-gray-400 mb-4 h-12 w-12" />
+                <p className="text-gray-600 font-semibold text-lg">Anda belum memiliki laporan.</p>
+                <p className="text-gray-500 text-sm mt-2">Laporan yang Anda buat akan muncul di sini.</p>
+                <Link href="/report/new" className="inline-block mt-6 bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors shadow-md hover:shadow-lg">
                   Buat Laporan Pertama
                 </Link>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {reports.map((report) => {
                   const statusInfo = statusConfig[report.status];
                   const StatusIcon = statusInfo.icon;
-                  const timelineSteps = getTimelineSteps(report.status);
 
                   return (
                     <div
                       key={report.id}
-                      className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
+                      className="bg-gray-50 rounded-xl p-5 flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer border border-gray-200"
+                      onClick={() => router.push(`/dashboard/report/${report.id}`)}
                     >
-                      {/* Report Header */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <span
-                              className={`px-3 py-1 rounded-full text-xs font-semibold border ${statusInfo.color}`}
-                            >
-                              <StatusIcon className="inline mr-1" size={12} />
-                              {statusInfo.label}
-                            </span>
-                            <span className="text-sm text-gray-500">
-                              Laporan #{report.id}
-                            </span>
-                          </div>
-                          <div className="flex items-start gap-2 text-gray-600 mb-2">
-                            <FaMapMarkerAlt className="mt-1 flex-shrink-0" size={14} />
-                            <span className="text-sm">
-                              {report.location_name || `${report.latitude}, ${report.longitude}`}
-                            </span>
-                          </div>
-                          <p className="text-gray-700 text-sm">{report.description}</p>
+                      <div className="flex items-center gap-4">
+                        <div className={`p-3 rounded-full ${statusInfo.color}`}>
+                          <StatusIcon className="text-white h-5 w-5" />
                         </div>
-                        <button
-                          onClick={() => router.push(`/dashboard/report/${report.id}`)}
-                          className="ml-4 text-red-600 hover:text-red-700 font-semibold text-sm flex items-center gap-1"
-                        >
-                          <FaEye size={14} />
-                          Detail
-                        </button>
-                      </div>
-
-                      {/* Timeline Progress */}
-                      <div className="mb-4">
-                        <div className="flex items-center justify-between relative">
-                          {/* Progress Line */}
-                          <div className="absolute top-4 left-0 right-0 h-1 bg-gray-200 -z-10">
-                            <div
-                              className="h-full bg-red-600 transition-all duration-500"
-                              style={{
-                                width: `${
-                                  (timelineSteps.filter((s) => s.completed).length /
-                                    (timelineSteps.length - 1)) *
-                                  100
-                                }%`,
-                              }}
-                            ></div>
-                          </div>
-
-                          {/* Timeline Steps */}
-                          {timelineSteps.map((step, index) => (
-                            <div
-                              key={index}
-                              className="flex flex-col items-center flex-1 relative"
-                            >
-                              <div
-                                className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${
-                                  step.completed || step.active
-                                    ? "bg-red-600 border-red-600"
-                                    : "bg-white border-gray-300"
-                                }`}
-                              >
-                                {step.completed || step.active ? (
-                                  <FaCheckCircle className="text-white" size={16} />
-                                ) : (
-                                  <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-                                )}
-                              </div>
-                              <span
-                                className={`text-xs mt-2 text-center ${
-                                  step.completed || step.active
-                                    ? "text-gray-800 font-semibold"
-                                    : "text-gray-500"
-                                }`}
-                              >
-                                {step.label}
-                              </span>
-                            </div>
-                          ))}
+                        <div>
+                          <p className="font-bold text-gray-800">Laporan #{report.id}</p>
+                          <p className="text-sm text-gray-600 truncate max-w-xs">{report.description}</p>
                         </div>
                       </div>
-
-                      {/* Admin Notes */}
-                      {report.admin_notes && (
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                          <div className="flex items-start gap-2">
-                            <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                              <span className="text-white text-xs font-bold">A</span>
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-sm font-semibold text-blue-900 mb-1">
-                                Update dari Admin
-                              </p>
-                              <p className="text-sm text-blue-800">{report.admin_notes}</p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Timestamps */}
-                      <div className="flex items-center justify-between text-xs text-gray-500 pt-4 border-t border-gray-200">
-                        <span>Dilaporkan: {formatDate(report.created_at)}</span>
-                        <span>Update Terakhir: {formatDate(report.updated_at)}</span>
+                      <div className="text-right">
+                        <p className={`text-sm font-semibold ${statusInfo.color.replace('bg-', 'text-')}`}>{statusInfo.label}</p>
+                        <p className="text-xs text-gray-500">{formatDate(report.updated_at)}</p>
                       </div>
                     </div>
                   );
@@ -398,8 +248,8 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }
