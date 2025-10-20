@@ -18,6 +18,52 @@ const createEmojiIcon = (emoji: string, size: number) => {
 // Ikon kustom untuk pos damkar menggunakan emoji
 const fireStationIcon = createEmojiIcon('🚒', 30); // Emoji pemadam kebakaran, ukuran 30px
 
+// Ikon untuk lokasi kebakaran/laporan (dengan animasi pulse)
+const fireLocationIcon = new L.DivIcon({
+    html: `
+        <div style="position: relative; width: 40px; height: 40px;">
+            <div style="
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 30px;
+                height: 30px;
+                background-color: rgba(239, 68, 68, 0.3);
+                border-radius: 50%;
+                animation: pulse-fire 2s infinite;
+            "></div>
+            <div style="
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 32px;
+                text-align: center;
+                line-height: 32px;
+                filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+            ">🔥</div>
+        </div>
+        <style>
+            @keyframes pulse-fire {
+                0%, 100% {
+                    width: 30px;
+                    height: 30px;
+                    opacity: 1;
+                }
+                50% {
+                    width: 45px;
+                    height: 45px;
+                    opacity: 0.5;
+                }
+            }
+        </style>
+    `,
+    className: 'leaflet-fire-icon',
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+});
+
 // Komponen untuk mengubah view peta saat posisi berubah
 function ChangeView({ center }: { center: [number, number] }) {
   const map = useMap();
@@ -87,7 +133,7 @@ interface ReportMapProps {
 
 export default function ReportMap({ position, setPosition, onNearestStationFound }: ReportMapProps) {
   const defaultPosition: [number, number] = [-2.976, 104.775];
-  const [routeSummary, setRouteSummary] = useState<L.Routing.Summary | null>(null);
+  const [routeSummary, setRouteSummary] = useState<any>(null);
 
   const eventHandlers = useMemo(
     () => ({
@@ -101,7 +147,7 @@ export default function ReportMap({ position, setPosition, onNearestStationFound
     [setPosition],
   );
 
-  const nearestStation = useMemo(() => {
+  const nearestStation: FireStation | null = useMemo(() => {
     if (!position) return null;
     let closest: FireStation | null = null;
     let minDistance = Infinity;
@@ -118,10 +164,11 @@ export default function ReportMap({ position, setPosition, onNearestStationFound
 
   useEffect(() => {
     if (nearestStation && routeSummary && onNearestStationFound) {
+      const station = nearestStation as FireStation;
       onNearestStationFound({
-        name: nearestStation.name,
-        latitude: nearestStation.latitude,
-        longitude: nearestStation.longitude,
+        name: station.name,
+        latitude: station.latitude,
+        longitude: station.longitude,
         distance: routeSummary.totalDistance,
         time: routeSummary.totalTime,
       });
@@ -156,8 +203,21 @@ export default function ReportMap({ position, setPosition, onNearestStationFound
             position={position}
             draggable={isInteractive}
             eventHandlers={isInteractive ? eventHandlers : undefined}
+            icon={fireLocationIcon}
           >
-            <Popup>Lokasi Anda / Laporan</Popup>
+            <Popup>
+              <div className="text-center">
+                <p className="font-bold text-red-600">🔥 Lokasi Kebakaran</p>
+                <p className="text-xs text-gray-600 mt-1">
+                  {position[0].toFixed(6)}, {position[1].toFixed(6)}
+                </p>
+                {isInteractive && (
+                  <p className="text-xs text-gray-500 mt-1 italic">
+                    Seret marker untuk ubah lokasi
+                  </p>
+                )}
+              </div>
+            </Popup>
           </Marker>
           <ChangeView center={position} />
         </>      
@@ -166,7 +226,7 @@ export default function ReportMap({ position, setPosition, onNearestStationFound
       {position && nearestStation && (
         <RoutingMachine 
             start={position} 
-            end={[nearestStation.latitude, nearestStation.longitude]} 
+            end={[(nearestStation as FireStation).latitude, (nearestStation as FireStation).longitude]} 
             onRouteFound={setRouteSummary}
         />
       )}

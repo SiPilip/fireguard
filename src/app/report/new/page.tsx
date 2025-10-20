@@ -4,6 +4,10 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import type { NearestStationInfo } from "@/components/ReportMap";
+import { useModal } from "@/hooks/useModal";
+import { useToast } from "@/hooks/useToast";
+import Modal from "@/components/Modal";
+import Toast from "@/components/Toast";
 
 const MapWithNoSSR = dynamic(() => import("@/components/ReportMap"), {
   ssr: false,
@@ -32,8 +36,13 @@ function NearestStationInfoBox({ info }: { info: NearestStationInfo }) {
 
 export default function NewReportPage() {
   const router = useRouter();
+  const { modal, success, error: showError } = useModal();
+  const { toast, error: errorToast, hideToast } = useToast();
+  
   const [position, setPosition] = useState<[number, number] | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [description, setDescription] = useState("");
+  const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
   const [contact, setContact] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -81,6 +90,8 @@ export default function NewReportPage() {
     const formData = new FormData();
     formData.append("latitude", position[0].toString());
     formData.append("longitude", position[1].toString());
+    formData.append("description", description);
+    formData.append("address", address);
     formData.append("media", file);
     formData.append("notes", notes);
     formData.append("contact", contact);
@@ -94,17 +105,23 @@ export default function NewReportPage() {
       if (!response.ok) {
         const data = await response.json();
         if (response.status === 401) {
-          setError("Sesi Anda telah berakhir. Silakan login kembali.");
-          router.push('/login');
+          showError(
+            "Sesi Berakhir",
+            "Sesi Anda telah berakhir. Silakan login kembali.",
+            () => router.push('/login')
+          );
           return;
         }
         throw new Error(data.message || "Gagal mengirim laporan.");
       }
 
-      alert("Laporan berhasil dikirim! Terima kasih atas partisipasi Anda.");
-      router.push("/");
+      success(
+        "Laporan Berhasil Dikirim!",
+        "Terima kasih atas partisipasi Anda. Laporan Anda telah diterima dan akan segera ditindaklanjuti oleh petugas.",
+        () => router.push("/")
+      );
     } catch (err: any) {
-      setError(err.message);
+      errorToast(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -153,11 +170,42 @@ export default function NewReportPage() {
           </div>
 
           {/* Bagian Detail Laporan */}
+          <div className="space-y-6 mb-8">
+            <div>
+              <label htmlFor="description" className="mb-3 block text-xl font-semibold text-gray-800">
+                2. Deskripsi Kejadian
+              </label>
+              <textarea
+                id="description"
+                rows={3}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full p-3 border-2 border-gray-400 rounded-md shadow-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 placeholder-gray-500 text-base"
+                placeholder="Jelaskan kondisi kebakaran (tingkat keparahan, jenis bangunan, dll)"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="address" className="mb-3 block text-xl font-semibold text-gray-800">
+                3. Alamat/Patokan Lokasi
+              </label>
+              <input
+                type="text"
+                id="address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                className="w-full p-3 border-2 border-gray-400 rounded-md shadow-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 placeholder-gray-500 text-base"
+                placeholder="Contoh: Jl. Merdeka No. 123, dekat Alfamart"
+              />
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-6">
               <div>
                 <label htmlFor="media" className="mb-3 block text-xl font-semibold text-gray-800">
-                  2. Unggah Bukti
+                  4. Unggah Bukti
                 </label>
                 <input
                   type="file"
@@ -173,7 +221,7 @@ export default function NewReportPage() {
 
             <div className="space-y-6">
                 <label className="mb-3 block text-xl font-semibold text-gray-800">
-                  3. Beri Info Tambahan
+                  5. Info Tambahan
                 </label>
                 <div>
                     <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">Catatan Penting</label>
@@ -182,7 +230,7 @@ export default function NewReportPage() {
                         rows={3}
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                        className="w-full p-3 border-2 border-gray-400 rounded-md shadow-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 placeholder-gray-500 text-base"
                         placeholder="Contoh: Ada orang terjebak, api dekat tabung gas, akses jalan sempit"
                     />
                 </div>
@@ -193,7 +241,7 @@ export default function NewReportPage() {
                         id="contact"
                         value={contact}
                         onChange={(e) => setContact(e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                        className="w-full p-3 border-2 border-gray-400 rounded-md shadow-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 placeholder-gray-500 text-base"
                         placeholder="Nomor yang bisa dihubungi oleh petugas"
                     />
                 </div>
@@ -215,6 +263,28 @@ export default function NewReportPage() {
           </div>
         </form>
       </main>
+
+      {/* Modal */}
+      {modal.show && (
+        <Modal
+          type={modal.type}
+          title={modal.title}
+          message={modal.message}
+          onConfirm={modal.onConfirm}
+          onCancel={modal.onCancel}
+          confirmText={modal.confirmText}
+          cancelText={modal.cancelText}
+        />
+      )}
+
+      {/* Toast */}
+      {toast.show && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={hideToast}
+        />
+      )}
     </div>
   );
 }

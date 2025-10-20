@@ -204,7 +204,7 @@ export default function OperatorDashboard() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [isMonitorMode, setIsMonitorMode] = useState(false);
   const [wsStatus, setWsStatus] = useState("Connecting");
-  const alarmIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const alarmIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const ws = useRef<WebSocket | null>(null);
 
   const stopAlarm = useCallback(() => {
@@ -220,31 +220,8 @@ export default function OperatorDashboard() {
     alarmIntervalRef.current = setInterval(playWarningSound, 500);
   }, [stopAlarm]);
 
-  const acknowledgeReport = (reportId: number) => {
-    setReports((prev) =>
-      prev.map((r) => (r.id === reportId ? { ...r, acknowledged: true } : r))
-    );
-  };
-
   const handleSelectReport = (report: Report) => {
     router.push(`/operator/dashboard/${report.id}`);
-  };
-
-  const handleUpdateStatus = async (reportId: number, newStatus: string) => {
-    try {
-      const response = await fetch(`/api/operator/reports/${reportId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
-      });
-      if (!response.ok) throw new Error("Gagal update status");
-      setReports((prev) =>
-        prev.map((r) => (r.id === reportId ? { ...r, status: newStatus } : r))
-      );
-    } catch (error) {
-      console.error("Error updating status:", error);
-      alert("Gagal memperbarui status laporan.");
-    }
   };
 
   const fetchReports = useCallback(async () => {
@@ -276,7 +253,7 @@ export default function OperatorDashboard() {
   }, [reports, isMonitorMode, startAlarm, stopAlarm]);
 
   useEffect(() => {
-    let reconnectionTimer: NodeJS.Timeout;
+    let reconnectionTimer: ReturnType<typeof setTimeout>;
 
     const connect = () => {
       const wsProtocol = window.location.protocol === "https" ? "wss" : "ws";

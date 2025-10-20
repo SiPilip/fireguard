@@ -5,26 +5,61 @@ import 'dotenv/config'; // Untuk memuat variabel dari .env saat menjalankan loka
 const SALT_ROUNDS = 10;
 
 async function setup() {
-  if (!process.env.TURSO_DATABASE_URL || !process.env.TURSO_AUTH_TOKEN) {
-    throw new Error('TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables must be set.');
+  let db;
+
+  if (process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN) {
+    // Gunakan Turso untuk production
+    db = createClient({
+      url: process.env.TURSO_DATABASE_URL,
+      authToken: process.env.TURSO_AUTH_TOKEN,
+    });
+    console.log('Running database setup script on Turso...');
+  } else {
+    // Gunakan SQLite local untuk development
+    db = createClient({
+      url: 'file:local.db'
+    });
+    console.log('Running database setup script on local SQLite...');
   }
-
-  const db = createClient({
-    url: process.env.TURSO_DATABASE_URL,
-    authToken: process.env.TURSO_AUTH_TOKEN,
-  });
-
-  console.log('Running database setup script on Turso...');
 
   const schema = [
     `DROP TABLE IF EXISTS reports;`,
     `DROP TABLE IF EXISTS operators;`,
     `DROP TABLE IF EXISTS users;`,
     `DROP TABLE IF EXISTS otp_attempts;`,
-    `CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, phone_number TEXT NOT NULL UNIQUE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`,
-    `CREATE TABLE operators (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`,
-    `CREATE TABLE reports (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, latitude REAL NOT NULL, longitude REAL NOT NULL, address TEXT, media_url TEXT, status TEXT NOT NULL DEFAULT 'submitted', notes TEXT, contact TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (user_id) REFERENCES users (id));`,
-    `CREATE TABLE otp_attempts (id INTEGER PRIMARY KEY AUTOINCREMENT, phone_number TEXT NOT NULL, otp_hash TEXT NOT NULL, expires_at TIMESTAMP NOT NULL);`
+    `CREATE TABLE users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, 
+      phone_number TEXT NOT NULL UNIQUE, 
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );`,
+    `CREATE TABLE operators (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, 
+      username TEXT NOT NULL UNIQUE, 
+      password_hash TEXT NOT NULL, 
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );`,
+    `CREATE TABLE reports (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, 
+      user_id INTEGER, 
+      latitude REAL NOT NULL, 
+      longitude REAL NOT NULL, 
+      description TEXT,
+      address TEXT, 
+      media_url TEXT, 
+      status TEXT NOT NULL DEFAULT 'pending',
+      admin_notes TEXT,
+      notes TEXT, 
+      contact TEXT, 
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users (id)
+    );`,
+    `CREATE TABLE otp_attempts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, 
+      phone_number TEXT NOT NULL, 
+      otp_hash TEXT NOT NULL, 
+      expires_at TIMESTAMP NOT NULL
+    );`
   ];
 
   try {

@@ -9,9 +9,15 @@ import { fireStations } from '@/lib/fire-stations';
 // Definisikan tipe untuk Laporan
 interface Report {
   id: number;
+  phone_number: string;
   latitude: number;
   longitude: number;
   status: string;
+  created_at: string;
+  media_url: string;
+  notes?: string;
+  contact?: string;
+  acknowledged?: boolean;
 }
 
 // Ikon untuk Pos Damkar

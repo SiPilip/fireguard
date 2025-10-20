@@ -43,9 +43,8 @@ function VerifyPageContent() {
         throw new Error(data.message || "Gagal memverifikasi OTP.");
       }
 
-      // Jika berhasil, arahkan ke halaman utama (dashboard)
-      // Untuk sekarang, kita arahkan ke halaman root
-      router.replace("/");
+      // Redirect ke home page dan refresh untuk update navbar
+      window.location.href = "/";
     } catch (err: any) {
       setError(err.message);
     } finally {

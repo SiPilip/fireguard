@@ -1,15 +1,21 @@
-import { createClient } from '@libsql/client';
+import { createClient, type Client } from '@libsql/client';
 
-// Pastikan environment variables sudah di-set di Vercel atau di file .env.local
-if (!process.env.TURSO_DATABASE_URL || !process.env.TURSO_AUTH_TOKEN) {
-  throw new Error('TURSO_DATABASE_URL and TURSO_AUTH_TOKEN must be set');
+// Konfigurasi klien database dengan fallback ke SQLite local untuk development
+let db: Client;
+
+if (process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN) {
+  // Gunakan Turso untuk production
+  db = createClient({
+    url: process.env.TURSO_DATABASE_URL,
+    authToken: process.env.TURSO_AUTH_TOKEN,
+  });
+} else {
+  // Gunakan SQLite local untuk development
+  console.log('Using local SQLite database for development');
+  db = createClient({
+    url: 'file:local.db'
+  });
 }
-
-// Konfigurasi klien database Turso.
-const db = createClient({
-  url: process.env.TURSO_DATABASE_URL,
-  authToken: process.env.TURSO_AUTH_TOKEN,
-});
 
 // Fungsi untuk mengeksekusi query SELECT yang mengembalikan banyak baris
 export async function queryRows<T>(sql: string, args?: any[]): Promise<T[]> {

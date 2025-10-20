@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -11,6 +11,9 @@ import {
   FaMobileAlt,
   FaPhone,
   FaRoute,
+  FaUser,
+  FaChevronDown,
+  FaSignOutAlt,
 } from "react-icons/fa";
 
 // Komponen untuk Halaman Landing FireGuard
@@ -18,18 +21,48 @@ import {
 const Navbar = () => {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState<{ phone?: string; id?: number } | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Cek cookie di sisi client untuk menentukan status login
-    const token = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("auth_token="));
-    setIsLoggedIn(!!token);
+    // Cek status login dengan memanggil API /auth/me
+    const checkAuth = async () => {
+      try {
+        const response = await fetch("/api/auth/me");
+        if (response.ok) {
+          const userData = await response.json();
+          setIsLoggedIn(true);
+          setUser(userData);
+        } else {
+          setIsLoggedIn(false);
+          setUser(null);
+        }
+      } catch {
+        setIsLoggedIn(false);
+        setUser(null);
+      }
+    };
+    checkAuth();
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     setIsLoggedIn(false);
+    setUser(null);
+    setDropdownOpen(false);
     router.push("/"); // Refresh halaman
   };
 
@@ -60,18 +93,48 @@ const Navbar = () => {
         <div className="hidden md:flex items-center gap-4">
           {isLoggedIn ? (
             <>
-              <button
-                onClick={() => router.push("/dashboard")}
-                className="font-semibold text-gray-600 hover:text-red-600"
-              >
-                Dashboard
-              </button>
-              <button
-                onClick={handleLogout}
-                className="font-semibold text-gray-600 hover:text-red-600"
-              >
-                Logout
-              </button>
+              {/* Profile Dropdown */}
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="flex items-center gap-2 font-semibold text-gray-700 hover:text-red-600 transition-colors"
+                >
+                  <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center text-white">
+                    <FaUser size={14} />
+                  </div>
+                  <span>{user?.phone || "User"}</span>
+                  <FaChevronDown
+                    size={12}
+                    className={`transition-transform ${
+                      dropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {/* Dropdown Menu */}
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                    <button
+                      onClick={() => {
+                        setDropdownOpen(false);
+                        router.push("/dashboard");
+                      }}
+                      className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 flex items-center gap-2 transition-colors"
+                    >
+                      <FaUser size={14} />
+                      <span>Dashboard</span>
+                    </button>
+                    <hr className="my-2 border-gray-200" />
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                    >
+                      <FaSignOutAlt size={14} />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </>
           ) : (
             <button

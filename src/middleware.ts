@@ -11,12 +11,14 @@ export async function middleware(request: NextRequest) {
   const secret = new TextEncoder().encode(JWT_SECRET);
 
   // Halaman publik yang tidak memerlukan login
-  const publicPaths = ["/", "/login", "/login/verify", "/operator/login"];
+  const publicPaths = ["/", "/login", "/login/verify", "/operator/login", "/report/new"];
 
-  // Izinkan akses ke API, file Next.js, dan halaman publik
+  // Izinkan akses ke API, file Next.js, static files, dan halaman publik
   if (
     pathname.startsWith("/api") ||
     pathname.startsWith("/_next") ||
+    pathname.startsWith("/static") ||
+    pathname.includes(".") || // File dengan extension (.js, .css, .png, dll)
     publicPaths.includes(pathname)
   ) {
     return NextResponse.next();
@@ -53,8 +55,9 @@ export async function middleware(request: NextRequest) {
     } else {
       return NextResponse.next(); // Akses diizinkan untuk pengguna biasa
     }
-  } catch (error) {
+  } catch (err) {
     // Jika token tidak valid, hapus dan redirect ke login
+    console.error('[Middleware] Token verification failed:', err);
     const url = request.nextUrl.clone();
     url.pathname = pathname.startsWith("/operator")
       ? "/operator/login"
