@@ -84,20 +84,20 @@ export async function PATCH(
       );
     }
 
-    const result = await execute(
+    const rowsAffected = await execute(
       "UPDATE reports SET status = ? WHERE id = ?",
       [newStatus, reportId]
     );
 
-    if (result.affectedRows === 0) {
+    if (rowsAffected === 0) {
       return NextResponse.json(
         { message: `Laporan dengan ID ${reportId} tidak ditemukan.` },
         { status: 404 }
       );
     }
 
-    // Kirim notifikasi WhatsApp jika status diubah menjadi "dispatched"
-    if (newStatus === 'dispatched') {
+    // Kirim notifikasi WhatsApp berdasarkan status
+    if (newStatus === 'verified' || newStatus === 'dispatched' || newStatus === 'completed' || newStatus === 'false') {
       const report = await queryRow<{ user_id: number; latitude: number; longitude: number }>(
         'SELECT user_id, latitude, longitude FROM reports WHERE id = ?',
         [reportId]
@@ -110,13 +110,35 @@ export async function PATCH(
         );
 
         if (user && user.phone_number) {
-          // Dapatkan alamat dan ETA secara bersamaan
-          const [address, etaResult] = await Promise.all([
-            getAddressFromCoordinates(report.latitude, report.longitude),
-            calculateETA(report.latitude, report.longitude)
-          ]);
+          let message = '';
 
-          const message = 
+          if (newStatus === 'verified') {
+            const address = await getAddressFromCoordinates(report.latitude, report.longitude);
+            
+            message = 
+`*[FireGuard]*
+
+✓ Laporan Anda *#${reportId}* sedang dalam *PROSES VERIFIKASI*.
+
+*Alamat Terdeteksi:*
+${address}
+
+Tim operator sedang memverifikasi laporan Anda. Mohon tetap waspada dan amankan diri Anda.
+
+Unit pemadam kebakaran akan segera dikirim jika laporan terverifikasi.
+
+Pantau terus notifikasi untuk update selanjutnya.
+
+> _Sent via fonnte.com_`;
+          }
+          else if (newStatus === 'dispatched') {
+            // Dapatkan alamat dan ETA secara bersamaan
+            const [address, etaResult] = await Promise.all([
+              getAddressFromCoordinates(report.latitude, report.longitude),
+              calculateETA(report.latitude, report.longitude)
+            ]);
+
+            message = 
 `*[FireGuard]*
 
 Laporan Anda *#${reportId}* telah diverifikasi.
@@ -130,9 +152,56 @@ ${address}
 *${etaResult.etaMinutes} menit* (jarak sekitar ${etaResult.distanceKm} km).
 
 Harap tetap tenang dan amankan diri Anda.`;
+          } 
+          else if (newStatus === 'completed') {
+            const address = await getAddressFromCoordinates(report.latitude, report.longitude);
+            
+            message = 
+`*[FireGuard]*
 
-          // Kirim di latar belakang
-          sendWhatsAppMessage(user.phone_number, message);
+✅ Laporan Anda *#${reportId}* telah *SELESAI* ditangani.
+
+*Alamat Lokasi:*
+${address}
+
+Terima kasih telah menggunakan layanan FireGuard. Kebakaran telah berhasil dipadamkan dan situasi sudah aman.
+
+Jika ada kerusakan atau memerlukan bantuan lebih lanjut, silakan hubungi:
+- Hotline Damkar: *113*
+- Email: damkar@palembang.go.id
+
+Harap tetap waspada dan pastikan tidak ada titik api yang tersisa.
+
+> _Sent via fonnte.com_`;
+          } 
+          else if (newStatus === 'false') {
+            const address = await getAddressFromCoordinates(report.latitude, report.longitude);
+            
+            message = 
+`*[FireGuard]*
+
+❌ Laporan Anda *#${reportId}* telah diverifikasi sebagai *LAPORAN PALSU*.
+
+*Alamat Terdeteksi:*
+${address}
+
+Setelah pengecekan tim, *tidak ditemukan indikasi kebakaran* di lokasi yang dilaporkan.
+
+⚠️ *PERINGATAN PENTING*:
+Laporan palsu dapat:
+- Menghambat penanganan darurat yang sesungguhnya
+- Membuang sumber daya pemadam kebakaran
+- Merugikan masyarakat yang membutuhkan bantuan nyata
+
+Mohon gunakan layanan darurat dengan bijak dan bertanggung jawab.
+
+> _Sent via fonnte.com_`;
+          }
+
+          // Kirim di latar belakang jika ada pesan
+          if (message) {
+            sendWhatsAppMessage(user.phone_number, message);
+          }
         }
       }
     }

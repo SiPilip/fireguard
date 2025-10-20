@@ -21,6 +21,9 @@ import {
   FaQuestionCircle,
   FaPhone,
 } from "react-icons/fa";
+import ReportDetailModal from "@/components/ReportDetailModal";
+import { useToast } from "@/hooks/useToast";
+import Toast from "@/components/Toast";
 
 // Tipe data untuk laporan
 interface Report {
@@ -220,8 +223,44 @@ export default function OperatorDashboard() {
     alarmIntervalRef.current = setInterval(playWarningSound, 500);
   }, [stopAlarm]);
 
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const { toast, success, error, hideToast } = useToast();
+
   const handleSelectReport = (report: Report) => {
-    router.push(`/operator/dashboard/${report.id}`);
+    setSelectedReport(report);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedReport(null);
+  };
+
+  const handleUpdateStatus = async (reportId: number, newStatus: string) => {
+    try {
+      const response = await fetch(`/api/operator/reports/${reportId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      
+      if (!response.ok) throw new Error("Gagal update status");
+      
+      // Update report di state
+      setReports((prev) =>
+        prev.map((r) =>
+          r.id === reportId ? { ...r, status: newStatus } : r
+        )
+      );
+
+      // Update selected report jika masih dibuka
+      if (selectedReport && selectedReport.id === reportId) {
+        setSelectedReport({ ...selectedReport, status: newStatus });
+      }
+
+      success("Status laporan berhasil diperbarui!");
+    } catch (err) {
+      console.error("Error updating status:", err);
+      error("Gagal memperbarui status laporan.");
+    }
   };
 
   const fetchReports = useCallback(async () => {
@@ -330,10 +369,10 @@ export default function OperatorDashboard() {
         });
         if (!response.ok) throw new Error("Gagal menghapus laporan.");
         setReports([]);
-        alert("Semua laporan berhasil dihapus.");
-      } catch (error) {
-        console.error("Error deleting all reports:", error);
-        alert("Gagal menghapus semua laporan.");
+        success("Semua laporan berhasil dihapus.");
+      } catch (err) {
+        console.error("Error deleting all reports:", err);
+        error("Gagal menghapus semua laporan.");
       }
     }
   };
@@ -349,8 +388,19 @@ export default function OperatorDashboard() {
   ).length;
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white font-sans flex flex-col">
-      <header className="bg-gray-800 border-b border-gray-700 shadow-md sticky top-0 z-40">
+    <>
+      {toast.show && <Toast {...toast} onClose={hideToast} />}
+      
+      {selectedReport && (
+        <ReportDetailModal
+          report={selectedReport}
+          onClose={handleCloseModal}
+          onUpdateStatus={handleUpdateStatus}
+        />
+      )}
+
+      <div className="min-h-screen bg-gray-900 text-white font-sans flex flex-col">
+        <header className="bg-gray-800 border-b border-gray-700 shadow-md sticky top-0 z-40">
         <div className="container mx-auto px-6 py-3 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <FaFire className="text-red-500 text-2xl" />
@@ -488,6 +538,7 @@ export default function OperatorDashboard() {
           </section>
         </div>
       </main>
-    </div>
+      </div>
+    </>
   );
 }
