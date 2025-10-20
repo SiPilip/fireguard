@@ -20,7 +20,7 @@ interface Report {
   latitude: number;
   longitude: number;
   description: string;
-  status: "pending" | "verified" | "on_the_way" | "resolved" | "rejected";
+  status: "submitted" | "verified" | "dispatched" | "arrived" | "completed" | "false";
   created_at: string;
   updated_at: string;
   admin_notes?: string;
@@ -33,7 +33,7 @@ interface User {
 }
 
 const statusConfig = {
-  pending: {
+  submitted: {
     label: "Menunggu Verifikasi",
     color: "bg-yellow-100 text-yellow-800 border-yellow-300",
     icon: FaClock,
@@ -45,20 +45,26 @@ const statusConfig = {
     icon: FaCheckCircle,
     iconColor: "text-blue-600",
   },
-  on_the_way: {
-    label: "Petugas Dalam Perjalanan",
+  dispatched: {
+    label: "Unit Dalam Perjalanan",
     color: "bg-purple-100 text-purple-800 border-purple-300",
     icon: FaTruck,
     iconColor: "text-purple-600",
   },
-  resolved: {
+  arrived: {
+    label: "Unit Telah Tiba",
+    color: "bg-indigo-100 text-indigo-800 border-indigo-300",
+    icon: FaCheckCircle,
+    iconColor: "text-indigo-600",
+  },
+  completed: {
     label: "Selesai",
     color: "bg-green-100 text-green-800 border-green-300",
     icon: FaCheckCircle,
     iconColor: "text-green-600",
   },
-  rejected: {
-    label: "Ditolak",
+  false: {
+    label: "Laporan Palsu",
     color: "bg-red-100 text-red-800 border-red-300",
     icon: FaTimesCircle,
     iconColor: "text-red-600",
@@ -121,19 +127,20 @@ export default function DashboardPage() {
 
   const getTimelineSteps = (currentStatus: Report["status"]) => {
     const steps = [
-      { status: "pending", label: "Dilaporkan" },
-      { status: "verified", label: "Diverifikasi" },
-      { status: "on_the_way", label: "Dalam Perjalanan" },
-      { status: "resolved", label: "Selesai" },
+      { status: "submitted" as const, label: "Dilaporkan" },
+      { status: "verified" as const, label: "Diverifikasi" },
+      { status: "dispatched" as const, label: "Unit Dikirim" },
+      { status: "arrived" as const, label: "Unit Tiba" },
+      { status: "completed" as const, label: "Selesai" },
     ];
 
-    const statusOrder = ["pending", "verified", "on_the_way", "resolved"];
+    const statusOrder: Report["status"][] = ["submitted", "verified", "dispatched", "arrived", "completed"];
     const currentIndex = statusOrder.indexOf(currentStatus);
 
-    if (currentStatus === "rejected") {
+    if (currentStatus === "false") {
       return [
-        { status: "pending", label: "Dilaporkan", active: true, completed: true },
-        { status: "rejected", label: "Ditolak", active: true, completed: true },
+        { status: "submitted" as const, label: "Dilaporkan", active: true, completed: true },
+        { status: "false" as const, label: "Laporan Palsu", active: true, completed: true },
       ];
     }
 
@@ -198,7 +205,7 @@ export default function DashboardPage() {
               <div>
                 <p className="text-sm text-gray-600">Menunggu</p>
                 <p className="text-2xl font-bold text-yellow-600">
-                  {reports.filter((r) => r.status === "pending").length}
+                  {reports.filter((r) => r.status === "submitted").length}
                 </p>
               </div>
               <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
@@ -212,7 +219,7 @@ export default function DashboardPage() {
               <div>
                 <p className="text-sm text-gray-600">Dalam Proses</p>
                 <p className="text-2xl font-bold text-purple-600">
-                  {reports.filter((r) => r.status === "verified" || r.status === "on_the_way").length}
+                  {reports.filter((r) => r.status === "verified" || r.status === "dispatched" || r.status === "arrived").length}
                 </p>
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -226,7 +233,7 @@ export default function DashboardPage() {
               <div>
                 <p className="text-sm text-gray-600">Selesai</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {reports.filter((r) => r.status === "resolved").length}
+                  {reports.filter((r) => r.status === "completed").length}
                 </p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
