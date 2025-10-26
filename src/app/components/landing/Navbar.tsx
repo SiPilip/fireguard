@@ -3,13 +3,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { FaFire, FaUser, FaChevronDown, FaSignOutAlt } from 'react-icons/fa';
+import { FaFire, FaUser, FaChevronDown, FaSignOutAlt, FaBars, FaTimes } from 'react-icons/fa';
 
 const Navbar = () => {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<{ phone?: string; id?: number } | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [scrolled, setScrolled] = useState(false);
 
@@ -75,6 +76,19 @@ const Navbar = () => {
           <Link href="#contact" className={`${scrolled ? 'text-gray-700 hover:text-gray-900' : 'text-white/90 hover:text-white'} font-medium transition-colors`}>Kontak</Link>
           <Link href="/operator/login" className={`${scrolled ? 'text-gray-700 hover:text-gray-900' : 'text-white/90 hover:text-white'} font-medium transition-colors`}>Operator</Link>
         </div>
+        {/* Mobile Menu Button */}
+        <button 
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="md:hidden p-2 rounded-xl transition-colors hover:bg-white/10"
+        >
+          {mobileMenuOpen ? (
+            <FaTimes className={`text-xl ${scrolled ? 'text-gray-900' : 'text-white'}`} />
+          ) : (
+            <FaBars className={`text-xl ${scrolled ? 'text-gray-900' : 'text-white'}`} />
+          )}
+        </button>
+
+        {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-3">
           {isLoggedIn ? (
             <div className="relative" ref={dropdownRef}>
@@ -111,6 +125,74 @@ const Navbar = () => {
           </button>
         </div>
       </div>
+
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden bg-white border-t border-gray-200/60 shadow-lg">
+          <div className="px-6 py-4 space-y-3">
+            <Link 
+              href="#features" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="block py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+            >
+              Fitur
+            </Link>
+            <Link 
+              href="#stations" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="block py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+            >
+              Lokasi Pos
+            </Link>
+            <Link 
+              href="#contact" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="block py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+            >
+              Kontak
+            </Link>
+            <Link 
+              href="/operator/login" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="block py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+            >
+              Operator
+            </Link>
+            <hr className="border-gray-200" />
+            {isLoggedIn ? (
+              <>
+                <button 
+                  onClick={() => { setMobileMenuOpen(false); router.push('/dashboard'); }}
+                  className="w-full text-left py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors flex items-center gap-2"
+                >
+                  <FaUser size={14} />
+                  <span>Dashboard ({user?.phone})</span>
+                </button>
+                <button 
+                  onClick={() => { setMobileMenuOpen(false); handleLogout(); }}
+                  className="w-full text-left py-2 text-sm font-medium text-red-600 hover:text-red-700 transition-colors flex items-center gap-2"
+                >
+                  <FaSignOutAlt size={14} />
+                  <span>Logout</span>
+                </button>
+              </>
+            ) : (
+              <button 
+                onClick={() => { setMobileMenuOpen(false); router.push('/login'); }}
+                className="w-full text-left py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+              >
+                Login
+              </button>
+            )}
+            <button 
+              onClick={() => { setMobileMenuOpen(false); router.push('/report/new'); }}
+              className="w-full bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white px-5 py-3 rounded-xl font-semibold text-sm transition-all shadow-lg shadow-red-500/25"
+            >
+              Lapor Darurat
+            </button>
+          </div>
+        </div>
+      )}
     </nav>
   );
 };

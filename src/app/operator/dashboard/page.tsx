@@ -60,14 +60,14 @@ const StatCard = ({
   value: string;
   color: string;
 }) => (
-  <div className="bg-white rounded-xl p-5 flex items-center gap-4 border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-200">
+  <div className="bg-white rounded-xl p-3 md:p-5 flex flex-col md:flex-row items-center md:gap-4 gap-2 border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-200">
     <div
-      className={`w-11 h-11 rounded-lg flex items-center justify-center text-white text-lg ${color} shadow-sm`}
+      className={`w-10 h-10 md:w-11 md:h-11 rounded-lg flex items-center justify-center text-white text-base md:text-lg ${color} shadow-sm`}
     >
       {icon}
     </div>
-    <div>
-      <h3 className="text-2xl font-semibold text-gray-900">{value}</h3>
+    <div className="text-center md:text-left">
+      <h3 className="text-xl md:text-2xl font-semibold text-gray-900">{value}</h3>
       <p className="text-xs text-gray-500 mt-0.5">{title}</p>
     </div>
   </div>
@@ -401,18 +401,18 @@ export default function OperatorDashboard() {
 
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans flex flex-col">
         <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/60 shadow-sm sticky top-0 z-40">
-        <div className="max-w-[1600px] mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-br from-red-500 to-orange-600 p-2.5 rounded-xl shadow-sm">
-                <FaFire className="text-white text-lg" />
+        <div className="max-w-[1600px] mx-auto px-4 md:px-6 py-3 md:py-4 flex justify-between items-center">
+          <div className="flex items-center gap-2 md:gap-4">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="bg-gradient-to-br from-red-500 to-orange-600 p-2 md:p-2.5 rounded-xl shadow-sm">
+                <FaFire className="text-white text-base md:text-lg" />
               </div>
               <div>
-                <h1 className="text-lg font-semibold text-gray-900">FireGuard Admin</h1>
-                <p className="text-xs text-gray-500">Dashboard Operator</p>
+                <h1 className="text-sm md:text-lg font-semibold text-gray-900">FireGuard Admin</h1>
+                <p className="text-xs text-gray-500 hidden md:block">Dashboard Operator</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 ml-2 px-3 py-1.5 bg-gray-100 rounded-lg">
+            <div className="hidden sm:flex items-center gap-2 px-2 md:px-3 py-1.5 bg-gray-100 rounded-lg">
               <span
                 className={`w-2 h-2 rounded-full ${
                   wsStatus === "Connected"
@@ -425,8 +425,8 @@ export default function OperatorDashboard() {
               <span className="text-xs font-medium text-gray-600">{wsStatus}</span>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2.5 px-3 py-2 bg-gray-100 rounded-xl">
+          <div className="flex items-center gap-2 md:gap-4">
+            <div className="hidden md:flex items-center gap-2.5 px-3 py-2 bg-gray-100 rounded-xl">
               <span className="text-xs font-medium text-gray-700">Mode Pantau</span>
               <button
                 onClick={() => setIsMonitorMode(!isMonitorMode)}
@@ -441,14 +441,14 @@ export default function OperatorDashboard() {
                 />
               </button>
             </div>
-            <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-xl">
+            <div className="hidden lg:flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-xl">
               <FaUserShield className="text-gray-600 text-sm" />
               <span className="text-xs font-medium text-gray-700">Operator Damkar</span>
             </div>
             <button
               onClick={handleLogout}
               title="Logout"
-              className="bg-red-500 hover:bg-red-600 p-2.5 rounded-xl transition-colors shadow-sm"
+              className="bg-red-500 hover:bg-red-600 p-2 md:p-2.5 rounded-xl transition-colors shadow-sm"
             >
               <FaSignOutAlt className="text-white text-sm" />
             </button>
@@ -456,8 +456,8 @@ export default function OperatorDashboard() {
         </div>
       </header>
 
-      <main className="max-w-[1600px] mx-auto p-6 flex-grow">
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+      <main className="max-w-[1600px] mx-auto p-4 md:p-6 flex-grow">
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 mb-4 md:mb-6">
           <StatCard
             icon={<FaFire />}
             title="Laporan Aktif"
@@ -484,8 +484,8 @@ export default function OperatorDashboard() {
           />
         </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 h-full min-h-[70vh]">
-          <section className="lg:col-span-2 bg-white border border-gray-200/60 rounded-2xl shadow-sm flex flex-col overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-5 h-full min-h-[70vh]">
+          <section className="lg:col-span-2 bg-white border border-gray-200/60 rounded-xl md:rounded-2xl shadow-sm flex flex-col overflow-hidden order-2 lg:order-1">
             <div className="px-5 py-4 border-b border-gray-200/60 flex justify-between items-center flex-shrink-0 bg-gray-50/50">
               <div className="flex items-center gap-2">
                 <div className="w-1 h-5 bg-gradient-to-b from-red-500 to-orange-500 rounded-full"></div>
@@ -545,7 +545,7 @@ export default function OperatorDashboard() {
             </div>
           </section>
 
-          <section className="lg:col-span-3 bg-white border border-gray-200/60 rounded-2xl shadow-sm flex flex-col overflow-hidden">
+          <section className="lg:col-span-3 bg-white border border-gray-200/60 rounded-xl md:rounded-2xl shadow-sm overflow-hidden flex flex-col order-1 lg:order-2 min-h-[400px] md:min-h-[500px]">
             <div className="px-5 py-4 border-b border-gray-200/60 flex justify-between items-center flex-shrink-0 bg-gray-50/50">
               <div className="flex items-center gap-2">
                 <div className="w-1 h-5 bg-gradient-to-b from-red-500 to-orange-500 rounded-full"></div>

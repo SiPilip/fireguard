@@ -68,7 +68,7 @@ const Stations = () => {
   const [selectedStation, setSelectedStation] = useState<any>(null);
 
   return (
-    <section id="stations" className="py-20 bg-white">
+    <section id="stations" className="py-20 bg-white scroll-mt-20">
       <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-14">
@@ -97,20 +97,22 @@ const Stations = () => {
 
           {/* Station List */}
           <div className="lg:col-span-1">
-            <div className="bg-gray-50 rounded-2xl p-5 h-[500px] overflow-y-auto">
-              <h3 className="text-base font-semibold text-gray-900 mb-4 sticky top-0 bg-gray-50 pb-2">
+            <div className="bg-gray-50 rounded-2xl h-[500px] overflow-y-auto">
+              <h3 className="text-base font-semibold text-gray-900 sticky top-0 bg-gray-50 py-5 px-5 z-10 -mt-0">
                 Daftar Pos Damkar ({fireStations.length})
               </h3>
-              <div className="space-y-3">
-                {fireStations.map((station, index) => (
-                  <div
-                    key={station.name}
-                    onClick={() => setSelectedStation(station)}
-                    className="cursor-pointer"
-                  >
-                    <StationCard station={station} index={index} />
-                  </div>
-                ))}
+              <div className="px-5 pb-5">
+                <div className="space-y-3">
+                  {fireStations.map((station, index) => (
+                    <div
+                      key={station.name}
+                      onClick={() => setSelectedStation(station)}
+                      className="cursor-pointer"
+                    >
+                      <StationCard station={station} index={index} />
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
