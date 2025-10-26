@@ -34,32 +34,38 @@ function NearestStationInfoBox({ info }: { info: NearestStationInfo }) {
   const timeInMinutes = Math.round(info.time / 60);
 
   return (
-    <div className="mt-4 rounded-lg bg-amber-50 border border-amber-300 p-4">
-      <div className="flex items-center gap-3 mb-3">
-        <FaFireExtinguisher className="text-amber-600 text-lg" />
-        <h3 className="text-md font-bold text-amber-900">Pos Damkar Terdekat</h3>
+    <div className="mt-5 rounded-xl bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200/60 p-5 shadow-sm">
+      <div className="flex items-center gap-2.5 mb-4">
+        <div className="p-2 bg-orange-100 rounded-lg">
+          <FaFireExtinguisher className="text-orange-600 text-base" />
+        </div>
+        <h3 className="text-sm font-semibold text-gray-800">Pos Damkar Terdekat</h3>
       </div>
-      <div className="space-y-2">
-        <div className="flex items-start gap-3">
-          <FaMapMarkerAlt className="text-amber-600 mt-1 flex-shrink-0" />
-          <div>
-            <p className="text-xs text-amber-700">Nama Pos</p>
-            <p className="text-sm font-semibold text-gray-800">{info.name}</p>
+      <div className="space-y-3">
+        <div className="flex items-start gap-3 pb-3 border-b border-orange-200/50">
+          <FaMapMarkerAlt className="text-orange-500 mt-0.5 flex-shrink-0 text-sm" />
+          <div className="flex-1">
+            <p className="text-xs text-gray-500 mb-0.5">Nama Pos</p>
+            <p className="text-sm font-medium text-gray-900">{info.name}</p>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="flex items-start gap-2">
-            <FaRoad className="text-amber-600 mt-1 flex-shrink-0 text-sm" />
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex items-start gap-2.5">
+            <div className="p-1.5 bg-orange-100 rounded-md">
+              <FaRoad className="text-orange-600 text-xs" />
+            </div>
             <div>
-              <p className="text-xs text-amber-700">Jarak</p>
-              <p className="text-sm font-bold text-gray-800">{distanceInKm} km</p>
+              <p className="text-xs text-gray-500">Jarak</p>
+              <p className="text-base font-semibold text-gray-900">{distanceInKm} km</p>
             </div>
           </div>
-          <div className="flex items-start gap-2">
-            <FaClock className="text-amber-600 mt-1 flex-shrink-0 text-sm" />
+          <div className="flex items-start gap-2.5">
+            <div className="p-1.5 bg-orange-100 rounded-md">
+              <FaClock className="text-orange-600 text-xs" />
+            </div>
             <div>
-              <p className="text-xs text-amber-700">Estimasi</p>
-              <p className="text-sm font-bold text-gray-800">~{timeInMinutes} menit</p>
+              <p className="text-xs text-gray-500">Estimasi</p>
+              <p className="text-base font-semibold text-gray-900">~{timeInMinutes} min</p>
             </div>
           </div>
         </div>
@@ -174,70 +180,82 @@ export default function NewReportPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-md sticky top-0 z-40">
-        <div className="container mx-auto flex items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-red-600 p-2 rounded-md">
-              <FaFireExtinguisher className="text-white text-xl" />
-            </div>
-            <h1 className="text-xl font-bold text-gray-800">Buat Laporan Kebakaran</h1>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto flex items-center gap-4 px-6 py-4">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-600 hover:text-red-600 transition-colors rounded-lg hover:bg-red-50"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-all rounded-xl hover:bg-gray-100"
           >
-            <FaArrowLeft />
+            <FaArrowLeft className="text-xs" />
             <span>Kembali</span>
           </button>
+          <div className="flex items-center gap-3">
+            <div className="bg-gradient-to-br from-red-500 to-orange-600 p-2.5 rounded-xl shadow-sm">
+              <FaFireExtinguisher className="text-white text-lg" />
+            </div>
+            <div>
+              <h1 className="text-lg font-semibold text-gray-900">Laporan Baru</h1>
+              <p className="text-xs text-gray-500">Laporkan kejadian kebakaran</p>
+            </div>
+          </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Left Column: Map */}
-          <div className="space-y-6">
-            <div className="p-6 bg-white rounded-xl shadow-lg border border-gray-200">
-              <div className="mb-4">
-                <h2 className="text-lg font-bold text-gray-800">1. Tandai Lokasi Kejadian</h2>
-                <p className="text-sm text-gray-500">Klik pada peta untuk menandai lokasi akurat.</p>
+          <div className="lg:col-span-3 space-y-5">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200/60 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-5 bg-gradient-to-b from-red-500 to-orange-500 rounded-full"></div>
+                  <div>
+                    <h2 className="text-base font-semibold text-gray-900">Lokasi Kejadian</h2>
+                    <p className="text-xs text-gray-500 mt-0.5">Klik peta untuk menandai lokasi</p>
+                  </div>
+                </div>
               </div>
-              <div className="h-[450px] w-full rounded-lg overflow-hidden border-2 border-gray-200">
-                <MapWithNoSSR
-                  position={position}
-                  setPosition={setPosition}
-                  onNearestStationFound={setNearestStation}
-                />
+              <div className="p-4">
+                <div className="h-[420px] w-full rounded-xl overflow-hidden border border-gray-200 relative z-0">
+                  <MapWithNoSSR
+                    position={position}
+                    setPosition={setPosition}
+                    onNearestStationFound={setNearestStation}
+                  />
+                </div>
+                {nearestStation && <NearestStationInfoBox info={nearestStation} />}
               </div>
-              {nearestStation && <NearestStationInfoBox info={nearestStation} />}
             </div>
           </div>
 
           {/* Right Column: Form */}
-          <div className="space-y-6">
+          <div className="lg:col-span-2 space-y-5">
             {/* Incident Details */}
-            <div className="p-6 bg-white rounded-xl shadow-lg border border-gray-200">
-              <div className="mb-4">
-                <h2 className="text-lg font-bold text-gray-800">2. Detail Kejadian</h2>
-                <p className="text-sm text-gray-500">Berikan informasi yang jelas dan lengkap.</p>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200/60 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-5 bg-gradient-to-b from-red-500 to-orange-500 rounded-full"></div>
+                  <h2 className="text-base font-semibold text-gray-900">Detail Kejadian</h2>
+                </div>
               </div>
-              <div className="space-y-4">
+              <div className="p-6 space-y-4">
                 <div>
-                  <label htmlFor="description" className="block mb-1 text-sm font-medium text-gray-700">
-                    Deskripsi Kejadian <span className="text-red-500">*</span>
+                  <label htmlFor="description" className="block mb-2 text-xs font-medium text-gray-700">
+                    Deskripsi <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     id="description"
                     rows={3}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500 placeholder:text-gray-600"
-                    placeholder="Contoh: Kebakaran rumah, api sudah membesar..."
+                    className="w-full px-4 py-2.5 text-sm text-gray-900 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all placeholder:text-gray-400"
+                    placeholder="Kebakaran rumah, api sudah membesar..."
                     required
                   />
                 </div>
                 <div>
-                  <label htmlFor="address" className="block mb-1 text-sm font-medium text-gray-700">
+                  <label htmlFor="address" className="block mb-2 text-xs font-medium text-gray-700">
                     Alamat/Patokan
                   </label>
                   <input
@@ -245,48 +263,54 @@ export default function NewReportPage() {
                     id="address"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500 placeholder:text-gray-600"
-                    placeholder="Contoh: Jl. Merdeka No. 10, dekat Masjid Agung"
+                    className="w-full px-4 py-2.5 text-sm text-gray-900 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all placeholder:text-gray-400"
+                    placeholder="Jl. Merdeka No. 10, dekat Masjid Agung"
                   />
                 </div>
               </div>
             </div>
 
             {/* File Upload */}
-            <div className="p-6 bg-white rounded-xl shadow-lg border border-gray-200">
-              <div className="mb-4">
-                <h2 className="text-lg font-bold text-gray-800">3. Upload Bukti</h2>
-                <p className="text-sm text-gray-500">Unggah foto atau video kejadian.</p>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200/60 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-5 bg-gradient-to-b from-red-500 to-orange-500 rounded-full"></div>
+                  <h2 className="text-base font-semibold text-gray-900">Bukti Kejadian</h2>
+                </div>
               </div>
-              <div>
-                <label htmlFor="media" className="block mb-2 text-sm font-medium text-gray-700">
-                  Pilih File <span className="text-red-500">*</span>
+              <div className="p-6">
+                <label htmlFor="media" className="block mb-2 text-xs font-medium text-gray-700">
+                  Upload Foto/Video <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="file"
-                  id="media"
-                  onChange={handleFileChange}
-                  accept="image/*,video/*"
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-red-100 file:text-red-700 hover:file:bg-red-200"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type="file"
+                    id="media"
+                    onChange={handleFileChange}
+                    accept="image/*,video/*"
+                    className="block w-full text-sm text-gray-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-gradient-to-r file:from-red-500 file:to-orange-500 file:text-white hover:file:from-red-600 hover:file:to-orange-600 file:transition-all file:cursor-pointer cursor-pointer border border-gray-200 rounded-xl p-2"
+                    required
+                  />
+                </div>
                 {file && (
-                  <div className="mt-3 text-sm text-green-700">
-                    ✓ File terpilih: {file.name}
+                  <div className="mt-3 px-3 py-2 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-xs text-green-700 font-medium">✓ {file.name}</p>
                   </div>
                 )}
               </div>
             </div>
             
             {/* Additional Info */}
-            <div className="p-6 bg-white rounded-xl shadow-lg border border-gray-200">
-              <div className="mb-4">
-                <h2 className="text-lg font-bold text-gray-800">4. Info Tambahan</h2>
-                <p className="text-sm text-gray-500">Informasi ini sangat membantu petugas.</p>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200/60 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-5 bg-gradient-to-b from-red-500 to-orange-500 rounded-full"></div>
+                  <h2 className="text-base font-semibold text-gray-900">Info Tambahan</h2>
+                </div>
               </div>
-              <div className="space-y-4">
+              <div className="p-6 space-y-4">
                 <div>
-                  <label htmlFor="notes" className="block mb-1 text-sm font-medium text-gray-700">
+                  <label htmlFor="notes" className="block mb-2 text-xs font-medium text-gray-700">
                     Catatan Penting
                   </label>
                   <textarea
@@ -294,12 +318,12 @@ export default function NewReportPage() {
                     rows={2}
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500 placeholder:text-gray-600"
-                    placeholder="Contoh: Ada korban terjebak, ada tabung gas..."
+                    className="w-full px-4 py-2.5 text-sm text-gray-900 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all placeholder:text-gray-400"
+                    placeholder="Ada korban terjebak, ada tabung gas..."
                   />
                 </div>
                 <div>
-                  <label htmlFor="contact" className="block mb-1 text-sm font-medium text-gray-700">
+                  <label htmlFor="contact" className="block mb-2 text-xs font-medium text-gray-700">
                     Nomor Kontak (Opsional)
                   </label>
                   <input
@@ -307,7 +331,7 @@ export default function NewReportPage() {
                     id="contact"
                     value={contact}
                     onChange={(e) => setContact(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500 placeholder:text-gray-600"
+                    className="w-full px-4 py-2.5 text-sm text-gray-900 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all placeholder:text-gray-400"
                     placeholder="0812-3456-7890"
                   />
                 </div>
@@ -317,10 +341,10 @@ export default function NewReportPage() {
             {/* Error and Submit */}
             <div className="space-y-4">
               {error && (
-                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
-                  <div className="flex items-center gap-3">
-                    <FaExclamationTriangle className="text-red-500 text-xl" />
-                    <p className="text-sm text-red-800 font-medium">{error}</p>
+                <div className="bg-red-50 border border-red-200 p-4 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <FaExclamationTriangle className="text-red-500 text-base mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-red-700">{error}</p>
                   </div>
                 </div>
               )}
@@ -328,16 +352,16 @@ export default function NewReportPage() {
               <button
                 type="submit"
                 disabled={isLoading || !position || !file}
-                className="w-full flex items-center justify-center gap-3 rounded-lg bg-red-600 px-8 py-4 text-lg font-bold text-white shadow-md hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105"
+                className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-red-500 to-orange-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-red-500/25 hover:shadow-xl hover:shadow-red-500/30 hover:from-red-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:from-gray-300 disabled:to-gray-400 disabled:shadow-none disabled:cursor-not-allowed transition-all duration-200"
               >
                 {isLoading ? (
                   <>
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                    <span>Mengirim...</span>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                    <span>Mengirim Laporan...</span>
                   </>
                 ) : (
                   <>
-                    <FaFireExtinguisher />
+                    <FaFireExtinguisher className="text-base" />
                     <span>Kirim Laporan</span>
                   </>
                 )}

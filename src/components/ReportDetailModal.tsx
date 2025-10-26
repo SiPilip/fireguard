@@ -46,7 +46,7 @@ const StatusButton = ({
 }) => (
   <button
     onClick={onClick}
-    className={`${color} text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition-all hover:scale-105`}
+    className={`${color} text-white px-4 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2 transition-all hover:shadow-lg shadow-md`}
   >
     {icon}
     {label}
@@ -79,16 +79,16 @@ export default function ReportDetailModal({
   }, [onClose]);
 
   const getStatusDisplay = (status: string) => {
-    const statusMap: { [key: string]: { text: string; color: string } } = {
-      submitted: { text: "Baru", color: "text-red-400" },
-      verified: { text: "Diverifikasi", color: "text-yellow-400" },
-      dispatched: { text: "Dikirim", color: "text-blue-400" },
-      arrived: { text: "Tiba", color: "text-indigo-400" },
-      completed: { text: "Selesai", color: "text-green-400" },
-      false: { text: "Palsu", color: "text-gray-400" },
+    const statusMap: { [key: string]: { text: string; color: string; bgColor: string } } = {
+      submitted: { text: "Baru", color: "text-red-600", bgColor: "bg-red-50 border-red-200" },
+      verified: { text: "Diverifikasi", color: "text-yellow-600", bgColor: "bg-yellow-50 border-yellow-200" },
+      dispatched: { text: "Dikirim", color: "text-blue-600", bgColor: "bg-blue-50 border-blue-200" },
+      arrived: { text: "Tiba", color: "text-indigo-600", bgColor: "bg-indigo-50 border-indigo-200" },
+      completed: { text: "Selesai", color: "text-green-600", bgColor: "bg-green-50 border-green-200" },
+      false: { text: "Palsu", color: "text-gray-600", bgColor: "bg-gray-50 border-gray-200" },
     };
     return (
-      statusMap[status] || { text: status, color: "text-gray-300" }
+      statusMap[status] || { text: status, color: "text-gray-600", bgColor: "bg-gray-50 border-gray-200" }
     );
   };
 
@@ -96,37 +96,42 @@ export default function ReportDetailModal({
 
   return (
     <div 
-      className="fixed inset-0 z-[9998] flex items-center justify-center bg-black bg-opacity-70 p-4"
+      className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       onClick={onClose}
     >
       <div 
-        className="bg-gray-800 border-2 border-gray-700 rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-gray-800 border-b border-gray-700 p-6 flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-            <FaFileAlt className="text-red-500" />
-            Detail Laporan #{report.id}
-          </h2>
+        <div className="sticky top-0 bg-white border-b border-gray-200/60 px-6 py-5 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl">
+              <FaFileAlt className="text-white text-base" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Detail Laporan #{report.id}</h2>
+              <p className="text-xs text-gray-500 mt-0.5">Informasi lengkap laporan kebakaran</p>
+            </div>
+          </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white hover:bg-red-600 transition-all p-3 rounded-full"
+            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all p-2 rounded-xl"
             aria-label="Close modal"
           >
-            <FaTimes size={28} />
+            <FaTimes size={20} />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-6 space-y-5 bg-gray-50/30">
           {/* Status */}
-          <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm text-gray-400 mb-1">Status Laporan</p>
-                <p className={`text-2xl font-bold ${statusDisplay.color}`}>
-                  {statusDisplay.text.toUpperCase()}
+          <div className={`rounded-xl p-5 border ${statusDisplay.bgColor}`}>
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <p className="text-xs text-gray-500 mb-1">Status Laporan</p>
+                <p className={`text-xl font-semibold ${statusDisplay.color}`}>
+                  {statusDisplay.text}
                 </p>
               </div>
             </div>
@@ -135,19 +140,21 @@ export default function ReportDetailModal({
           {/* Info Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Waktu */}
-            <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
+            <div className="bg-white rounded-xl p-5 border border-gray-200/60 shadow-sm">
               <div className="flex items-start gap-3">
-                <FaClock className="text-yellow-400 text-xl mt-1" />
-                <div>
-                  <p className="text-sm text-gray-400 mb-1">Waktu Laporan</p>
-                  <p className="text-white font-semibold">
+                <div className="p-2 bg-yellow-100 rounded-lg">
+                  <FaClock className="text-yellow-600 text-sm" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs text-gray-500 mb-1.5">Waktu Laporan</p>
+                  <p className="text-sm font-semibold text-gray-900">
                     {new Date(report.created_at).toLocaleDateString("id-ID", {
                       day: "numeric",
                       month: "long",
                       year: "numeric",
                     })}
                   </p>
-                  <p className="text-gray-300">
+                  <p className="text-sm text-gray-600 mt-0.5">
                     {new Date(report.created_at).toLocaleTimeString("id-ID", {
                       hour: "2-digit",
                       minute: "2-digit",
@@ -158,16 +165,18 @@ export default function ReportDetailModal({
             </div>
 
             {/* Kontak */}
-            <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
+            <div className="bg-white rounded-xl p-5 border border-gray-200/60 shadow-sm">
               <div className="flex items-start gap-3">
-                <FaPhone className="text-green-400 text-xl mt-1" />
-                <div>
-                  <p className="text-sm text-gray-400 mb-1">Nomor Telepon</p>
-                  <p className="text-white font-semibold font-mono">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <FaPhone className="text-green-600 text-sm" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs text-gray-500 mb-1.5">Nomor Telepon</p>
+                  <p className="text-sm font-semibold text-gray-900 font-mono">
                     {report.phone_number}
                   </p>
                   {report.contact && (
-                    <p className="text-gray-300 text-sm mt-1">{report.contact}</p>
+                    <p className="text-xs text-gray-600 mt-1">{report.contact}</p>
                   )}
                 </div>
               </div>
@@ -175,22 +184,24 @@ export default function ReportDetailModal({
           </div>
 
           {/* Lokasi */}
-          <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
+          <div className="bg-white rounded-xl p-5 border border-gray-200/60 shadow-sm">
             <div className="flex items-start gap-3">
-              <FaMapMarkerAlt className="text-red-400 text-xl mt-1" />
+              <div className="p-2 bg-red-100 rounded-lg">
+                <FaMapMarkerAlt className="text-red-600 text-sm" />
+              </div>
               <div className="flex-1">
-                <p className="text-sm text-gray-400 mb-2">Koordinat Lokasi</p>
-                <p className="text-white font-mono text-sm">
+                <p className="text-xs text-gray-500 mb-2">Koordinat Lokasi</p>
+                <p className="text-sm text-gray-900 font-mono">
                   Lat: {report.latitude.toFixed(6)}
                 </p>
-                <p className="text-white font-mono text-sm">
+                <p className="text-sm text-gray-900 font-mono">
                   Lng: {report.longitude.toFixed(6)}
                 </p>
                 <a
                   href={`https://www.google.com/maps?q=${report.latitude},${report.longitude}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-400 hover:text-blue-300 text-sm mt-2 inline-block"
+                  className="text-blue-600 hover:text-blue-700 text-xs font-medium mt-2 inline-flex items-center gap-1 hover:underline"
                 >
                   Buka di Google Maps →
                 </a>
@@ -200,12 +211,14 @@ export default function ReportDetailModal({
 
           {/* Catatan */}
           {report.notes && (
-            <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
+            <div className="bg-white rounded-xl p-5 border border-gray-200/60 shadow-sm">
               <div className="flex items-start gap-3">
-                <FaFileAlt className="text-blue-400 text-xl mt-1" />
-                <div>
-                  <p className="text-sm text-gray-400 mb-2">Catatan</p>
-                  <p className="text-white">{report.notes}</p>
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <FaFileAlt className="text-blue-600 text-sm" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs text-gray-500 mb-2">Catatan</p>
+                  <p className="text-sm text-gray-900 leading-relaxed">{report.notes}</p>
                 </div>
               </div>
             </div>
@@ -213,24 +226,26 @@ export default function ReportDetailModal({
 
           {/* Media */}
           {report.media_url && (
-            <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
+            <div className="bg-white rounded-xl p-5 border border-gray-200/60 shadow-sm">
               <div className="flex items-start gap-3">
-                <FaImage className="text-purple-400 text-xl mt-1" />
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <FaImage className="text-purple-600 text-sm" />
+                </div>
                 <div className="flex-1">
-                  <p className="text-sm text-gray-400 mb-3">Media Lampiran</p>
-                  <div className="relative w-full h-64">
+                  <p className="text-xs text-gray-500 mb-3">Media Lampiran</p>
+                  <div className="relative w-full h-64 rounded-xl overflow-hidden border border-gray-200">
                     <Image
                       src={report.media_url}
                       alt="Bukti laporan"
                       fill
-                      className="rounded-lg object-cover border border-gray-700"
+                      className="object-cover"
                     />
                   </div>
                   <a
                     href={report.media_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-400 hover:text-blue-300 text-sm mt-2 inline-block"
+                    className="text-blue-600 hover:text-blue-700 text-xs font-medium mt-3 inline-flex items-center gap-1 hover:underline"
                   >
                     Lihat Ukuran Penuh →
                   </a>
@@ -241,40 +256,43 @@ export default function ReportDetailModal({
         </div>
 
         {/* Action Buttons */}
-        <div className="sticky bottom-0 bg-gray-800 border-t border-gray-700 p-6">
-          <p className="text-sm text-gray-400 mb-4">Ubah Status Laporan:</p>
-          <div className="flex flex-wrap gap-3 justify-end">
+        <div className="sticky bottom-0 bg-white border-t border-gray-200/60 px-6 py-5">
+          <p className="text-xs font-medium text-gray-600 mb-3">Ubah Status Laporan:</p>
+          <div className="flex flex-wrap gap-2.5 justify-end">
             <StatusButton
               label="Verifikasi"
-              icon={<FaCheck />}
-              color="bg-yellow-500 hover:bg-yellow-600"
+              icon={<FaCheck className="text-sm" />}
+              color="bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700"
               onClick={() => handleStatusUpdate("verified")}
             />
             <StatusButton
               label="Kirim Unit"
-              icon={<FaTruck />}
-              color="bg-blue-500 hover:bg-blue-600"
+              icon={<FaTruck className="text-sm" />}
+              color="bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700"
               onClick={() => handleStatusUpdate("dispatched")}
             />
             <StatusButton
               label="Selesaikan"
-              icon={<FaCheckCircle />}
-              color="bg-green-500 hover:bg-green-600"
+              icon={<FaCheckCircle className="text-sm" />}
+              color="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
               onClick={() => handleStatusUpdate("completed")}
             />
             <StatusButton
               label="Laporan Palsu"
-              icon={<FaTimesCircle />}
-              color="bg-gray-500 hover:bg-gray-600"
+              icon={<FaTimesCircle className="text-sm" />}
+              color="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700"
               onClick={() => handleStatusUpdate("false")}
             />
           </div>
         </div>
 
         {isUpdating && (
-          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="bg-gray-800 rounded-lg p-4">
-              <p className="text-white">Memperbarui status...</p>
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center rounded-2xl">
+            <div className="bg-white rounded-xl p-6 shadow-xl">
+              <div className="flex items-center gap-3">
+                <div className="h-5 w-5 animate-spin rounded-full border-3 border-solid border-red-500 border-r-transparent"></div>
+                <p className="text-sm font-medium text-gray-900">Memperbarui status...</p>
+              </div>
             </div>
           </div>
         )}

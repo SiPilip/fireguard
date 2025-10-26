@@ -60,15 +60,15 @@ const StatCard = ({
   value: string;
   color: string;
 }) => (
-  <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 flex items-center gap-4 transition-transform hover:scale-105">
+  <div className="bg-white rounded-xl p-5 flex items-center gap-4 border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-200">
     <div
-      className={`w-12 h-12 rounded-md flex items-center justify-center text-white text-2xl ${color}`}
+      className={`w-11 h-11 rounded-lg flex items-center justify-center text-white text-lg ${color} shadow-sm`}
     >
       {icon}
     </div>
     <div>
-      <h3 className="text-2xl font-bold">{value}</h3>
-      <p className="text-gray-400">{title}</p>
+      <h3 className="text-2xl font-semibold text-gray-900">{value}</h3>
+      <p className="text-xs text-gray-500 mt-0.5">{title}</p>
     </div>
   </div>
 );
@@ -80,44 +80,44 @@ const StatusBadge = ({ status }: { status: string }) => {
     submitted: {
       icon: <FaFileAlt />,
       text: "Baru",
-      className: "bg-red-500/20 text-red-400 border-red-500/50",
+      className: "bg-red-50 text-red-600 border-red-200",
     },
     verified: {
       icon: <FaCheck />,
       text: "Diverifikasi",
-      className: "bg-yellow-500/20 text-yellow-400 border-yellow-500/50",
+      className: "bg-yellow-50 text-yellow-600 border-yellow-200",
     },
     dispatched: {
       icon: <FaTruck />,
       text: "Dikirim",
-      className: "bg-blue-500/20 text-blue-400 border-blue-500/50",
+      className: "bg-blue-50 text-blue-600 border-blue-200",
     },
     arrived: {
       icon: <FaBuilding />,
       text: "Tiba",
-      className: "bg-indigo-500/20 text-indigo-400 border-indigo-500/50",
+      className: "bg-indigo-50 text-indigo-600 border-indigo-200",
     },
     completed: {
       icon: <FaCheckCircle />,
       text: "Selesai",
-      className: "bg-green-500/20 text-green-400 border-green-500/50",
+      className: "bg-green-50 text-green-600 border-green-200",
     },
     false: {
       icon: <FaTimesCircle />,
       text: "Palsu",
-      className: "bg-gray-500/20 text-gray-400 border-gray-500/50",
+      className: "bg-gray-50 text-gray-600 border-gray-200",
     },
   };
 
   const config = statusConfig[status] || {
     icon: <FaQuestionCircle />,
     text: status,
-    className: "bg-gray-600/20 text-gray-300 border-gray-600/50",
+    className: "bg-gray-50 text-gray-600 border-gray-200",
   };
 
   return (
     <div
-      className={`flex items-center gap-2 text-xs font-bold uppercase px-2 py-1 rounded-full border ${config.className}`}
+      className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg border ${config.className}`}
     >
       {config.icon}
       <span>{config.text}</span>
@@ -146,24 +146,24 @@ const ReportListItem = ({
 }) => (
   <div
     onClick={() => onSelect(report)}
-    className={`bg-gray-700/50 hover:bg-gray-700 p-4 rounded-lg cursor-pointer transition-all duration-200 border-l-4 ${
+    className={`bg-white hover:bg-gray-50 p-4 rounded-xl cursor-pointer transition-all duration-200 border border-gray-200/60 hover:border-gray-300 hover:shadow-sm ${
       !report.acknowledged
-        ? "border-yellow-400 animate-pulse-new"
-        : getStatusColor(report.status)
+        ? "ring-2 ring-yellow-400 ring-offset-2 animate-pulse-new"
+        : ""
     }`}
   >
-    <div className="flex justify-between items-start">
-      <div>
-        <span className="font-mono text-base font-bold text-white">
+    <div className="flex justify-between items-start gap-3">
+      <div className="flex-1">
+        <span className="font-semibold text-sm text-gray-900">
           Laporan #{report.id}
         </span>
-        <p className="text-sm text-gray-400 mt-1 flex items-center gap-2">
-          <FaPhone /> {report.phone_number}
+        <p className="text-xs text-gray-500 mt-1 flex items-center gap-1.5">
+          <FaPhone className="text-[10px]" /> {report.phone_number}
         </p>
       </div>
       <StatusBadge status={report.status} />
     </div>
-    <p className="text-xs text-gray-500 mt-2">
+    <p className="text-xs text-gray-400 mt-2.5">
       {new Date(report.created_at).toLocaleString("id-ID", {
         dateStyle: "medium",
         timeStyle: "short",
@@ -399,107 +399,117 @@ export default function OperatorDashboard() {
         />
       )}
 
-      <div className="min-h-screen bg-gray-900 text-white font-sans flex flex-col">
-        <header className="bg-gray-800 border-b border-gray-700 shadow-md sticky top-0 z-40">
-        <div className="container mx-auto px-6 py-3 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <FaFire className="text-red-500 text-2xl" />
-            <h1 className="text-xl font-bold">FireGuard Admin</h1>
-            <div className="flex items-center gap-2 ml-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans flex flex-col">
+        <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/60 shadow-sm sticky top-0 z-40">
+        <div className="max-w-[1600px] mx-auto px-6 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-gradient-to-br from-red-500 to-orange-600 p-2.5 rounded-xl shadow-sm">
+                <FaFire className="text-white text-lg" />
+              </div>
+              <div>
+                <h1 className="text-lg font-semibold text-gray-900">FireGuard Admin</h1>
+                <p className="text-xs text-gray-500">Dashboard Operator</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 ml-2 px-3 py-1.5 bg-gray-100 rounded-lg">
               <span
-                className={`w-3 h-3 rounded-full ${
+                className={`w-2 h-2 rounded-full ${
                   wsStatus === "Connected"
-                    ? "bg-green-500"
+                    ? "bg-green-500 animate-pulse"
                     : wsStatus === "Connecting"
                     ? "bg-yellow-500"
                     : "bg-red-500"
                 }`}
               ></span>
-              <span className="text-sm text-gray-400">{wsStatus}</span>
+              <span className="text-xs font-medium text-gray-600">{wsStatus}</span>
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Mode Pantau</span>
+            <div className="flex items-center gap-2.5 px-3 py-2 bg-gray-100 rounded-xl">
+              <span className="text-xs font-medium text-gray-700">Mode Pantau</span>
               <button
                 onClick={() => setIsMonitorMode(!isMonitorMode)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  isMonitorMode ? "bg-green-500" : "bg-gray-600"
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                  isMonitorMode ? "bg-green-500" : "bg-gray-300"
                 }`}
               >
                 <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    isMonitorMode ? "translate-x-6" : "translate-x-1"
+                  className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform shadow-sm ${
+                    isMonitorMode ? "translate-x-5" : "translate-x-0.5"
                   }`}
                 />
               </button>
             </div>
-            <FaUserShield />
-            <span>Operator Damkar</span>
+            <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-xl">
+              <FaUserShield className="text-gray-600 text-sm" />
+              <span className="text-xs font-medium text-gray-700">Operator Damkar</span>
+            </div>
             <button
               onClick={handleLogout}
               title="Logout"
-              className="bg-red-600 hover:bg-red-700 p-2 rounded-full"
+              className="bg-red-500 hover:bg-red-600 p-2.5 rounded-xl transition-colors shadow-sm"
             >
-              <FaSignOutAlt />
+              <FaSignOutAlt className="text-white text-sm" />
             </button>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto p-6 flex-grow">
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <main className="max-w-[1600px] mx-auto p-6 flex-grow">
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
           <StatCard
             icon={<FaFire />}
             title="Laporan Aktif"
             value={activeReportsCount.toString()}
-            color="bg-red-500"
+            color="bg-gradient-to-br from-red-500 to-orange-600"
           />
           <StatCard
             icon={<FaTruck />}
             title="Unit Dikirim"
             value={dispatchedCount.toString()}
-            color="bg-blue-500"
+            color="bg-gradient-to-br from-blue-500 to-cyan-600"
           />
           <StatCard
             icon={<FaClock />}
             title="Rata-rata Respons"
             value="- min"
-            color="bg-yellow-500"
+            color="bg-gradient-to-br from-yellow-500 to-amber-600"
           />
           <StatCard
             icon={<FaBuilding />}
             title="Total Pos Damkar"
             value="12"
-            color="bg-green-500"
+            color="bg-gradient-to-br from-green-500 to-emerald-600"
           />
         </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 h-full min-h-[70vh]">
-          <section className="lg:col-span-2 bg-gray-800 border border-gray-700 rounded-lg flex flex-col">
-            <div className="p-4 border-b border-gray-700 flex justify-between items-center flex-shrink-0">
-              <h2 className="text-lg font-bold flex items-center gap-2">
-                <FaList /> Daftar Laporan
-              </h2>
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 h-full min-h-[70vh]">
+          <section className="lg:col-span-2 bg-white border border-gray-200/60 rounded-2xl shadow-sm flex flex-col overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-200/60 flex justify-between items-center flex-shrink-0 bg-gray-50/50">
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-5 bg-gradient-to-b from-red-500 to-orange-500 rounded-full"></div>
+                <h2 className="text-base font-semibold text-gray-900">Daftar Laporan</h2>
+              </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={fetchReports}
-                  className="text-gray-400 hover:text-white"
+                  className="text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-lg transition-colors"
                   title="Muat Ulang Laporan"
                 >
-                  <FaSyncAlt />
+                  <FaSyncAlt className="text-sm" />
                 </button>
                 <button
                   onClick={handleDeleteAllReports}
-                  className="text-gray-400 hover:text-red-500"
+                  className="text-gray-500 hover:text-red-600 p-2 hover:bg-red-50 rounded-lg transition-colors"
                   title="Hapus Semua Laporan"
                 >
-                  <FaTrash />
+                  <FaTrash className="text-sm" />
                 </button>
                 <select
                   onChange={(e) => setStatusFilter(e.target.value)}
                   value={statusFilter}
-                  className="bg-gray-700 border border-gray-600 rounded-md px-2 py-1 text-sm"
+                  className="bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs font-medium text-gray-700 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all"
                 >
                   <option value="all">Semua Status</option>
                   <option value="submitted">Baru</option>
@@ -511,9 +521,18 @@ export default function OperatorDashboard() {
                 </select>
               </div>
             </div>
-            <div className="overflow-y-auto p-4 space-y-3 flex-grow">
+            <div className="overflow-y-auto p-4 space-y-2.5 flex-grow bg-gray-50/30">
               {isLoading ? (
-                <p>Memuat laporan...</p>
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <div className="inline-block h-8 w-8 animate-spin rounded-full border-3 border-solid border-red-500 border-r-transparent mb-3"></div>
+                    <p className="text-sm text-gray-500">Memuat laporan...</p>
+                  </div>
+                </div>
+              ) : filteredReports.length === 0 ? (
+                <div className="flex items-center justify-center py-12">
+                  <p className="text-sm text-gray-500">Tidak ada laporan</p>
+                </div>
               ) : (
                 filteredReports.map((report) => (
                   <ReportListItem
@@ -526,11 +545,12 @@ export default function OperatorDashboard() {
             </div>
           </section>
 
-          <section className="lg:col-span-3 bg-gray-800 border border-gray-700 rounded-lg flex flex-col">
-            <div className="p-4 border-b border-gray-700 flex justify-between items-center flex-shrink-0">
-              <h2 className="text-lg font-bold flex items-center gap-2">
-                <FaMap /> Peta Monitoring
-              </h2>
+          <section className="lg:col-span-3 bg-white border border-gray-200/60 rounded-2xl shadow-sm flex flex-col overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-200/60 flex justify-between items-center flex-shrink-0 bg-gray-50/50">
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-5 bg-gradient-to-b from-red-500 to-orange-500 rounded-full"></div>
+                <h2 className="text-base font-semibold text-gray-900">Peta Monitoring</h2>
+              </div>
             </div>
             <div className="flex-grow h-full w-full">
               <AdminMap reports={reports} onReportClick={handleSelectReport} />

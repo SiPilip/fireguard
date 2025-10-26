@@ -4,43 +4,45 @@ import Link from 'next/link';
 import { FaFire, FaFacebook, FaTwitter, FaInstagram } from 'react-icons/fa';
 
 const Footer = () => (
-  <footer className="bg-gray-900 text-white pt-16 pb-8">
-    <div className="container mx-auto px-6">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
+  <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white pt-16 pb-8">
+    <div className="max-w-7xl mx-auto px-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
         <div className="md:col-span-1">
-          <Link href="/" className="flex items-center gap-3 text-2xl font-bold">
-            <FaFire />
-            <span>FireGuard</span>
+          <Link href="/" className="flex items-center gap-2.5 mb-4">
+            <div className="p-2 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl">
+              <FaFire className="text-white text-lg" />
+            </div>
+            <span className="text-xl font-semibold">FireGuard</span>
           </Link>
-          <p className="mt-4 text-gray-400 text-lg">Sistem Cepat Tanggap Kebakaran Palembang.</p>
+          <p className="text-sm text-gray-400 leading-relaxed">Sistem Cepat Tanggap Kebakaran Palembang untuk keamanan maksimal.</p>
         </div>
         <div>
-          <h3 className="text-xl font-bold mb-6">Tautan Cepat</h3>
-          <ul className="space-y-3">
-            <li><Link href="#features" className="text-gray-400 hover:text-white transition-colors">Fitur</Link></li>
-            <li><Link href="#contact" className="text-gray-400 hover:text-white transition-colors">Kontak</Link></li>
-            <li><Link href="/operator/login" className="text-gray-400 hover:text-white transition-colors">Portal Operator</Link></li>
+          <h3 className="text-base font-semibold mb-4">Tautan Cepat</h3>
+          <ul className="space-y-2.5">
+            <li><Link href="#features" className="text-sm text-gray-400 hover:text-white transition-colors">Fitur</Link></li>
+            <li><Link href="#contact" className="text-sm text-gray-400 hover:text-white transition-colors">Kontak</Link></li>
+            <li><Link href="/operator/login" className="text-sm text-gray-400 hover:text-white transition-colors">Portal Operator</Link></li>
           </ul>
         </div>
         <div>
-          <h3 className="text-xl font-bold mb-6">Hubungi Kami</h3>
-          <ul className="space-y-3 text-gray-400">
+          <h3 className="text-base font-semibold mb-4">Hubungi Kami</h3>
+          <ul className="space-y-2.5 text-sm text-gray-400">
             <li>Jl. Merdeka No.1, Palembang</li>
             <li>damkar@palembang.go.id</li>
             <li>Hotline: 113</li>
           </ul>
         </div>
         <div>
-          <h3 className="text-xl font-bold mb-6">Media Sosial</h3>
-          <div className="flex gap-6">
-            <a href="#" className="text-gray-400 hover:text-white transition-colors text-3xl"><FaFacebook /></a>
-            <a href="#" className="text-gray-400 hover:text-white transition-colors text-3xl"><FaTwitter /></a>
-            <a href="#" className="text-gray-400 hover:text-white transition-colors text-3xl"><FaInstagram /></a>
+          <h3 className="text-base font-semibold mb-4">Media Sosial</h3>
+          <div className="flex gap-3">
+            <a href="#" className="w-10 h-10 bg-gray-800 hover:bg-gradient-to-br hover:from-red-500 hover:to-orange-600 rounded-xl flex items-center justify-center transition-all"><FaFacebook className="text-lg" /></a>
+            <a href="#" className="w-10 h-10 bg-gray-800 hover:bg-gradient-to-br hover:from-red-500 hover:to-orange-600 rounded-xl flex items-center justify-center transition-all"><FaTwitter className="text-lg" /></a>
+            <a href="#" className="w-10 h-10 bg-gray-800 hover:bg-gradient-to-br hover:from-red-500 hover:to-orange-600 rounded-xl flex items-center justify-center transition-all"><FaInstagram className="text-lg" /></a>
           </div>
         </div>
       </div>
-      <div className="mt-16 border-t border-gray-800 pt-8 text-center text-gray-500">
-        <p>&copy; {new Date().getFullYear()} FireGuard Palembang. Hak Cipta Dilindungi.</p>
+      <div className="mt-12 pt-8 border-t border-gray-800 text-center">
+        <p className="text-xs text-gray-500">&copy; {new Date().getFullYear()} FireGuard Palembang. Hak Cipta Dilindungi.</p>
       </div>
     </div>
   </footer>

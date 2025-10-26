@@ -70,14 +70,14 @@ const statusConfig = {
   },
 };
 
-const StatCard = ({ title, value, icon: Icon, color, bgColor }) => (
-  <div className="bg-white p-6 rounded-2xl shadow-lg flex items-center justify-between transform hover:-translate-y-1 transition-transform duration-300">
-    <div>
-      <p className="text-sm text-gray-500 font-medium">{title}</p>
-      <p className={`text-3xl font-bold ${color}`}>{value}</p>
+const StatCard = ({ title, value, icon: Icon, gradient }: { title: string; value: number; icon: any; gradient: string }) => (
+  <div className="bg-white p-5 rounded-xl border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-4">
+    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${gradient} shadow-sm`}>
+      <Icon className="w-5 h-5 text-white" />
     </div>
-    <div className={`p-4 rounded-full ${bgColor}`}>
-      <Icon className={`w-6 h-6`} style={{ color }} />
+    <div>
+      <p className="text-xs text-gray-500 font-medium mb-0.5">{title}</p>
+      <p className="text-2xl font-semibold text-gray-900">{value}</p>
     </div>
   </div>
 );
@@ -141,31 +141,33 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
       {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-lg flex flex-col">
-        <div className="flex items-center justify-center h-20 border-b">
-          <FaFire className="text-red-600 text-3xl" />
-          <span className="ml-2 text-2xl font-bold text-gray-800">FireGuard</span>
+      <aside className="w-64 bg-white border-r border-gray-200/60 flex flex-col">
+        <div className="flex items-center gap-2.5 px-6 h-20 border-b border-gray-200/60">
+          <div className="p-2 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl">
+            <FaFire className="text-white text-lg" />
+          </div>
+          <span className="text-xl font-semibold text-gray-900">FireGuard</span>
         </div>
-        <nav className="flex-1 px-4 py-6 space-y-2">
-          <Link href="/" className="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-200 rounded-lg">
-            <FaHome className="text-gray-600" />
-            <span className="ml-3">Landing Page</span>
+        <nav className="flex-1 px-4 py-6 space-y-1.5">
+          <Link href="/" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+            <FaHome className="text-base" />
+            <span>Landing Page</span>
           </Link>
-          <Link href="/dashboard" className="flex items-center px-4 py-3 text-gray-700 bg-red-100 rounded-lg font-semibold">
-            <FaChartBar className="text-red-600" />
-            <span className="ml-3">Dashboard</span>
+          <Link href="/dashboard" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-900 bg-red-50 rounded-xl font-medium">
+            <FaChartBar className="text-base text-red-600" />
+            <span>Dashboard</span>
           </Link>
-          <Link href="/report/new" className="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-200 rounded-lg">
-            <FaPlus className="text-gray-600" />
-            <span className="ml-3">Lapor Baru</span>
+          <Link href="/report/new" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+            <FaPlus className="text-base" />
+            <span>Lapor Baru</span>
           </Link>
         </nav>
-        <div className="px-4 py-6 border-t">
-          <button onClick={handleLogout} className="flex items-center w-full px-4 py-3 text-gray-600 hover:bg-gray-200 rounded-lg">
-            <FaSignOutAlt />
-            <span className="ml-3">Logout</span>
+        <div className="px-4 py-6 border-t border-gray-200/60">
+          <button onClick={handleLogout} className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-600 hover:bg-red-50 hover:text-red-600 rounded-xl transition-colors">
+            <FaSignOutAlt className="text-base" />
+            <span>Logout</span>
           </button>
         </div>
       </aside>
@@ -173,52 +175,62 @@ export default function DashboardPage() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="bg-white shadow-sm h-20 flex items-center justify-between px-8">
+        <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/60 h-20 flex items-center justify-between px-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Dashboard Saya</h1>
-            <p className="text-sm text-gray-500">Selamat datang, {user?.phone || 'Pengguna'}</p>
+            <h1 className="text-xl font-semibold text-gray-900">Dashboard Saya</h1>
+            <p className="text-xs text-gray-500 mt-0.5">Selamat datang, {user?.phone || 'Pengguna'}</p>
           </div>
-          <div className="flex items-center space-x-6">
-            <FaBell className="text-gray-500 h-6 w-6 cursor-pointer hover:text-red-600" />
-            <FaCog className="text-gray-500 h-6 w-6 cursor-pointer hover:text-red-600" />
-            <FaUserCircle className="text-gray-500 h-8 w-8 cursor-pointer hover:text-red-600" />
+          <div className="flex items-center gap-3">
+            <button className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
+              <FaBell className="text-gray-500 text-lg" />
+            </button>
+            <button className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
+              <FaCog className="text-gray-500 text-lg" />
+            </button>
+            <div className="w-9 h-9 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl flex items-center justify-center">
+              <FaUserCircle className="text-white text-lg" />
+            </div>
           </div>
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 p-8 overflow-y-auto">
+        <main className="flex-1 p-6 overflow-y-auto">
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <StatCard title="Total Laporan" value={reports.length} icon={FaFileAlt} color="#3B82F6" bgColor="bg-blue-100" />
-            <StatCard title="Menunggu" value={reports.filter((r) => r.status === 'submitted').length} icon={FaClock} color="#F59E0B" bgColor="bg-yellow-100" />
-            <StatCard title="Dalam Proses" value={reports.filter((r) => ['verified', 'dispatched', 'arrived'].includes(r.status)).length} icon={FaTruck} color="#8B5CF6" bgColor="bg-purple-100" />
-            <StatCard title="Selesai" value={reports.filter((r) => r.status === 'completed').length} icon={FaCheckCircle} color="#10B981" bgColor="bg-green-100" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+            <StatCard title="Total Laporan" value={reports.length} icon={FaFileAlt} gradient="bg-gradient-to-br from-blue-500 to-cyan-600" />
+            <StatCard title="Menunggu" value={reports.filter((r) => r.status === 'submitted').length} icon={FaClock} gradient="bg-gradient-to-br from-yellow-500 to-amber-600" />
+            <StatCard title="Dalam Proses" value={reports.filter((r) => ['verified', 'dispatched', 'arrived'].includes(r.status)).length} icon={FaTruck} gradient="bg-gradient-to-br from-purple-500 to-indigo-600" />
+            <StatCard title="Selesai" value={reports.filter((r) => r.status === 'completed').length} icon={FaCheckCircle} gradient="bg-gradient-to-br from-green-500 to-emerald-600" />
           </div>
 
           {/* Reports List */}
-          <div className="bg-white rounded-2xl shadow-lg p-8">
-            <h2 className="text-xl font-bold text-gray-800 mb-6">Riwayat Laporan Anda</h2>
+          <div className="bg-white rounded-2xl border border-gray-200/60 shadow-sm p-6">
+            <div className="flex items-center gap-2 mb-6">
+              <div className="w-1 h-6 bg-gradient-to-b from-red-500 to-orange-500 rounded-full"></div>
+              <h2 className="text-base font-semibold text-gray-900">Riwayat Laporan Anda</h2>
+            </div>
             {isLoading ? (
-              <div className="text-center py-16">
-                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
-                <p className="mt-4 text-gray-600">Memuat laporan...</p>
+              <div className="text-center py-12">
+                <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-red-500 border-r-transparent mb-3"></div>
+                <p className="text-sm text-gray-600">Memuat laporan...</p>
               </div>
             ) : error ? (
-              <div className="text-center py-16">
-                <FaExclamationCircle className="mx-auto text-red-500 mb-4 h-12 w-12" />
-                <p className="text-red-600 font-semibold">{error}</p>
+              <div className="text-center py-12">
+                <FaExclamationCircle className="mx-auto text-red-500 mb-3 h-10 w-10" />
+                <p className="text-sm text-red-600 font-medium">{error}</p>
               </div>
             ) : reports.length === 0 ? (
-              <div className="text-center py-16">
-                <FaFire className="mx-auto text-gray-400 mb-4 h-12 w-12" />
-                <p className="text-gray-600 font-semibold text-lg">Anda belum memiliki laporan.</p>
-                <p className="text-gray-500 text-sm mt-2">Laporan yang Anda buat akan muncul di sini.</p>
-                <Link href="/report/new" className="inline-block mt-6 bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors shadow-md hover:shadow-lg">
-                  Buat Laporan Pertama
+              <div className="text-center py-12">
+                <FaFire className="mx-auto text-gray-400 mb-3 h-10 w-10" />
+                <p className="text-base text-gray-900 font-semibold">Belum Ada Laporan</p>
+                <p className="text-xs text-gray-500 mt-1">Laporan yang Anda buat akan muncul di sini</p>
+                <Link href="/report/new" className="inline-flex items-center gap-2 mt-6 bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white px-6 py-3 rounded-xl font-semibold text-sm transition-all shadow-lg shadow-red-500/25 hover:shadow-xl hover:shadow-red-500/30">
+                  <FaPlus />
+                  <span>Buat Laporan Pertama</span>
                 </Link>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {reports.map((report) => {
                   const statusInfo = statusConfig[report.status];
                   const StatusIcon = statusInfo.icon;
@@ -226,21 +238,21 @@ export default function DashboardPage() {
                   return (
                     <div
                       key={report.id}
-                      className="bg-gray-50 rounded-xl p-5 flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer border border-gray-200"
+                      className="bg-white hover:bg-gray-50 rounded-xl p-4 flex items-center justify-between hover:shadow-sm transition-all cursor-pointer border border-gray-200/60"
                       onClick={() => router.push(`/dashboard/report/${report.id}`)}
                     >
-                      <div className="flex items-center gap-4">
-                        <div className={`p-3 rounded-full ${statusInfo.color}`}>
-                          <StatusIcon className="text-white h-5 w-5" />
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${statusInfo.color}`}>
+                          <StatusIcon className="text-white text-base" />
                         </div>
                         <div>
-                          <p className="font-bold text-gray-800">Laporan #{report.id}</p>
-                          <p className="text-sm text-gray-600 truncate max-w-xs">{report.description}</p>
+                          <p className="font-semibold text-sm text-gray-900">Laporan #{report.id}</p>
+                          <p className="text-xs text-gray-500 truncate max-w-xs mt-0.5">{report.description}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className={`text-sm font-semibold ${statusInfo.color.replace('bg-', 'text-')}`}>{statusInfo.label}</p>
-                        <p className="text-xs text-gray-500">{formatDate(report.updated_at)}</p>
+                        <p className={`text-xs font-medium ${statusInfo.color.replace('bg-', 'text-')}`}>{statusInfo.label}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{formatDate(report.updated_at)}</p>
                       </div>
                     </div>
                   );
