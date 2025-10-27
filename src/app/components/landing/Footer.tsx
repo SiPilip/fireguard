@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FaFire, FaFacebook, FaTwitter, FaInstagram } from 'react-icons/fa';
+import { FaFire, FaFacebook, FaTwitter, FaInstagram, FaGithub } from 'react-icons/fa';
 
 const Footer = () => (
   <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white pt-16 pb-8">
@@ -35,9 +35,9 @@ const Footer = () => (
         <div>
           <h3 className="text-base font-semibold mb-4">Media Sosial</h3>
           <div className="flex gap-3">
-            <a href="#" className="w-10 h-10 bg-gray-800 hover:bg-gradient-to-br hover:from-red-500 hover:to-orange-600 rounded-xl flex items-center justify-center transition-all"><FaFacebook className="text-lg" /></a>
-            <a href="#" className="w-10 h-10 bg-gray-800 hover:bg-gradient-to-br hover:from-red-500 hover:to-orange-600 rounded-xl flex items-center justify-center transition-all"><FaTwitter className="text-lg" /></a>
-            <a href="#" className="w-10 h-10 bg-gray-800 hover:bg-gradient-to-br hover:from-red-500 hover:to-orange-600 rounded-xl flex items-center justify-center transition-all"><FaInstagram className="text-lg" /></a>
+            <a href="https://www.facebook.com/damkarpalembang" className="w-10 h-10 bg-gray-800 hover:bg-gradient-to-br hover:from-red-500 hover:to-orange-600 rounded-xl flex items-center justify-center transition-all"><FaFacebook className="text-lg" /></a>
+            <a href="https://twitter.com/damkarpalembang" className="w-10 h-10 bg-gray-800 hover:bg-gradient-to-br hover:from-red-500 hover:to-orange-600 rounded-xl flex items-center justify-center transition-all"><FaGithub className="text-lg" /></a>
+            <a href="https://www.instagram.com/pemadam_palembang" className="w-10 h-10 bg-gray-800 hover:bg-gradient-to-br hover:from-red-500 hover:to-orange-600 rounded-xl flex items-center justify-center transition-all"><FaInstagram className="text-lg" /></a>
           </div>
         </div>
       </div>

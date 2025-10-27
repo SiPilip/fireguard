@@ -18,6 +18,8 @@ import {
   FaTruck,
   FaTimesCircle,
   FaExclamationCircle,
+  FaBars,
+  FaTimes,
 } from 'react-icons/fa';
 
 interface Report {
@@ -71,13 +73,13 @@ const statusConfig = {
 };
 
 const StatCard = ({ title, value, icon: Icon, gradient }: { title: string; value: number; icon: any; gradient: string }) => (
-  <div className="bg-white p-5 rounded-xl border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-4">
-    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${gradient} shadow-sm`}>
-      <Icon className="w-5 h-5 text-white" />
+  <div className="bg-white p-4 md:p-5 rounded-xl border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col md:flex-row items-center md:gap-4 gap-2">
+    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center ${gradient} shadow-sm`}>
+      <Icon className="w-4 h-4 md:w-5 md:h-5 text-white" />
     </div>
-    <div>
+    <div className="text-center md:text-left">
       <p className="text-xs text-gray-500 font-medium mb-0.5">{title}</p>
-      <p className="text-2xl font-semibold text-gray-900">{value}</p>
+      <p className="text-xl md:text-2xl font-semibold text-gray-900">{value}</p>
     </div>
   </div>
 );
@@ -88,6 +90,7 @@ export default function DashboardPage() {
   const [reports, setReports] = useState<Report[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -142,13 +145,31 @@ export default function DashboardPage() {
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200/60 flex flex-col">
-        <div className="flex items-center gap-2.5 px-6 h-20 border-b border-gray-200/60">
-          <div className="p-2 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl">
-            <FaFire className="text-white text-lg" />
+      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200/60 flex flex-col transform transition-transform duration-300 lg:transform-none ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      }`}>
+        <div className="flex items-center justify-between gap-2.5 px-6 h-16 md:h-20 border-b border-gray-200/60">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl">
+              <FaFire className="text-white text-base md:text-lg" />
+            </div>
+            <span className="text-lg md:text-xl font-semibold text-gray-900">FireGuard</span>
           </div>
-          <span className="text-xl font-semibold text-gray-900">FireGuard</span>
+          <button 
+            onClick={() => setSidebarOpen(false)}
+            className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <FaTimes className="text-gray-600 text-lg" />
+          </button>
         </div>
         <nav className="flex-1 px-4 py-6 space-y-1.5">
           <Link href="/" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
@@ -175,28 +196,36 @@ export default function DashboardPage() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/60 h-20 flex items-center justify-between px-8">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900">Dashboard Saya</h1>
-            <p className="text-xs text-gray-500 mt-0.5">Selamat datang, {user?.phone || 'Pengguna'}</p>
-          </div>
+        <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/60 h-16 md:h-20 flex items-center justify-between px-4 md:px-8">
           <div className="flex items-center gap-3">
-            <button className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
-              <FaBell className="text-gray-500 text-lg" />
+            <button 
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden p-2 hover:bg-gray-100 rounded-xl transition-colors"
+            >
+              <FaBars className="text-gray-600 text-lg" />
             </button>
-            <button className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
-              <FaCog className="text-gray-500 text-lg" />
+            <div>
+              <h1 className="text-base md:text-xl font-semibold text-gray-900">Dashboard Saya</h1>
+              <p className="text-xs text-gray-500 mt-0.5 hidden sm:block">Selamat datang, {user?.phone || 'Pengguna'}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 md:gap-3">
+            <button className="p-2 hover:bg-gray-100 rounded-xl transition-colors hidden sm:block">
+              <FaBell className="text-gray-500 text-base md:text-lg" />
             </button>
-            <div className="w-9 h-9 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl flex items-center justify-center">
-              <FaUserCircle className="text-white text-lg" />
+            <button className="p-2 hover:bg-gray-100 rounded-xl transition-colors hidden sm:block">
+              <FaCog className="text-gray-500 text-base md:text-lg" />
+            </button>
+            <div className="w-8 h-8 md:w-9 md:h-9 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl flex items-center justify-center">
+              <FaUserCircle className="text-white text-base md:text-lg" />
             </div>
           </div>
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 mb-4 md:mb-6">
             <StatCard title="Total Laporan" value={reports.length} icon={FaFileAlt} gradient="bg-gradient-to-br from-blue-500 to-cyan-600" />
             <StatCard title="Menunggu" value={reports.filter((r) => r.status === 'submitted').length} icon={FaClock} gradient="bg-gradient-to-br from-yellow-500 to-amber-600" />
             <StatCard title="Dalam Proses" value={reports.filter((r) => ['verified', 'dispatched', 'arrived'].includes(r.status)).length} icon={FaTruck} gradient="bg-gradient-to-br from-purple-500 to-indigo-600" />
@@ -204,7 +233,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Reports List */}
-          <div className="bg-white rounded-2xl border border-gray-200/60 shadow-sm p-6">
+          <div className="bg-white rounded-xl md:rounded-2xl border border-gray-200/60 shadow-sm p-4 md:p-6">
             <div className="flex items-center gap-2 mb-6">
               <div className="w-1 h-6 bg-gradient-to-b from-red-500 to-orange-500 rounded-full"></div>
               <h2 className="text-base font-semibold text-gray-900">Riwayat Laporan Anda</h2>
@@ -238,19 +267,19 @@ export default function DashboardPage() {
                   return (
                     <div
                       key={report.id}
-                      className="bg-white hover:bg-gray-50 rounded-xl p-4 flex items-center justify-between hover:shadow-sm transition-all cursor-pointer border border-gray-200/60"
+                      className="bg-white hover:bg-gray-50 rounded-xl p-3 md:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 hover:shadow-sm transition-all cursor-pointer border border-gray-200/60"
                       onClick={() => router.push(`/dashboard/report/${report.id}`)}
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${statusInfo.color}`}>
-                          <StatusIcon className="text-white text-base" />
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${statusInfo.color} flex-shrink-0`}>
+                          <StatusIcon className="text-white text-sm" />
                         </div>
-                        <div>
+                        <div className="flex-1 min-w-0">
                           <p className="font-semibold text-sm text-gray-900">Laporan #{report.id}</p>
-                          <p className="text-xs text-gray-500 truncate max-w-xs mt-0.5">{report.description}</p>
+                          <p className="text-xs text-gray-500 truncate mt-0.5">{report.description}</p>
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-left sm:text-right pl-13 sm:pl-0">
                         <p className={`text-xs font-medium ${statusInfo.color.replace('bg-', 'text-')}`}>{statusInfo.label}</p>
                         <p className="text-xs text-gray-400 mt-0.5">{formatDate(report.updated_at)}</p>
                       </div>

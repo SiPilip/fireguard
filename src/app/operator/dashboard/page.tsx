@@ -479,7 +479,7 @@ export default function OperatorDashboard() {
           <StatCard
             icon={<FaBuilding />}
             title="Total Pos Damkar"
-            value="12"
+            value="8"
             color="bg-gradient-to-br from-green-500 to-emerald-600"
           />
         </section>

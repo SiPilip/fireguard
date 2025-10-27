@@ -74,7 +74,6 @@ const Navbar = () => {
           <Link href="#features" className={`${scrolled ? 'text-gray-700 hover:text-gray-900' : 'text-white/90 hover:text-white'} font-medium transition-colors`}>Fitur</Link>
           <Link href="#stations" className={`${scrolled ? 'text-gray-700 hover:text-gray-900' : 'text-white/90 hover:text-white'} font-medium transition-colors`}>Lokasi Pos</Link>
           <Link href="#contact" className={`${scrolled ? 'text-gray-700 hover:text-gray-900' : 'text-white/90 hover:text-white'} font-medium transition-colors`}>Kontak</Link>
-          <Link href="/operator/login" className={`${scrolled ? 'text-gray-700 hover:text-gray-900' : 'text-white/90 hover:text-white'} font-medium transition-colors`}>Operator</Link>
         </div>
         {/* Mobile Menu Button */}
         <button 
@@ -150,13 +149,6 @@ const Navbar = () => {
               className="block py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
             >
               Kontak
-            </Link>
-            <Link 
-              href="/operator/login" 
-              onClick={() => setMobileMenuOpen(false)}
-              className="block py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
-            >
-              Operator
             </Link>
             <hr className="border-gray-200" />
             {isLoggedIn ? (

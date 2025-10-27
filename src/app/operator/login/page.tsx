@@ -111,7 +111,7 @@ export default function OperatorLoginPage() {
                   id="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all placeholder:text-gray-400 bg-white"
+                  className="w-full pl-10 pr-4 py-3 text-sm text-gray-900 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all placeholder:text-gray-400 bg-white"
                   placeholder="Masukkan username"
                   required
                   disabled={isLoading}
@@ -133,7 +133,7 @@ export default function OperatorLoginPage() {
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all placeholder:text-gray-400 bg-white"
+                  className="w-full pl-10 pr-4 py-3 text-sm text-gray-900 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all placeholder:text-gray-400 bg-white"
                   placeholder="Masukkan password"
                   required
                   disabled={isLoading}
