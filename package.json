@@ -2,10 +2,16 @@
   "name": "fireguard-app",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
   "scripts": {
     "dev": "node server.js",
+    "dev:vercel": "next dev",
     "build": "next build",
     "start": "NODE_ENV=production node server.js",
+    "start:vercel": "next start",
     "lint": "eslint",
     "db:setup": "node scripts/setup-db.mjs"
   },

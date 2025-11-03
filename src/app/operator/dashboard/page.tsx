@@ -167,7 +167,8 @@ const ReportListItem = ({
       {new Date(report.created_at).toLocaleString("id-ID", {
         dateStyle: "medium",
         timeStyle: "short",
-      })}
+        timeZone: "Asia/Jakarta",
+      })} WIB
     </p>
   </div>
 );

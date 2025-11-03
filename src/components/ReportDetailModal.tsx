@@ -152,13 +152,16 @@ export default function ReportDetailModal({
                       day: "numeric",
                       month: "long",
                       year: "numeric",
+                      timeZone: "Asia/Jakarta",
                     })}
                   </p>
                   <p className="text-sm text-gray-600 mt-0.5">
                     {new Date(report.created_at).toLocaleTimeString("id-ID", {
                       hour: "2-digit",
                       minute: "2-digit",
-                    })}
+                      second: "2-digit",
+                      timeZone: "Asia/Jakarta",
+                    })} WIB
                   </p>
                 </div>
               </div>

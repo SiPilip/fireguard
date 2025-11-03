@@ -62,9 +62,11 @@ export async function POST(request: NextRequest) {
     await writeFile(path.join(uploadsDir, filename), buffer);
     const mediaUrl = `/uploads/${filename}`;
 
+    const currentTimestamp = new Date().toISOString();
+    
     const reportId = await executeAndGetLastInsertId(
-      "INSERT INTO reports (user_id, latitude, longitude, description, address, media_url, notes, contact, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [userId, parseFloat(latitude), parseFloat(longitude), description, address, mediaUrl, notes, contact, 'pending']
+      "INSERT INTO reports (user_id, latitude, longitude, description, address, media_url, notes, contact, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [userId, parseFloat(latitude), parseFloat(longitude), description, address, mediaUrl, notes, contact, 'pending', currentTimestamp]
     );
 
     if (global.wss) {
@@ -73,8 +75,8 @@ export async function POST(request: NextRequest) {
         latitude: parseFloat(latitude),
         longitude: parseFloat(longitude),
         media_url: mediaUrl,
-        status: "Pending",
-        created_at: new Date().toISOString(),
+        status: "pending",
+        created_at: currentTimestamp,
         phone_number: user.phone,
       };
       global.wss.broadcast(
