@@ -41,8 +41,10 @@ async function setup() {
     `CREATE TABLE reports (
       id INTEGER PRIMARY KEY AUTOINCREMENT, 
       user_id INTEGER, 
-      latitude REAL NOT NULL, 
-      longitude REAL NOT NULL, 
+      fire_latitude REAL NOT NULL, 
+      fire_longitude REAL NOT NULL,
+      reporter_latitude REAL,
+      reporter_longitude REAL,
       description TEXT,
       address TEXT, 
       media_url TEXT, 

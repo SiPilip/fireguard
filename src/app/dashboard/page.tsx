@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -24,8 +24,10 @@ import {
 
 interface Report {
   id: number;
-  latitude: number;
-  longitude: number;
+  fire_latitude: number;
+  fire_longitude: number;
+  reporter_latitude?: number;
+  reporter_longitude?: number;
   description: string;
   status: 'submitted' | 'verified' | 'dispatched' | 'arrived' | 'completed' | 'false';
   created_at: string;
@@ -92,12 +94,7 @@ export default function DashboardPage() {
   const [error, setError] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  useEffect(() => {
-    checkAuth();
-    fetchReports();
-  }, []);
-
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       const response = await fetch('/api/auth/me');
       if (!response.ok) {
@@ -109,7 +106,12 @@ export default function DashboardPage() {
     } catch {
       router.push('/login');
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    checkAuth();
+    fetchReports();
+  }, [checkAuth]);
 
   const fetchReports = async () => {
     try {

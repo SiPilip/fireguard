@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useEffect, useState, useCallback } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import {
   FaArrowLeft,
   FaMapMarkerAlt,
@@ -26,8 +26,10 @@ const SimpleMap = dynamic(() => import('@/components/SimpleMap'), {
 
 interface Report {
   id: number;
-  latitude: number;
-  longitude: number;
+  fire_latitude: number;
+  fire_longitude: number;
+  reporter_latitude?: number;
+  reporter_longitude?: number;
   description: string;
   status: 'submitted' | 'verified' | 'dispatched' | 'arrived' | 'completed' | 'false';
   created_at: string;
@@ -81,7 +83,13 @@ const statusConfig = {
   },
 };
 
-const TimelineItem = ({ icon: Icon, color, title, time, isLast = false }) => (
+const TimelineItem = ({ icon: Icon, color, title, time, isLast = false }: {
+  icon: React.ComponentType<any>;
+  color: string;
+  title: string;
+  time: string;
+  isLast?: boolean;
+}) => (
   <div className="flex">
     <div className="flex flex-col items-center mr-4">
       <div>
@@ -107,13 +115,7 @@ export default function ReportDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (reportId) {
-      fetchReportDetail();
-    }
-  }, [reportId]);
-
-  const fetchReportDetail = async () => {
+  const fetchReportDetail = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await fetch(`/api/operator/reports/${reportId}`);
@@ -128,7 +130,13 @@ export default function ReportDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [reportId]);
+
+  useEffect(() => {
+    if (reportId) {
+      fetchReportDetail();
+    }
+  }, [reportId, fetchReportDetail]);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
@@ -194,13 +202,16 @@ export default function ReportDetailPage() {
           <div className="bg-white rounded-2xl shadow-lg p-6">
             <h2 className="text-lg font-bold text-gray-800 mb-4">Lokasi Kejadian</h2>
             <div className="h-80 w-full rounded-lg overflow-hidden border-2 border-gray-200">
-              <SimpleMap latitude={report.latitude} longitude={report.longitude} zoom={16} />
+              <SimpleMap latitude={report.fire_latitude} longitude={report.fire_longitude} zoom={16} />
             </div>
             <div className="mt-4 flex items-start gap-3 text-gray-700">
               <FaMapMarkerAlt className="mt-1 text-red-600" />
               <div>
                 <p className="font-semibold">{report.address || 'Alamat tidak tersedia'}</p>
-                <p className="text-xs text-gray-500">{report.latitude}, {report.longitude}</p>
+                <p className="text-xs text-gray-500">🔥 {report.fire_latitude}, {report.fire_longitude}</p>
+                {report.reporter_latitude && report.reporter_longitude && (
+                  <p className="text-xs text-gray-500 mt-1">📍 {report.reporter_latitude}, {report.reporter_longitude}</p>
+                )}
               </div>
             </div>
           </div>
@@ -212,7 +223,9 @@ export default function ReportDetailPage() {
             {report.media_url && (
               <div>
                 <h3 className="font-semibold text-gray-700 mb-2 flex items-center gap-2"><FaImage /> Bukti Foto/Video</h3>
-                <img src={report.media_url} alt="Bukti Laporan" className="w-full max-w-md rounded-lg border" />
+                <div className="relative w-full max-w-md h-64">
+                  <Image src={report.media_url} alt="Bukti Laporan" fill className="object-cover rounded-lg border" />
+                </div>
               </div>
             )}
           </div>

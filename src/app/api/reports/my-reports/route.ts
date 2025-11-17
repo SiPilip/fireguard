@@ -37,8 +37,10 @@ export async function GET(request: NextRequest) {
       const report = await queryRow(
         `SELECT 
           r.id, 
-          r.latitude, 
-          r.longitude, 
+          r.fire_latitude, 
+          r.fire_longitude,
+          r.reporter_latitude,
+          r.reporter_longitude, 
           COALESCE(r.description, r.address, 'Tidak ada deskripsi') as description,
           r.address as location_name,
           r.status, 
@@ -66,8 +68,10 @@ export async function GET(request: NextRequest) {
     const reports = await queryRows(
       `SELECT 
         id, 
-        latitude, 
-        longitude, 
+        fire_latitude, 
+        fire_longitude,
+        reporter_latitude,
+        reporter_longitude, 
         COALESCE(description, address, 'Tidak ada deskripsi') as description,
         address as location_name,
         status, 

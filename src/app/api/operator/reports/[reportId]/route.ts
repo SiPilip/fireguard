@@ -98,8 +98,8 @@ export async function PATCH(
 
     // Kirim notifikasi WhatsApp berdasarkan status
     if (newStatus === 'verified' || newStatus === 'dispatched' || newStatus === 'completed' || newStatus === 'false') {
-      const report = await queryRow<{ user_id: number; latitude: number; longitude: number }>(
-        'SELECT user_id, latitude, longitude FROM reports WHERE id = ?',
+      const report = await queryRow<{ user_id: number; fire_latitude: number; fire_longitude: number }>(
+        'SELECT user_id, fire_latitude, fire_longitude FROM reports WHERE id = ?',
         [reportId]
       );
 
@@ -113,7 +113,7 @@ export async function PATCH(
           let message = '';
 
           if (newStatus === 'verified') {
-            const address = await getAddressFromCoordinates(report.latitude, report.longitude);
+            const address = await getAddressFromCoordinates(report.fire_latitude, report.fire_longitude);
             
             message = 
 `*[FireGuard]*
@@ -134,8 +134,8 @@ Pantau terus notifikasi untuk update selanjutnya.
           else if (newStatus === 'dispatched') {
             // Dapatkan alamat dan ETA secara bersamaan
             const [address, etaResult] = await Promise.all([
-              getAddressFromCoordinates(report.latitude, report.longitude),
-              calculateETA(report.latitude, report.longitude)
+              getAddressFromCoordinates(report.fire_latitude, report.fire_longitude),
+              calculateETA(report.fire_latitude, report.fire_longitude)
             ]);
 
             message = 
@@ -154,7 +154,7 @@ ${address}
 Harap tetap tenang dan amankan diri Anda.`;
           } 
           else if (newStatus === 'completed') {
-            const address = await getAddressFromCoordinates(report.latitude, report.longitude);
+            const address = await getAddressFromCoordinates(report.fire_latitude, report.fire_longitude);
             
             message = 
 `*[FireGuard]*
@@ -175,7 +175,7 @@ Harap tetap waspada dan pastikan tidak ada titik api yang tersisa.
 > _Sent via fonnte.com_`;
           } 
           else if (newStatus === 'false') {
-            const address = await getAddressFromCoordinates(report.latitude, report.longitude);
+            const address = await getAddressFromCoordinates(report.fire_latitude, report.fire_longitude);
             
             message = 
 `*[FireGuard]*

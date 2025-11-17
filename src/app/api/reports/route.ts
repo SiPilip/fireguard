@@ -39,17 +39,19 @@ export async function POST(request: NextRequest) {
     }
     
     const formData = await request.formData();
-    const latitude = formData.get("latitude") as string;
-    const longitude = formData.get("longitude") as string;
+    const fireLatitude = formData.get("fireLatitude") as string;
+    const fireLongitude = formData.get("fireLongitude") as string;
+    const reporterLatitude = formData.get("reporterLatitude") as string | null;
+    const reporterLongitude = formData.get("reporterLongitude") as string | null;
     const description = formData.get("description") as string | null;
     const address = formData.get("address") as string | null;
     const mediaFile = formData.get("media") as File | null;
     const notes = formData.get("notes") as string | null;
     const contact = formData.get("contact") as string | null;
 
-    if (!latitude || !longitude || !mediaFile) {
+    if (!fireLatitude || !fireLongitude || !mediaFile) {
       return NextResponse.json(
-        { message: "Data laporan tidak lengkap (lokasi dan media wajib)." },
+        { message: "Data laporan tidak lengkap (lokasi kebakaran dan media wajib)." },
         { status: 400 }
       );
     }
@@ -65,15 +67,30 @@ export async function POST(request: NextRequest) {
     const currentTimestamp = new Date().toISOString();
     
     const reportId = await executeAndGetLastInsertId(
-      "INSERT INTO reports (user_id, latitude, longitude, description, address, media_url, notes, contact, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [userId, parseFloat(latitude), parseFloat(longitude), description, address, mediaUrl, notes, contact, 'pending', currentTimestamp]
+      "INSERT INTO reports (user_id, fire_latitude, fire_longitude, reporter_latitude, reporter_longitude, description, address, media_url, notes, contact, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [
+        userId, 
+        parseFloat(fireLatitude), 
+        parseFloat(fireLongitude), 
+        reporterLatitude ? parseFloat(reporterLatitude) : null,
+        reporterLongitude ? parseFloat(reporterLongitude) : null,
+        description, 
+        address, 
+        mediaUrl, 
+        notes, 
+        contact, 
+        'pending', 
+        currentTimestamp
+      ]
     );
 
     if (global.wss) {
       const newReport = {
         id: reportId,
-        latitude: parseFloat(latitude),
-        longitude: parseFloat(longitude),
+        fire_latitude: parseFloat(fireLatitude),
+        fire_longitude: parseFloat(fireLongitude),
+        reporter_latitude: reporterLatitude ? parseFloat(reporterLatitude) : null,
+        reporter_longitude: reporterLongitude ? parseFloat(reporterLongitude) : null,
         media_url: mediaUrl,
         status: "pending",
         created_at: currentTimestamp,

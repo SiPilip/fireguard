@@ -6,7 +6,7 @@ import path from 'path';
 export async function GET(request: NextRequest) {
   try {
     const reports = await queryRows(
-      `SELECT r.id, r.latitude, r.longitude, r.status, r.created_at, r.media_url, u.phone_number
+      `SELECT r.id, r.fire_latitude, r.fire_longitude, r.reporter_latitude, r.reporter_longitude, r.status, r.created_at, r.media_url, r.notes, r.contact, u.phone_number
        FROM reports r JOIN users u ON r.user_id = u.id
        ORDER BY r.created_at DESC`
     );

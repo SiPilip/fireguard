@@ -79,7 +79,8 @@ export default function NewReportPage() {
   const { modal, success, error: showError } = useModal();
   const { toast, error: errorToast, hideToast } = useToast();
 
-  const [position, setPosition] = useState<[number, number] | null>(null);
+  const [firePosition, setFirePosition] = useState<[number, number] | null>(null);
+  const [reporterPosition, setReporterPosition] = useState<[number, number] | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [description, setDescription] = useState("");
   const [address, setAddress] = useState("");
@@ -116,8 +117,8 @@ export default function NewReportPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!position) {
-      setError("Lokasi belum ditentukan. Mohon tandai lokasi di peta.");
+    if (!firePosition) {
+      setError("Lokasi kebakaran belum ditentukan. Mohon tandai lokasi di peta.");
       return;
     }
     if (!file) {
@@ -129,8 +130,12 @@ export default function NewReportPage() {
     setError("");
 
     const formData = new FormData();
-    formData.append("latitude", position[0].toString());
-    formData.append("longitude", position[1].toString());
+    formData.append("fireLatitude", firePosition[0].toString());
+    formData.append("fireLongitude", firePosition[1].toString());
+    if (reporterPosition) {
+      formData.append("reporterLatitude", reporterPosition[0].toString());
+      formData.append("reporterLongitude", reporterPosition[1].toString());
+    }
     formData.append("description", description);
     formData.append("address", address);
     formData.append("media", file);
@@ -208,19 +213,47 @@ export default function NewReportPage() {
           <div className="lg:col-span-3 space-y-5">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200/60 overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-100">
-                <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-5 bg-gradient-to-b from-red-500 to-orange-500 rounded-full"></div>
-                  <div>
-                    <h2 className="text-base font-semibold text-gray-900">Lokasi Kejadian</h2>
-                    <p className="text-xs text-gray-500 mt-0.5">Klik peta untuk menandai lokasi</p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-5 bg-gradient-to-b from-red-500 to-orange-500 rounded-full"></div>
+                    <div>
+                      <h2 className="text-base font-semibold text-gray-900">Lokasi Kejadian</h2>
+                      <p className="text-xs text-gray-500 mt-0.5">Klik peta untuk menandai lokasi kebakaran</p>
+                    </div>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                          (position) => {
+                            const pos: [number, number] = [position.coords.latitude, position.coords.longitude];
+                            setReporterPosition(pos);
+                            if (!firePosition) {
+                              setFirePosition(pos);
+                            }
+                          },
+                          (error) => {
+                            console.error("Error getting location:", error);
+                            alert("Tidak dapat mengakses lokasi GPS Anda");
+                          }
+                        );
+                      }
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all"
+                  >
+                    <FaMapMarkerAlt />
+                    Set Lokasi Saya
+                  </button>
                 </div>
               </div>
               <div className="p-4">
                 <div className="h-[420px] w-full rounded-xl overflow-hidden border border-gray-200 relative z-0">
                   <MapWithNoSSR
-                    position={position}
-                    setPosition={setPosition}
+                    firePosition={firePosition}
+                    setFirePosition={setFirePosition}
+                    reporterPosition={reporterPosition}
+                    setReporterPosition={setReporterPosition}
                     onNearestStationFound={setNearestStation}
                   />
                 </div>
@@ -351,7 +384,7 @@ export default function NewReportPage() {
 
               <button
                 type="submit"
-                disabled={isLoading || !position || !file}
+                disabled={isLoading || !firePosition || !file}
                 className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-red-500 to-orange-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-red-500/25 hover:shadow-xl hover:shadow-red-500/30 hover:from-red-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:from-gray-300 disabled:to-gray-400 disabled:shadow-none disabled:cursor-not-allowed transition-all duration-200"
               >
                 {isLoading ? (

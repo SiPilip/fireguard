@@ -8,8 +8,6 @@ import {
   FaTruck,
   FaClock,
   FaBuilding,
-  FaList,
-  FaMap,
   FaSyncAlt,
   FaSignOutAlt,
   FaUserShield,
@@ -29,8 +27,10 @@ import Toast from "@/components/Toast";
 interface Report {
   id: number;
   phone_number: string;
-  latitude: number;
-  longitude: number;
+  fire_latitude: number;
+  fire_longitude: number;
+  reporter_latitude?: number;
+  reporter_longitude?: number;
   status: string;
   created_at: string;
   media_url: string;
@@ -123,18 +123,6 @@ const StatusBadge = ({ status }: { status: string }) => {
       <span>{config.text}</span>
     </div>
   );
-};
-
-const getStatusColor = (status: string) => {
-  const colors: { [key: string]: string } = {
-    submitted: "border-red-500",
-    verified: "border-yellow-500",
-    dispatched: "border-blue-500",
-    arrived: "border-indigo-500",
-    completed: "border-green-500",
-    false: "border-gray-500",
-  };
-  return colors[status] || "border-gray-400";
 };
 
 const ReportListItem = ({
@@ -554,7 +542,7 @@ export default function OperatorDashboard() {
               </div>
             </div>
             <div className="flex-grow h-full w-full">
-              <AdminMap reports={reports} onReportClick={handleSelectReport} />
+              <AdminMap reports={reports} onReportClick={handleSelectReport} selectedReport={selectedReport} />
             </div>
           </section>
         </div>

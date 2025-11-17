@@ -18,8 +18,10 @@ import {
 interface Report {
   id: number;
   phone_number: string;
-  latitude: number;
-  longitude: number;
+  fire_latitude: number;
+  fire_longitude: number;
+  reporter_latitude?: number;
+  reporter_longitude?: number;
   status: string;
   created_at: string;
   media_url: string;
@@ -186,22 +188,22 @@ export default function ReportDetailModal({
             </div>
           </div>
 
-          {/* Lokasi */}
+          {/* Lokasi Kebakaran */}
           <div className="bg-white rounded-xl p-5 border border-gray-200/60 shadow-sm">
             <div className="flex items-start gap-3">
               <div className="p-2 bg-red-100 rounded-lg">
                 <FaMapMarkerAlt className="text-red-600 text-sm" />
               </div>
               <div className="flex-1">
-                <p className="text-xs text-gray-500 mb-2">Koordinat Lokasi</p>
+                <p className="text-xs text-gray-500 mb-2">🔥 Lokasi Kebakaran</p>
                 <p className="text-sm text-gray-900 font-mono">
-                  Lat: {report.latitude.toFixed(6)}
+                  Lat: {report.fire_latitude.toFixed(6)}
                 </p>
                 <p className="text-sm text-gray-900 font-mono">
-                  Lng: {report.longitude.toFixed(6)}
+                  Lng: {report.fire_longitude.toFixed(6)}
                 </p>
                 <a
-                  href={`https://www.google.com/maps?q=${report.latitude},${report.longitude}`}
+                  href={`https://www.google.com/maps?q=${report.fire_latitude},${report.fire_longitude}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:text-blue-700 text-xs font-medium mt-2 inline-flex items-center gap-1 hover:underline"
@@ -211,6 +213,34 @@ export default function ReportDetailModal({
               </div>
             </div>
           </div>
+
+          {/* Lokasi Pelapor */}
+          {report.reporter_latitude && report.reporter_longitude && (
+            <div className="bg-white rounded-xl p-5 border border-gray-200/60 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <FaMapMarkerAlt className="text-blue-600 text-sm" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs text-gray-500 mb-2">📍 Lokasi Pelapor</p>
+                  <p className="text-sm text-gray-900 font-mono">
+                    Lat: {report.reporter_latitude.toFixed(6)}
+                  </p>
+                  <p className="text-sm text-gray-900 font-mono">
+                    Lng: {report.reporter_longitude.toFixed(6)}
+                  </p>
+                  <a
+                    href={`https://www.google.com/maps?q=${report.reporter_latitude},${report.reporter_longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-700 text-xs font-medium mt-2 inline-flex items-center gap-1 hover:underline"
+                  >
+                    Buka di Google Maps →
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Catatan */}
           {report.notes && (
