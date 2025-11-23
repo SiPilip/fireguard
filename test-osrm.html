@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>OSRM Routing Test</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        #info { position: absolute; top: 10px; right: 10px; z-index: 1000; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); max-width: 300px; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="info">
+        <h3>OSRM Routing Test</h3>
+        <div id="status">Loading...</div>
+    </div>
+
+    <script>
+        // Koordinat pos damkar dan lokasi kebakaran dari screenshot
+        const fireSt = [-2.95996, 104.75111]; // Pos Pemadam Kebakaran Provinsi Sumsel (paling dekat di screenshot)
+        const fireLoc = [-2.96833, 104.76444]; // Lokasi kebakaran dari screenshot (sekitar koordinat di gambar)
+
+        // Initialize map
+        const map = L.map('map').setView(fireLoc, 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Add markers
+        L.marker(fireSt).addTo(map).bindPopup('🚒 Fire Station');
+        L.marker(fireLoc).addTo(map).bindPopup('🔥 Fire Location');
+
+        // Fetch route from OSRM
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${fireSt[1]},${fireSt[0]};${fireLoc[1]},${fireLoc[0]}?overview=full&geometries=geojson&steps=true`;
+        
+        document.getElementById('status').innerHTML = `
+            <p><strong>Testing OSRM API...</strong></p>
+            <p>From: [${fireSt[0]}, ${fireSt[1]}]</p>
+            <p>To: [${fireLoc[0]}, ${fireLoc[1]}]</p>
+            <p>URL: <small>${osrmUrl}</small></p>
+        `;
+
+        fetch(osrmUrl)
+            .then(response => response.json())
+            .then(data => {
+                console.log('OSRM Response:', data);
+                
+                if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+                    const route = data.routes[0];
+                    const coords = route.geometry.coordinates;
+                    
+                    // Convert [lng, lat] to [lat, lng]
+                    const latlngs = coords.map(c => [c[1], c[0]]);
+                    
+                    // Draw route
+                    const polyline = L.polyline(latlngs, {
+                        color: 'red',
+                        weight: 6,
+                        opacity: 0.8
+                    }).addTo(map);
+                    
+                    map.fitBounds(polyline.getBounds(), { padding: [50, 50] });
+                    
+                    document.getElementById('status').innerHTML = `
+                        <p style="color: green;"><strong>✓ Route Found!</strong></p>
+                        <p><strong>Distance:</strong> ${(route.distance / 1000).toFixed(2)} km</p>
+                        <p><strong>Duration:</strong> ${Math.round(route.duration / 60)} min</p>
+                        <p><strong>Points:</strong> ${coords.length}</p>
+                        <p style="font-size: 12px; color: #666;">Route follows roads: ${coords.length > 50 ? 'YES ✓' : 'MAYBE'}</p>
+                    `;
+                } else {
+                    throw new Error('No route found');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('status').innerHTML = `
+                    <p style="color: red;"><strong>✗ Error</strong></p>
+                    <p>${error.message}</p>
+                `;
+            });
+    </script>
+</body>
+</html>

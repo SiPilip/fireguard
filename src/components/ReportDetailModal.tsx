@@ -1,7 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
+
+const AdminMap = dynamic(() => import("./AdminMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
+      <div className="flex flex-col items-center gap-2">
+        <div className="animate-spin h-6 w-6 border-2 border-gray-400 border-t-transparent rounded-full"></div>
+        <span className="text-xs">Memuat Peta...</span>
+      </div>
+    </div>
+  ),
+});
 import {
   FaTimes,
   FaMapMarkerAlt,
@@ -97,11 +110,11 @@ export default function ReportDetailModal({
   const statusDisplay = getStatusDisplay(report.status);
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       onClick={onClose}
     >
-      <div 
+      <div
         className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
@@ -256,6 +269,28 @@ export default function ReportDetailModal({
               </div>
             </div>
           )}
+
+          {/* Peta Rute Kebakaran */}
+          <div className="bg-white rounded-xl p-5 border border-gray-200/60 shadow-sm overflow-hidden">
+            <div className="flex items-start gap-3 mb-3">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <FaMapMarkerAlt className="text-orange-600 text-sm" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 mb-1">Rute Pemadam Kebakaran</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  Estimasi Rute Tercepat
+                </p>
+              </div>
+            </div>
+            <div className="w-full h-80 rounded-lg overflow-hidden border border-gray-200 relative z-0">
+              <AdminMap
+                reports={[report]}
+                selectedReport={report}
+                onReportClick={() => { }}
+              />
+            </div>
+          </div>
 
           {/* Media */}
           {report.media_url && (
