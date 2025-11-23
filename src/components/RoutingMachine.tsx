@@ -2,43 +2,33 @@ import L from "leaflet";
 import "leaflet-routing-machine";
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 import { useMap } from "react-leaflet";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 
 interface RoutingMachineProps {
   start: [number, number];
   end: [number, number];
-  onRouteFound?: (summary: any) => void;
+  onRouteFound?: (summary: { totalDistance: number; totalTime: number }) => void;
 }
 
 const RoutingMachine = ({ start, end, onRouteFound }: RoutingMachineProps) => {
   const map = useMap();
-
-  // Memoize coordinates to prevent unnecessary re-renders
-  const startCoords = useMemo(() => start, [start[0], start[1]]);
-  const endCoords = useMemo(() => end, [end[0], end[1]]);
 
   useEffect(() => {
     if (!map) return;
 
     let polyline: L.Polyline | null = null;
     let timeoutId: NodeJS.Timeout;
-    let fetchTimeoutId: NodeJS.Timeout;
 
     const fetchRoute = async () => {
       try {
         // Validasi koordinat
-        if (!startCoords || !endCoords || startCoords.length !== 2 || endCoords.length !== 2) {
+        if (!start || !end || start.length !== 2 || end.length !== 2) {
           return;
         }
 
         // PENTING: start dan end sudah dalam format [lat, lng] dari Leaflet
         // OSRM API membutuhkan format: longitude,latitude (dibalik!)
-        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${startCoords[1]},${startCoords[0]};${endCoords[1]},${endCoords[0]}?overview=full&geometries=geojson&alternatives=false&steps=true&annotations=true`;
-
-        console.log('🗺️ Fetching route:', {
-          from: `Lat: ${startCoords[0]}, Lng: ${startCoords[1]}`,
-          to: `Lat: ${endCoords[0]}, Lng: ${endCoords[1]}`
-        });
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson&alternatives=false&steps=true&annotations=true`;
 
         // Fetch dengan timeout manual
         const controller = new AbortController();
@@ -71,7 +61,7 @@ const RoutingMachine = ({ start, end, onRouteFound }: RoutingMachineProps) => {
           // Leaflet membutuhkan format [lat, lng], jadi harus dibalik!
           const latlngs: L.LatLngExpression[] = coordinates.map((coord: number[]) => [coord[1], coord[0]]);
 
-          // Hapus polyline lama jika ada (meskipun cleanup function sudah handle, ini double check)
+          // Hapus polyline lama jika ada
           if (polyline) {
             map.removeLayer(polyline);
           }
@@ -102,35 +92,29 @@ const RoutingMachine = ({ start, end, onRouteFound }: RoutingMachineProps) => {
               totalTime: route.duration, // dalam detik
             });
           }
-
-          console.log('✅ Route found successfully');
         } else {
           throw new Error(data.message || 'No route found');
         }
-      } catch (error: any) {
-        if (error.name === 'AbortError') return;
-        console.error('❌ Error fetching route:', error.message);
+      } catch (error: unknown) {
+        if (error instanceof Error && error.name === 'AbortError') return;
 
         // Fallback: gunakan garis lurus jika routing gagal
-        // Tapi beri delay sedikit sebelum fallback agar tidak flickering jika hanya lag sebentar
-        console.warn('⚠️ Using straight line fallback');
-
         if (polyline) map.removeLayer(polyline);
 
-        polyline = L.polyline([startCoords, endCoords], {
+        polyline = L.polyline([start, end], {
           color: '#EF4444',
           weight: 4,
           opacity: 0.5,
           dashArray: '10, 10',
         }).addTo(map);
 
-        const bounds = L.latLngBounds([startCoords, endCoords]);
+        const bounds = L.latLngBounds([start, end]);
         map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
       }
     };
 
     // Debounce fetch untuk menghindari spam request saat drag cepat
-    fetchTimeoutId = setTimeout(fetchRoute, 500);
+    const fetchTimeoutId = setTimeout(fetchRoute, 500);
 
     return () => {
       if (polyline) {
@@ -143,7 +127,7 @@ const RoutingMachine = ({ start, end, onRouteFound }: RoutingMachineProps) => {
         clearTimeout(fetchTimeoutId);
       }
     };
-  }, [map, startCoords, endCoords, onRouteFound]);
+  }, [map, start, end, onRouteFound]);
 
   return null;
 };
