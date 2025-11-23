@@ -43,10 +43,10 @@ async function sendWhatsAppMessage(target: string, message: string) {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { reportId: string } }
+  { params }: { params: Promise<{ reportId: string }> }
 ) {
   try {
-    const reportId = params.reportId;
+    const { reportId } = await params;
     const report = await queryRow(
       `SELECT r.id, r.latitude, r.longitude, r.status, r.created_at, r.media_url, u.phone_number
        FROM reports r JOIN users u ON r.user_id = u.id
@@ -61,7 +61,7 @@ export async function GET(
     }
     return NextResponse.json(report);
   } catch (error) {
-    console.error(`[API Get Report #${params.reportId}] Error:`, error);
+    console.error(`[API Get Report] Error:`, error);
     return NextResponse.json(
       { message: "Terjadi kesalahan pada server." },
       { status: 500 }
@@ -71,10 +71,10 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { reportId: string } }
+  { params }: { params: Promise<{ reportId: string }> }
 ) {
   try {
-    const reportId = params.reportId;
+    const { reportId } = await params;
     const { status: newStatus } = await request.json();
 
     if (!newStatus) {
@@ -114,9 +114,9 @@ export async function PATCH(
 
           if (newStatus === 'verified') {
             const address = await getAddressFromCoordinates(report.fire_latitude, report.fire_longitude);
-            
-            message = 
-`*[FireGuard]*
+
+            message =
+              `*[FireGuard]*
 
 ✓ Laporan Anda *#${reportId}* sedang dalam *PROSES VERIFIKASI*.
 
@@ -138,8 +138,8 @@ Pantau terus notifikasi untuk update selanjutnya.
               calculateETA(report.fire_latitude, report.fire_longitude)
             ]);
 
-            message = 
-`*[FireGuard]*
+            message =
+              `*[FireGuard]*
 
 Laporan Anda *#${reportId}* telah diverifikasi.
 
@@ -152,12 +152,12 @@ ${address}
 *${etaResult.etaMinutes} menit* (jarak sekitar ${etaResult.distanceKm} km).
 
 Harap tetap tenang dan amankan diri Anda.`;
-          } 
+          }
           else if (newStatus === 'completed') {
             const address = await getAddressFromCoordinates(report.fire_latitude, report.fire_longitude);
-            
-            message = 
-`*[FireGuard]*
+
+            message =
+              `*[FireGuard]*
 
 ✅ Laporan Anda *#${reportId}* telah *SELESAI* ditangani.
 
@@ -173,12 +173,12 @@ Jika ada kerusakan atau memerlukan bantuan lebih lanjut, silakan hubungi:
 Harap tetap waspada dan pastikan tidak ada titik api yang tersisa.
 
 > _Sent via fonnte.com_`;
-          } 
+          }
           else if (newStatus === 'false') {
             const address = await getAddressFromCoordinates(report.fire_latitude, report.fire_longitude);
-            
-            message = 
-`*[FireGuard]*
+
+            message =
+              `*[FireGuard]*
 
 ❌ Laporan Anda *#${reportId}* telah diverifikasi sebagai *LAPORAN PALSU*.
 
@@ -224,7 +224,7 @@ Mohon gunakan layanan darurat dengan bijak dan bertanggung jawab.
       message: `Status laporan #${reportId} berhasil diperbarui menjadi ${newStatus}.`,
     });
   } catch (error) {
-    console.error(`[API Update Report #${params.reportId}] Error:`, error);
+    console.error(`[API Update Report] Error:`, error);
     return NextResponse.json(
       { message: "Terjadi kesalahan pada server." },
       { status: 500 }
