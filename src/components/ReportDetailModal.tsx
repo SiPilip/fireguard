@@ -45,7 +45,8 @@ interface Report {
 interface ReportDetailModalProps {
   report: Report;
   onClose: () => void;
-  onUpdateStatus: (reportId: number, newStatus: string) => Promise<void>;
+  onUpdateStatus?: (reportId: number, newStatus: string) => Promise<void>;
+  readOnly?: boolean;
 }
 
 const StatusButton = ({
@@ -72,10 +73,12 @@ export default function ReportDetailModal({
   report,
   onClose,
   onUpdateStatus,
+  readOnly = false,
 }: ReportDetailModalProps) {
   const [isUpdating, setIsUpdating] = useState(false);
 
   const handleStatusUpdate = async (newStatus: string) => {
+    if (!onUpdateStatus || readOnly) return;
     setIsUpdating(true);
     try {
       await onUpdateStatus(report.id, newStatus);
@@ -324,35 +327,37 @@ export default function ReportDetailModal({
         </div>
 
         {/* Action Buttons */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-200/60 px-6 py-5">
-          <p className="text-xs font-medium text-gray-600 mb-3">Ubah Status Laporan:</p>
-          <div className="flex flex-wrap gap-2.5 justify-end">
-            <StatusButton
-              label="Verifikasi"
-              icon={<FaCheck className="text-sm" />}
-              color="bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700"
-              onClick={() => handleStatusUpdate("verified")}
-            />
-            <StatusButton
-              label="Kirim Unit"
-              icon={<FaTruck className="text-sm" />}
-              color="bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700"
-              onClick={() => handleStatusUpdate("dispatched")}
-            />
-            <StatusButton
-              label="Selesaikan"
-              icon={<FaCheckCircle className="text-sm" />}
-              color="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
-              onClick={() => handleStatusUpdate("completed")}
-            />
-            <StatusButton
-              label="Laporan Palsu"
-              icon={<FaTimesCircle className="text-sm" />}
-              color="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700"
-              onClick={() => handleStatusUpdate("false")}
-            />
+        {!readOnly && onUpdateStatus && (
+          <div className="sticky bottom-0 bg-white border-t border-gray-200/60 px-6 py-5">
+            <p className="text-xs font-medium text-gray-600 mb-3">Ubah Status Laporan:</p>
+            <div className="flex flex-wrap gap-2.5 justify-end">
+              <StatusButton
+                label="Verifikasi"
+                icon={<FaCheck className="text-sm" />}
+                color="bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700"
+                onClick={() => handleStatusUpdate("verified")}
+              />
+              <StatusButton
+                label="Kirim Unit"
+                icon={<FaTruck className="text-sm" />}
+                color="bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700"
+                onClick={() => handleStatusUpdate("dispatched")}
+              />
+              <StatusButton
+                label="Selesaikan"
+                icon={<FaCheckCircle className="text-sm" />}
+                color="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                onClick={() => handleStatusUpdate("completed")}
+              />
+              <StatusButton
+                label="Laporan Palsu"
+                icon={<FaTimesCircle className="text-sm" />}
+                color="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700"
+                onClick={() => handleStatusUpdate("false")}
+              />
+            </div>
           </div>
-        </div>
+        )}
 
         {isUpdating && (
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center rounded-2xl">

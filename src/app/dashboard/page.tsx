@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import {
   FaFire,
   FaChartBar,
@@ -22,6 +23,11 @@ import {
   FaTimes,
 } from 'react-icons/fa';
 
+// Import UserReportDetailModal dynamically to avoid SSR issues if it uses map
+const UserReportDetailModal = dynamic(() => import('@/components/UserReportDetailModal'), {
+  ssr: false,
+});
+
 interface Report {
   id: number;
   fire_latitude: number;
@@ -34,6 +40,10 @@ interface Report {
   updated_at: string;
   admin_notes?: string;
   location_name?: string;
+  phone_number: string; // Added to match ReportDetailModal requirements
+  media_url: string;   // Added to match ReportDetailModal requirements
+  notes?: string;      // Added to match ReportDetailModal requirements
+  contact?: string;    // Added to match ReportDetailModal requirements
 }
 
 interface User {
@@ -41,37 +51,53 @@ interface User {
   phone: string;
 }
 
-const statusConfig = {
+type StatusType = 'submitted' | 'verified' | 'dispatched' | 'arrived' | 'completed' | 'false';
+
+const statusConfig: Record<StatusType, { label: string; color: string; textColor: string; icon: any }> = {
   submitted: {
     label: 'Menunggu Verifikasi',
     color: 'bg-yellow-500',
+    textColor: 'text-yellow-700',
     icon: FaClock,
   },
   verified: {
     label: 'Terverifikasi',
     color: 'bg-blue-500',
+    textColor: 'text-blue-700',
     icon: FaCheckCircle,
   },
   dispatched: {
     label: 'Unit Dalam Perjalanan',
     color: 'bg-purple-500',
+    textColor: 'text-purple-700',
     icon: FaTruck,
   },
   arrived: {
     label: 'Unit Telah Tiba',
     color: 'bg-indigo-500',
+    textColor: 'text-indigo-700',
     icon: FaCheckCircle,
   },
   completed: {
     label: 'Selesai',
     color: 'bg-green-500',
+    textColor: 'text-green-700',
     icon: FaCheckCircle,
   },
   false: {
     label: 'Laporan Palsu',
     color: 'bg-red-500',
+    textColor: 'text-red-700',
     icon: FaTimesCircle,
   },
+};
+
+// Default status config for unknown statuses
+const defaultStatusConfig = {
+  label: 'Status Tidak Diketahui',
+  color: 'bg-gray-500',
+  textColor: 'text-gray-700',
+  icon: FaExclamationCircle,
 };
 
 const StatCard = ({ title, value, icon: Icon, gradient }: { title: string; value: number; icon: any; gradient: string }) => (
@@ -93,6 +119,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
 
   const checkAuth = useCallback(async () => {
     try {
@@ -147,18 +174,25 @@ export default function DashboardPage() {
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      {/* Detail Modal */}
+      {selectedReport && (
+        <UserReportDetailModal
+          report={selectedReport}
+          onClose={() => setSelectedReport(null)}
+        />
+      )}
+
       {/* Mobile Overlay */}
       {sidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200/60 flex flex-col transform transition-transform duration-300 lg:transform-none ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-      }`}>
+      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200/60 flex flex-col transform transition-transform duration-300 lg:transform-none ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        }`}>
         <div className="flex items-center justify-between gap-2.5 px-6 h-16 md:h-20 border-b border-gray-200/60">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl">
@@ -166,7 +200,7 @@ export default function DashboardPage() {
             </div>
             <span className="text-lg md:text-xl font-semibold text-gray-900">FireGuard</span>
           </div>
-          <button 
+          <button
             onClick={() => setSidebarOpen(false)}
             className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -200,7 +234,7 @@ export default function DashboardPage() {
         {/* Header */}
         <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/60 h-16 md:h-20 flex items-center justify-between px-4 md:px-8">
           <div className="flex items-center gap-3">
-            <button 
+            <button
               onClick={() => setSidebarOpen(true)}
               className="lg:hidden p-2 hover:bg-gray-100 rounded-xl transition-colors"
             >
@@ -263,14 +297,14 @@ export default function DashboardPage() {
             ) : (
               <div className="space-y-3">
                 {reports.map((report) => {
-                  const statusInfo = statusConfig[report.status];
+                  const statusInfo = statusConfig[report.status as StatusType] || defaultStatusConfig;
                   const StatusIcon = statusInfo.icon;
 
                   return (
                     <div
                       key={report.id}
                       className="bg-white hover:bg-gray-50 rounded-xl p-3 md:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 hover:shadow-sm transition-all cursor-pointer border border-gray-200/60"
-                      onClick={() => router.push(`/dashboard/report/${report.id}`)}
+                      onClick={() => setSelectedReport(report)}
                     >
                       <div className="flex items-center gap-3">
                         <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${statusInfo.color} flex-shrink-0`}>
@@ -282,7 +316,7 @@ export default function DashboardPage() {
                         </div>
                       </div>
                       <div className="text-left sm:text-right pl-13 sm:pl-0">
-                        <p className={`text-xs font-medium ${statusInfo.color.replace('bg-', 'text-')}`}>{statusInfo.label}</p>
+                        <p className={`text-xs font-medium ${statusInfo.textColor}`}>{statusInfo.label}</p>
                         <p className="text-xs text-gray-400 mt-0.5">{formatDate(report.updated_at)}</p>
                       </div>
                     </div>

@@ -15,6 +15,7 @@ import {
   FaClock,
   FaRoad,
   FaExclamationTriangle,
+  FaTimes,
 } from "react-icons/fa";
 
 const MapWithNoSSR = dynamic(() => import("@/components/ReportMap"), {
@@ -28,6 +29,47 @@ const MapWithNoSSR = dynamic(() => import("@/components/ReportMap"), {
     </div>
   ),
 });
+
+// Komponen untuk menampilkan instruksi penggunaan peta
+function MapInstructions() {
+  const [show, setShow] = useState(true);
+
+  if (!show) return null;
+
+  return (
+    <div className="mt-3 bg-blue-50 border border-blue-100 rounded-xl p-4 relative">
+      <button
+        onClick={() => setShow(false)}
+        className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors"
+        aria-label="Tutup instruksi"
+      >
+        <FaTimes className="text-sm" />
+      </button>
+      <div className="flex items-start gap-3">
+        <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
+          <FaExclamationTriangle className="text-blue-600 text-sm" />
+        </div>
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900 mb-1">Panduan Peta</h3>
+          <ul className="space-y-1.5">
+            <li className="flex items-start gap-2 text-xs text-gray-600">
+              <span className="mt-0.5 w-1.5 h-1.5 bg-red-500 rounded-full flex-shrink-0"></span>
+              <span><strong>Klik</strong> pada peta untuk menandai titik api.</span>
+            </li>
+            <li className="flex items-start gap-2 text-xs text-gray-600">
+              <span className="mt-0.5 w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0"></span>
+              <span><strong>Seret</strong> marker 🔥 untuk menyesuaikan posisi.</span>
+            </li>
+            <li className="flex items-start gap-2 text-xs text-gray-600">
+              <span className="mt-0.5 w-1.5 h-1.5 bg-green-500 rounded-full flex-shrink-0"></span>
+              <span>Gunakan tombol <strong>Set Lokasi Saya</strong> untuk akurasi tinggi.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function NearestStationInfoBox({ info }: { info: NearestStationInfo }) {
   const distanceInKm = (info.distance / 1000).toFixed(2);
@@ -257,6 +299,7 @@ export default function NewReportPage() {
                     onNearestStationFound={setNearestStation}
                   />
                 </div>
+                <MapInstructions />
                 {nearestStation && <NearestStationInfoBox info={nearestStation} />}
               </div>
             </div>
@@ -332,7 +375,7 @@ export default function NewReportPage() {
                 )}
               </div>
             </div>
-            
+
             {/* Additional Info */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200/60 overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-100">

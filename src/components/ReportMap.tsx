@@ -136,124 +136,8 @@ function MapClickHandler({ onMapClick }: { onMapClick: (latlng: [number, number]
   return null;
 }
 
-// Komponen untuk menampilkan instruksi penggunaan peta
-function MapInstructions() {
-  const [show, setShow] = useState(true);
-
-  if (!show) return null;
-
-  return (
-    <div className="absolute top-2 left-2 z-[1000] bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-3 max-w-xs">
-      <div className="flex items-start gap-2">
-        <div className="flex-1">
-          <p className="text-xs font-semibold text-gray-900 mb-1.5">📍 Cara Menggunakan Peta:</p>
-          <ul className="text-xs text-gray-700 space-y-1">
-            <li className="flex items-start gap-1.5">
-              <span className="text-red-500 font-bold mt-0.5">•</span>
-              <span><strong>Klik</strong> pada peta untuk menandai lokasi kebakaran</span>
-            </li>
-            <li className="flex items-start gap-1.5">
-              <span className="text-blue-500 font-bold mt-0.5">•</span>
-              <span><strong>Seret</strong> marker 🔥 untuk menyesuaikan lokasi</span>
-            </li>
-            <li className="flex items-start gap-1.5">
-              <span className="text-green-500 font-bold mt-0.5">•</span>
-              <span>Gunakan tombol <strong>&quot;Set Lokasi Saya&quot;</strong> di atas untuk lokasi pelapor</span>
-            </li>
-          </ul>
-        </div>
-        <button
-          onClick={() => setShow(false)}
-          className="text-gray-400 hover:text-gray-600 transition-colors"
-          aria-label="Tutup instruksi"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-    </div>
-  );
-}
-
 // Komponen untuk kontrol mendapatkan lokasi
-function GetLocationButton({ setPosition }: { setPosition: (position: [number, number]) => void }) {
-  const map = useMap();
-  const [isGettingLocation, setIsGettingLocation] = useState(false);
-
-  const handleClick = () => {
-    setIsGettingLocation(true);
-
-    // Gunakan Geolocation API dengan opsi high accuracy
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const newPos: [number, number] = [position.coords.latitude, position.coords.longitude];
-          setPosition(newPos);
-          map.flyTo(newPos, 17, {
-            duration: 1.5,
-            easeLinearity: 0.25
-          });
-          setIsGettingLocation(false);
-
-          console.log('📍 Location obtained:', {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-            accuracy: `${position.coords.accuracy.toFixed(2)} meters`
-          });
-        },
-        (error) => {
-          setIsGettingLocation(false);
-          let errorMessage = 'Tidak dapat mendapatkan lokasi Anda.';
-
-          switch (error.code) {
-            case error.PERMISSION_DENIED:
-              errorMessage = 'Akses lokasi ditolak. Mohon izinkan akses lokasi di browser Anda.';
-              break;
-            case error.POSITION_UNAVAILABLE:
-              errorMessage = 'Informasi lokasi tidak tersedia.';
-              break;
-            case error.TIMEOUT:
-              errorMessage = 'Permintaan lokasi timeout. Coba lagi.';
-              break;
-          }
-
-          alert(errorMessage);
-          console.error('Geolocation error:', error);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        }
-      );
-    } else {
-      setIsGettingLocation(false);
-      alert('Geolocation tidak didukung oleh browser Anda.');
-    }
-  };
-
-  return (
-    <button
-      type="button"
-      onClick={handleClick}
-      disabled={isGettingLocation}
-      className="absolute top-2 right-2 z-[1000] rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
-    >
-      {isGettingLocation ? (
-        <>
-          <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-          <span>Mendapatkan Lokasi...</span>
-        </>
-      ) : (
-        <>
-          <span>📍</span>
-          <span>Dapatkan Lokasi Kebakaran</span>
-        </>
-      )}
-    </button>
-  );
-}
+// (Removed as per request)
 
 // Fungsi untuk menghitung jarak routing sebenarnya menggunakan OSRM API
 async function getRoutingDistance(from: [number, number], to: [number, number]): Promise<{ distance: number; duration: number } | null> {
@@ -439,9 +323,6 @@ export default function ReportMap({ firePosition, setFirePosition, reporterPosit
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
 
-        {/* Instruksi penggunaan peta */}
-        {isInteractive && <MapInstructions />}
-
         {/* Handler untuk klik pada peta */}
         {isInteractive && <MapClickHandler onMapClick={handleMapClick} />}
 
@@ -518,8 +399,6 @@ export default function ReportMap({ firePosition, setFirePosition, reporterPosit
             }}
           />
         )}
-
-        {isInteractive && setFirePosition && <GetLocationButton setPosition={setFirePosition} />}
       </MapContainer>
     </>
   );
