@@ -1,36 +1,135 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FireGuard - Sistem Pelaporan Kebakaran
 
-## Getting Started
+Aplikasi web untuk pelaporan dan monitoring kebakaran real-time dengan fitur peta interaktif dan routing cerdas.
 
-First, run the development server:
+## Fitur Utama
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- 🔥 Pelaporan kebakaran real-time dengan foto
+- 🗺️ Peta interaktif dengan routing OSRM
+- 🚒 Deteksi pos pemadam terdekat otomatis
+- 📊 Dashboard admin untuk monitoring
+- 📱 Responsive design (Mobile & Desktop)
+- ✅ Tracking status laporan
+
+## Tech Stack
+
+- **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS
+- **Backend**: Next.js API Routes
+- **Database**: PostgreSQL (Supabase)
+- **Maps**: Leaflet, React-Leaflet, OSRM
+- **Authentication**: Custom JWT-based auth
+
+## Environment Variables
+
+Buat file `.env.local` dengan variabel berikut:
+
+```env
+DATABASE_URL=your_postgresql_connection_string
+NEXTAUTH_SECRET=your_secret_key_here
+NEXTAUTH_URL=http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Instalasi
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Clone repository:
+```bash
+git clone https://github.com/fahrezi93/fireguard-LBS.git
+cd fireguard-LBS
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. Install dependencies:
+```bash
+npm install
+```
 
-## Learn More
+3. Setup database:
+```bash
+# Jalankan migrasi database (jika ada)
+npm run db:migrate
+```
 
-To learn more about Next.js, take a look at the following resources:
+4. Jalankan development server:
+```bash
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+5. Buka [http://localhost:3000](http://localhost:3000)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploy ke Vercel
 
-## Deploy on Vercel
+### Langkah 1: Push ke GitHub
+```bash
+git add .
+git commit -m "Ready for deployment"
+git push origin main
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Langkah 2: Deploy di Vercel
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Buka [vercel.com](https://vercel.com)
+2. Login dengan GitHub
+3. Klik "New Project"
+4. Import repository `fahrezi93/fireguard-LBS`
+5. Tambahkan Environment Variables:
+   - `DATABASE_URL`
+   - `NEXTAUTH_SECRET`
+   - `NEXTAUTH_URL` (gunakan domain Vercel Anda)
+6. Klik "Deploy"
+
+### Environment Variables untuk Production
+
+```
+DATABASE_URL=postgresql://user:password@host:5432/database
+NEXTAUTH_SECRET=generate-random-secret-key
+NEXTAUTH_URL=https://your-app.vercel.app
+```
+
+## Struktur Project
+
+```
+fireguard/
+├── src/
+│   ├── app/              # Next.js App Router
+│   │   ├── api/          # API Routes
+│   │   ├── dashboard/    # User Dashboard
+│   │   ├── operator/     # Admin Dashboard
+│   │   └── report/       # Report Pages
+│   ├── components/       # React Components
+│   ├── lib/              # Utilities & Helpers
+│   └── hooks/            # Custom React Hooks
+├── public/               # Static Assets
+└── prisma/              # Database Schema (if using Prisma)
+```
+
+## Scripts
+
+- `npm run dev` - Jalankan development server
+- `npm run build` - Build untuk production
+- `npm run start` - Jalankan production server
+- `npm run lint` - Jalankan ESLint
+
+## Fitur Detail
+
+### Untuk User (Pelapor)
+- Buat laporan kebakaran dengan foto
+- Tandai lokasi di peta
+- Lihat estimasi waktu bantuan
+- Track status laporan
+
+### Untuk Admin (Operator)
+- Dashboard monitoring real-time
+- Lihat semua laporan di peta
+- Update status laporan
+- Lihat rute dari pos damkar ke lokasi
+
+## Kontribusi
+
+Pull requests are welcome! Untuk perubahan besar, silakan buka issue terlebih dahulu.
+
+## License
+
+MIT
+
+## Author
+
+Fahrezi - [GitHub](https://github.com/fahrezi93)
