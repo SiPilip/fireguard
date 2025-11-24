@@ -18,6 +18,7 @@ import {
   FaTimesCircle,
   FaQuestionCircle,
   FaPhone,
+  FaTags,
 } from "react-icons/fa";
 import ReportDetailModal from "@/components/ReportDetailModal";
 import { useToast } from "@/hooks/useToast";
@@ -415,6 +416,14 @@ export default function OperatorDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-2 md:gap-4">
+            <button
+              onClick={() => router.push('/operator/categories')}
+              title="Kelola Kategori Bencana"
+              className="bg-blue-500 hover:bg-blue-600 p-2 md:p-2.5 rounded-xl transition-colors shadow-sm flex items-center gap-2"
+            >
+              <FaTags className="text-white text-sm" />
+              <span className="hidden md:inline text-xs font-medium text-white">Kategori</span>
+            </button>
             <div className="hidden md:flex items-center gap-2.5 px-3 py-2 bg-gray-100 rounded-xl">
               <span className="text-xs font-medium text-gray-700">Mode Pantau</span>
               <button

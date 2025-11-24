@@ -6,8 +6,12 @@ import path from 'path';
 export async function GET(request: NextRequest) {
   try {
     const reports = await queryRows(
-      `SELECT r.id, r.fire_latitude, r.fire_longitude, r.reporter_latitude, r.reporter_longitude, r.status, r.created_at, r.media_url, r.notes, r.contact, u.phone_number
-       FROM reports r JOIN users u ON r.user_id = u.id
+      `SELECT r.id, r.fire_latitude, r.fire_longitude, r.reporter_latitude, r.reporter_longitude, 
+              r.status, r.created_at, r.media_url, r.notes, r.contact, 
+              u.phone_number, c.id as category_id, c.name as category_name, c.icon as category_icon, c.color as category_color
+       FROM reports r 
+       JOIN users u ON r.user_id = u.id
+       LEFT JOIN disaster_categories c ON r.category_id = c.id
        ORDER BY r.created_at DESC`
     );
     return NextResponse.json(reports);

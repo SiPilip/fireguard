@@ -128,6 +128,8 @@ export default function NewReportPage() {
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
   const [contact, setContact] = useState("");
+  const [categoryId, setCategoryId] = useState<number>(1); // Default: Kebakaran
+  const [categories, setCategories] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [nearestStation, setNearestStation] =
@@ -150,6 +152,24 @@ export default function NewReportPage() {
     };
     checkAuth();
   }, [router]);
+
+  // Fetch disaster categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/disaster-categories');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            setCategories(data.data);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -183,6 +203,7 @@ export default function NewReportPage() {
     formData.append("media", file);
     formData.append("notes", notes);
     formData.append("contact", contact);
+    formData.append("categoryId", categoryId.toString());
 
     try {
       const response = await fetch("/api/reports", {
@@ -316,6 +337,29 @@ export default function NewReportPage() {
                 </div>
               </div>
               <div className="p-6 space-y-4">
+                <div>
+                  <label htmlFor="category" className="block mb-2 text-xs font-medium text-gray-700">
+                    Kategori Bencana <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="category"
+                    value={categoryId}
+                    onChange={(e) => setCategoryId(Number(e.target.value))}
+                    className="w-full px-4 py-2.5 text-sm text-gray-900 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all bg-white"
+                    required
+                  >
+                    {categories.length === 0 ? (
+                      <option value="1">Kebakaran</option>
+                    ) : (
+                      categories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {category.icon} {category.name}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1.5">Pilih jenis bencana yang terjadi</p>
+                </div>
                 <div>
                   <label htmlFor="description" className="block mb-2 text-xs font-medium text-gray-700">
                     Deskripsi <span className="text-red-500">*</span>

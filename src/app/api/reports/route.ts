@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
     const mediaFile = formData.get("media") as File | null;
     const notes = formData.get("notes") as string | null;
     const contact = formData.get("contact") as string | null;
+    const categoryId = formData.get("categoryId") as string | null;
 
     if (!fireLatitude || !fireLongitude || !mediaFile) {
       return NextResponse.json(
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
     const currentTimestamp = new Date().toISOString();
     
     const reportId = await executeAndGetLastInsertId(
-      "INSERT INTO reports (user_id, fire_latitude, fire_longitude, reporter_latitude, reporter_longitude, description, address, media_url, notes, contact, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO reports (user_id, fire_latitude, fire_longitude, reporter_latitude, reporter_longitude, description, address, media_url, notes, contact, category_id, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
         userId, 
         parseFloat(fireLatitude), 
@@ -78,7 +79,8 @@ export async function POST(request: NextRequest) {
         address, 
         mediaUrl, 
         notes, 
-        contact, 
+        contact,
+        categoryId ? parseInt(categoryId) : 1, // Default to 1 (Kebakaran)
         'pending', 
         currentTimestamp
       ]

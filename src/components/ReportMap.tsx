@@ -137,9 +137,66 @@ function MapClickHandler({ onMapClick }: { onMapClick: (latlng: [number, number]
 }
 
 // Komponen untuk kontrol mendapatkan lokasi
-// (Removed as per request)
+function GetLocationButton({ setPosition }: { setPosition: (position: [number, number]) => void }) {
+  const map = useMap();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleGetLocation = () => {
+    setIsLoading(true);
+    
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const newPos: [number, number] = [position.coords.latitude, position.coords.longitude];
+          setPosition(newPos);
+          map.setView(newPos, 16);
+          setIsLoading(false);
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          alert('Tidak dapat mengambil lokasi. Pastikan GPS aktif dan izin lokasi diberikan.');
+          setIsLoading(false);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    } else {
+      alert('Browser tidak mendukung geolocation');
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="leaflet-top leaflet-right" style={{ marginTop: '80px', marginRight: '10px' }}>
+      <div className="leaflet-control leaflet-bar">
+        <button
+          onClick={handleGetLocation}
+          disabled={isLoading}
+          className="bg-white hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+          style={{
+            width: '34px',
+            height: '34px',
+            border: 'none',
+            cursor: isLoading ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '18px',
+          }}
+          title="Dapatkan Lokasi Kebakaran"
+        >
+          {isLoading ? '⏳' : '🔥'}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 // Fungsi untuk menghitung jarak routing sebenarnya menggunakan OSRM API
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function getRoutingDistance(from: [number, number], to: [number, number]): Promise<{ distance: number; duration: number } | null> {
   try {
     // Format: longitude,latitude untuk OSRM
@@ -398,6 +455,11 @@ export default function ReportMap({ firePosition, setFirePosition, reporterPosit
               }
             }}
           />
+        )}
+
+        {/* Tombol untuk mendapatkan lokasi kebakaran */}
+        {isInteractive && setFirePosition && (
+          <GetLocationButton setPosition={setFirePosition} />
         )}
       </MapContainer>
     </>
