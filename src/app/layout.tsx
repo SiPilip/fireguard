@@ -17,6 +17,9 @@ const roboto = Roboto({
 export const metadata: Metadata = {
   title: 'FireGuard Palembang',
   description: 'Sistem Cepat Tanggap Kebakaran Palembang',
+  icons: {
+    icon: '/icon.svg',
+  },
 };
 
 export default function RootLayout({
