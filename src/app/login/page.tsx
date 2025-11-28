@@ -14,20 +14,20 @@ export default function LoginPage() {
   useEffect(() => {
     const verifySession = async () => {
       try {
-        const response = await fetch('/api/auth/me');
+        const response = await fetch('/api/auth/me', {
+          credentials: 'include'
+        });
         if (response.ok) {
           const data = await response.json();
           if (!data.isOperator) {
-            router.replace('/'); // Langsung arahkan ke dasbor pengguna
+            router.replace('/');
           } else {
-            // Jika yang login adalah operator, biarkan di halaman ini
             setIsVerifying(false);
           }
         } else {
-          // Tidak ada sesi valid, tampilkan form login
           setIsVerifying(false);
         }
-      } catch (error) {
+      } catch {
         setIsVerifying(false);
       }
     };
@@ -58,11 +58,6 @@ export default function LoginPage() {
       if (!response.ok) {
         throw new Error(data.message || "Gagal mengirim OTP.");
       }
-
-      // Tampilkan OTP di konsol browser untuk tujuan demo
-      console.log("====================================");
-      console.log(`[KHUSUS DEMO] Kode verifikasi Anda adalah: ${data.otp}`);
-      console.log("====================================");
 
       // Arahkan ke halaman verifikasi OTP
       router.push(`/login/verify?phone=${encodeURIComponent(phoneNumber)}`);

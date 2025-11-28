@@ -153,7 +153,6 @@ function GetLocationButton({ setPosition }: { setPosition: (position: [number, n
           setIsLoading(false);
         },
         (error) => {
-          console.error('Error getting location:', error);
           alert('Tidak dapat mengambil lokasi. Pastikan GPS aktif dan izin lokasi diberikan.');
           setIsLoading(false);
         },
@@ -195,40 +194,7 @@ function GetLocationButton({ setPosition }: { setPosition: (position: [number, n
   );
 }
 
-// Fungsi untuk menghitung jarak routing sebenarnya menggunakan OSRM API
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function getRoutingDistance(from: [number, number], to: [number, number]): Promise<{ distance: number; duration: number } | null> {
-  try {
-    // Format: longitude,latitude untuk OSRM
-    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${from[1]},${from[0]};${to[1]},${to[0]}?overview=false&geometries=geojson`;
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 detik timeout
-
-    const response = await fetch(osrmUrl, {
-      signal: controller.signal,
-      headers: { 'Accept': 'application/json' }
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) return null;
-
-    const data = await response.json();
-
-    if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
-      return {
-        distance: data.routes[0].distance, // meter
-        duration: data.routes[0].duration  // detik
-      };
-    }
-
-    return null;
-  } catch (error) {
-    console.error('Error getting routing distance:', error);
-    return null;
-  }
-}
 
 // Fungsi untuk menghitung jarak Haversine (jarak garis lurus) - fallback only
 function haversineDistance(coords1: [number, number], coords2: [number, number]): number {
@@ -332,11 +298,6 @@ export default function ReportMap({ firePosition, setFirePosition, reporterPosit
       setRouteSummary({
         totalDistance: distanceInMeters,
         totalTime: durationInSeconds,
-      });
-
-      console.log('🚒 Nearest fire station found (Haversine):', {
-        name: (closest as FireStation).name,
-        distance: `${minDistance.toFixed(2)} km`
       });
     }
 

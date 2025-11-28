@@ -17,7 +17,6 @@ async function sendWhatsAppMessage(target: string, message: string) {
   data.append("countryCode", "62");
 
   try {
-    console.log(`Sending WhatsApp to ${target}...`);
     const response = await fetch("https://api.fonnte.com/send", {
       method: "POST",
       headers: {
@@ -27,16 +26,11 @@ async function sendWhatsAppMessage(target: string, message: string) {
     });
 
     if (!response.ok) {
-      const errorBody = await response.json();
-      console.error("Fonnte API Error:", errorBody);
       return; // Jangan throw error agar tidak menghentikan alur utama
     }
 
-    const result = await response.json();
-    console.log("Fonnte API Success:", result);
-
   } catch (error) {
-    console.error("Error calling Fonnte API:", error);
+    // Error calling Fonnte API
   }
 }
 
@@ -61,7 +55,6 @@ export async function GET(
     }
     return NextResponse.json(report);
   } catch (error) {
-    console.error(`[API Get Report] Error:`, error);
     return NextResponse.json(
       { message: "Terjadi kesalahan pada server." },
       { status: 500 }
@@ -214,17 +207,12 @@ Mohon gunakan layanan darurat dengan bijak dan bertanggung jawab.
           payload: { reportId: parseInt(reportId), newStatus },
         })
       );
-    } else {
-      console.warn(
-        "WebSocket server (global.wss) not available. Cannot broadcast status update."
-      );
     }
 
     return NextResponse.json({
       message: `Status laporan #${reportId} berhasil diperbarui menjadi ${newStatus}.`,
     });
   } catch (error) {
-    console.error(`[API Update Report] Error:`, error);
     return NextResponse.json(
       { message: "Terjadi kesalahan pada server." },
       { status: 500 }

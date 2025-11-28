@@ -144,7 +144,6 @@ export default function NewReportPage() {
           router.replace("/login?redirect=/report/new");
         }
       } catch (error) {
-        console.error("Authentication check failed", error);
         router.replace("/login?redirect=/report/new");
       } finally {
         setIsAuthenticating(false);
@@ -165,7 +164,7 @@ export default function NewReportPage() {
           }
         }
       } catch (error) {
-        console.error('Error fetching categories:', error);
+        // Error fetching categories
       }
     };
     fetchCategories();

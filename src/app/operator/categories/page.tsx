@@ -38,7 +38,7 @@ export default function CategoriesManagementPage() {
         router.push("/operator/login");
       }
     } catch (error) {
-      console.error("Error fetching categories:", error);
+      // Error fetching categories
     } finally {
       setIsLoading(false);
     }
@@ -80,7 +80,6 @@ export default function CategoriesManagementPage() {
         alert(data.message || "Gagal menyimpan kategori");
       }
     } catch (error) {
-      console.error("Error saving category:", error);
       alert("Terjadi kesalahan saat menyimpan kategori");
     }
   };
@@ -115,7 +114,6 @@ export default function CategoriesManagementPage() {
         alert(data.message || "Gagal menghapus kategori");
       }
     } catch (error) {
-      console.error("Error deleting category:", error);
       alert("Terjadi kesalahan saat menghapus kategori");
     }
   };
@@ -135,7 +133,7 @@ export default function CategoriesManagementPage() {
         fetchCategories();
       }
     } catch (error) {
-      console.error("Error toggling category:", error);
+      // Error toggling category
     }
   };
 

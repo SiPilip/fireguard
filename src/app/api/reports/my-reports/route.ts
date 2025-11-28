@@ -17,15 +17,11 @@ export async function GET(request: NextRequest) {
   try {
     const user = await getAuthPayload(request);
     
-    // Debug logging
-    console.log('[API My Reports] User payload:', user);
-    
     if (user.isOperator) {
         return NextResponse.json({ message: 'Endpoint ini hanya untuk pengguna biasa.' }, { status: 403 });
     }
 
     if (!user.id) {
-        console.error('[API My Reports] User ID not found in token payload');
         return NextResponse.json({ message: 'User ID tidak valid.' }, { status: 401 });
     }
 
@@ -63,8 +59,6 @@ export async function GET(request: NextRequest) {
     }
 
     // Jika tidak ada reportId, ambil semua laporan user
-    console.log('[API My Reports] Fetching reports for user_id:', user.id);
-    
     const reports = await queryRows(
       `SELECT 
         id, 
@@ -85,16 +79,9 @@ export async function GET(request: NextRequest) {
       [user.id]
     );
 
-    console.log('[API My Reports] Found reports:', reports.length);
     return NextResponse.json({ reports });
     
   } catch (error: any) {
-    console.error('[API Get My Reports] Error details:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
-    });
-    
     if (error.message.includes('autentikasi') || error.message.includes('Token')) {
       return NextResponse.json({ message: 'Akses ditolak.' }, { status: 401 });
     }

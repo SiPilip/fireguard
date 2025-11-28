@@ -6,10 +6,9 @@ process.on('uncaughtException', (err) => {
   const nonCriticalErrors = ['WS_ERR_INVALID_CLOSE_CODE', 'WS_ERR_INVALID_UTF8'];
 
   if (isDev && nonCriticalErrors.includes(err.code)) {
-    console.warn(`Caught a non-critical WebSocket error (${err.code}) due to hot-reloading. Ignoring to prevent crash.`);
+    // Ignore non-critical WebSocket errors during hot-reloading
   } else {
     // Untuk error lainnya, biarkan server crash agar kita tahu ada masalah serius
-    console.error('Uncaught Exception, shutting down:', err);
     process.exit(1);
   }
 });
@@ -70,7 +69,6 @@ app.prepare().then(() => {
       return;
     }
 
-    console.log('Attempting to upgrade connection to application WebSocket...');
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit('connection', ws, request);
     });
@@ -78,7 +76,6 @@ app.prepare().then(() => {
 
   // Definisikan listener di instance wss tunggal
   wss.on('connection', (ws, request) => {
-    console.log('A new client connected to WebSocket.');
     ws.isAlive = true;
 
     ws.on('pong', () => {
@@ -86,11 +83,11 @@ app.prepare().then(() => {
     });
 
     ws.on('close', () => {
-      console.log('Client disconnected.');
+      // Client disconnected
     });
 
     ws.on('error', (error) => {
-        console.error('WebSocket Instance Error:', error);
+      // WebSocket error occurred
     });
   });
 
@@ -112,9 +109,7 @@ app.prepare().then(() => {
     wss.clients.forEach(function each(client) {
       if (client.readyState === 1) { // WebSocket.OPEN
         client.send(data, (err) => {
-          if (err) {
-            console.error('Broadcast error:', err);
-          }
+          // Handle broadcast error silently
         });
       }
     });
@@ -122,6 +117,5 @@ app.prepare().then(() => {
 
   server.listen(port, (err) => {
     if (err) throw err;
-    console.log(`> Ready on http://${hostname}:${port}`);
   });
 });

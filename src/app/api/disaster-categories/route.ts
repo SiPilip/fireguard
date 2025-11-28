@@ -18,7 +18,6 @@ export async function GET(request: NextRequest) {
       data: categories,
     });
   } catch (error) {
-    console.error("Error fetching disaster categories:", error);
     return NextResponse.json(
       { success: false, message: "Failed to fetch disaster categories" },
       { status: 500 }

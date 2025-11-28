@@ -57,7 +57,6 @@ export async function middleware(request: NextRequest) {
     }
   } catch (err) {
     // Jika token tidak valid, hapus dan redirect ke login
-    console.error('[Middleware] Token verification failed:', err);
     const url = request.nextUrl.clone();
     url.pathname = pathname.startsWith("/operator")
       ? "/operator/login"

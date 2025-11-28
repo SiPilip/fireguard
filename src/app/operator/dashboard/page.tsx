@@ -248,7 +248,6 @@ export default function OperatorDashboard() {
 
       success("Status laporan berhasil diperbarui!");
     } catch (err) {
-      console.error("Error updating status:", err);
       error("Gagal memperbarui status laporan.");
     }
   };
@@ -261,7 +260,7 @@ export default function OperatorDashboard() {
       const data = await response.json();
       setReports(data.map((r: Report) => ({ ...r, acknowledged: true })));
     } catch (error) {
-      console.error("Gagal memuat laporan", error);
+      // Error loading reports
     } finally {
       setIsLoading(false);
     }
@@ -291,12 +290,10 @@ export default function OperatorDashboard() {
       ws.current = socket;
 
       socket.onopen = () => {
-        console.log("WebSocket connection established");
         setWsStatus("Connected");
       };
 
       socket.onmessage = (event) => {
-        console.log("WebSocket message received:", event.data);
         const message = JSON.parse(event.data);
         if (message.type === "NEW_REPORT") {
           setReports((prev) => [
@@ -315,17 +312,14 @@ export default function OperatorDashboard() {
       };
 
       socket.onclose = (event) => {
-        console.log("WebSocket connection closed", event.code, event.reason);
         setWsStatus(`Closed (${event.code})`);
         // Implement reconnection logic
         reconnectionTimer = setTimeout(() => {
-          console.log("Attempting to reconnect WebSocket...");
           connect();
         }, 5000); // Try to reconnect every 5 seconds
       };
 
       socket.onerror = (error) => {
-        console.error("WebSocket error:", error);
         setWsStatus("Error");
         socket.close(); // This will trigger the onclose event and reconnection logic
       };
@@ -361,7 +355,6 @@ export default function OperatorDashboard() {
         setReports([]);
         success("Semua laporan berhasil dihapus.");
       } catch (err) {
-        console.error("Error deleting all reports:", err);
         error("Gagal menghapus semua laporan.");
       }
     }

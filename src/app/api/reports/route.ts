@@ -29,12 +29,10 @@ export async function POST(request: NextRequest) {
     
     if (!dbUser && user.phone) {
       // User tidak ada di database, buat user baru dengan phone dari token
-      console.log(`[API Create Report] User ${user.id} not found, creating new user with phone ${user.phone}`);
       userId = await createUser(
         "INSERT INTO users (phone_number) VALUES (?)",
         [user.phone]
       );
-      console.log(`[API Create Report] Created new user with id ${userId}`);
       needsNewToken = true; // Flag to create new JWT token
     }
     
@@ -101,8 +99,6 @@ export async function POST(request: NextRequest) {
       global.wss.broadcast(
         JSON.stringify({ type: "NEW_REPORT", payload: newReport })
       );
-    } else {
-      console.warn("WebSocket server (global.wss) not available. Cannot broadcast new report.");
     }
 
     // If new user was created, generate new JWT token with correct user_id
@@ -122,8 +118,6 @@ export async function POST(request: NextRequest) {
         maxAge: 60 * 60 * 24 * 7, // 7 days
       });
 
-      console.log(`[API Create Report] Issuing new token for user ${userId}`);
-
       return new NextResponse(
         JSON.stringify({ message: "Laporan berhasil dikirim!", reportId }),
         {
@@ -141,8 +135,6 @@ export async function POST(request: NextRequest) {
     if (error.message.includes("autentikasi")) {
       return NextResponse.json({ message: "Akses ditolak." }, { status: 401 });
     }
-    
-    console.error("[API Create Report] Error:", error);
     
     // Handle specific database errors
     if (error.code === 'SQLITE_CONSTRAINT') {

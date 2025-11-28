@@ -55,7 +55,6 @@ export default function ReportDetailPage() {
       setReport(prev => prev ? { ...prev, status: newStatus } : null);
       alert('Status laporan berhasil diperbarui.');
     } catch (error) {
-      console.error('Error updating status:', error);
       alert('Gagal memperbarui status laporan.');
     }
   };

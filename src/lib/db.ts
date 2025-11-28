@@ -11,7 +11,6 @@ if (process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN) {
   });
 } else {
   // Gunakan SQLite local untuk development
-  console.log('Using local SQLite database for development');
   db = createClient({
     url: 'file:local.db'
   });

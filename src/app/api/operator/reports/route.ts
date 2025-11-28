@@ -16,7 +16,6 @@ export async function GET(request: NextRequest) {
     );
     return NextResponse.json(reports);
   } catch (error) {
-    console.error('[API Get Reports] Error:', error);
     return NextResponse.json({ message: 'Terjadi kesalahan pada server.' }, { status: 500 });
   }
 }
@@ -30,7 +29,7 @@ export async function DELETE(request: NextRequest) {
         try {
           await unlink(filePath);
         } catch (fileError: any) {
-          if (fileError.code !== 'ENOENT') console.warn(`Gagal menghapus file: ${filePath}`, fileError);
+          // Ignore file not found errors
         }
       }
     }
@@ -38,7 +37,6 @@ export async function DELETE(request: NextRequest) {
     await execute("DELETE FROM sqlite_sequence WHERE name='reports'");
     return NextResponse.json({ message: 'Semua laporan berhasil dihapus.' });
   } catch (error) {
-    console.error('[API Delete All Reports] Error:', error);
     return NextResponse.json({ message: 'Terjadi kesalahan pada server.' }, { status: 500 });
   }
 }

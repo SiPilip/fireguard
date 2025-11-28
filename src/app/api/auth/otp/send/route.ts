@@ -30,18 +30,14 @@ async function sendWhatsAppOtp(target: string, otp: string) {
     });
 
     if (!response.ok) {
-      const errorBody = await response.json();
-      console.error("Fonnte API Error:", errorBody);
       throw new Error(
         `Gagal mengirim OTP via WhatsApp, status: ${response.status}`
       );
     }
 
     const result = await response.json();
-    console.log("Fonnte API Success:", result);
     return result;
   } catch (error) {
-    console.error("Error calling Fonnte API:", error);
     // Jangan throw error di sini agar proses utama tetap berjalan,
     // namun OTP tidak akan terkirim. Cukup log errornya.
   }
@@ -83,7 +79,6 @@ export async function POST(request: NextRequest) {
       message: `Kode OTP telah dikirim ke ${phoneNumber}.`,
     });
   } catch (error) {
-    console.error("[API Send OTP] Error:", error);
     return NextResponse.json(
       { message: "Terjadi kesalahan pada server." },
       { status: 500 }

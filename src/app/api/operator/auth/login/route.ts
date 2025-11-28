@@ -43,7 +43,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[API Operator Login] Error:', error);
     return NextResponse.json({ message: 'Terjadi kesalahan pada server.' }, { status: 500 });
   }
 }

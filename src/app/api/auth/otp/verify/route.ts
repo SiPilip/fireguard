@@ -39,7 +39,6 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       const newUserId = await executeAndGetLastInsertId('INSERT INTO users (phone_number) VALUES (?)', [phoneNumber]);
-      console.log('New User ID:', newUserId);
       user = { id: newUserId, phone_number: phoneNumber };
     }
 
@@ -64,7 +63,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[API Verify OTP] Error:', error);
     return NextResponse.json({ message: 'Terjadi kesalahan pada server.' }, { status: 500 });
   }
 }
