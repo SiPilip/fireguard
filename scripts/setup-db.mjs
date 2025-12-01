@@ -51,7 +51,8 @@ async function setup() {
       status TEXT NOT NULL DEFAULT 'pending',
       admin_notes TEXT,
       notes TEXT, 
-      contact TEXT, 
+      contact TEXT,
+      category_id INTEGER DEFAULT 1,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users (id)

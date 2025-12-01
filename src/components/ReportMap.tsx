@@ -1,7 +1,7 @@
 import { MapContainer, TileLayer, Marker, useMap, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { fireStations, FireStation } from '@/lib/fire-stations';
 import RoutingMachine from './RoutingMachine';
 
@@ -238,6 +238,12 @@ export default function ReportMap({ firePosition, setFirePosition, reporterPosit
   const [routeSummary, setRouteSummary] = useState<any>(null);
   const [nearestStation, setNearestStation] = useState<FireStation | null>(null);
   const [isCalculatingNearest, setIsCalculatingNearest] = useState(false);
+  const onNearestStationFoundRef = useRef(onNearestStationFound);
+  
+  // Update ref when callback changes
+  useEffect(() => {
+    onNearestStationFoundRef.current = onNearestStationFound;
+  }, [onNearestStationFound]);
 
   const fireEventHandlers = useMemo(
     () => ({
@@ -268,8 +274,8 @@ export default function ReportMap({ firePosition, setFirePosition, reporterPosit
     if (!firePosition) {
       setNearestStation(null);
       setRouteSummary(null);
-      if (onNearestStationFound) {
-        onNearestStationFound(null);
+      if (onNearestStationFoundRef.current) {
+        onNearestStationFoundRef.current(null);
       }
       return;
     }
@@ -277,7 +283,6 @@ export default function ReportMap({ firePosition, setFirePosition, reporterPosit
     setIsCalculatingNearest(true);
 
     // Gunakan Haversine distance untuk mencari pos terdekat
-    // Ini lebih cepat dan hemat quota API dibanding request route satu per satu
     let closest: FireStation | null = null;
     let minDistance = Infinity;
 
@@ -291,9 +296,8 @@ export default function ReportMap({ firePosition, setFirePosition, reporterPosit
 
     if (closest) {
       setNearestStation(closest);
-      // Estimasi awal (akan diupdate oleh RoutingMachine dengan data real)
       const distanceInMeters = minDistance * 1000;
-      const durationInSeconds = (minDistance / 40) * 3600; // asumsi 40 km/jam
+      const durationInSeconds = (minDistance / 40) * 3600;
 
       setRouteSummary({
         totalDistance: distanceInMeters,
@@ -302,12 +306,12 @@ export default function ReportMap({ firePosition, setFirePosition, reporterPosit
     }
 
     setIsCalculatingNearest(false);
-  }, [firePosition, onNearestStationFound]);
+  }, [firePosition]);
 
   // Effect untuk mengirim info nearest station ke parent
   useEffect(() => {
-    if (nearestStation && routeSummary && onNearestStationFound) {
-      onNearestStationFound({
+    if (nearestStation && routeSummary && onNearestStationFoundRef.current) {
+      onNearestStationFoundRef.current({
         name: nearestStation.name,
         latitude: nearestStation.latitude,
         longitude: nearestStation.longitude,
@@ -315,7 +319,7 @@ export default function ReportMap({ firePosition, setFirePosition, reporterPosit
         time: routeSummary.totalTime,
       });
     }
-  }, [nearestStation, routeSummary, onNearestStationFound]);
+  }, [nearestStation, routeSummary]);
 
 
   const isInteractive = !!setFirePosition;
@@ -408,13 +412,7 @@ export default function ReportMap({ firePosition, setFirePosition, reporterPosit
           <RoutingMachine
             start={[nearestStation.latitude, nearestStation.longitude]}
             end={firePosition}
-            onRouteFound={(summary) => {
-              // Update route summary jika berbeda (untuk refresh saat drag marker)
-              if (!routeSummary ||
-                Math.abs(routeSummary.totalDistance - summary.totalDistance) > 100) {
-                setRouteSummary(summary);
-              }
-            }}
+            onRouteFound={setRouteSummary}
           />
         )}
 

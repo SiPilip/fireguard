@@ -65,24 +65,51 @@ export async function POST(request: NextRequest) {
 
     const currentTimestamp = new Date().toISOString();
     
-    const reportId = await executeAndGetLastInsertId(
-      "INSERT INTO reports (user_id, fire_latitude, fire_longitude, reporter_latitude, reporter_longitude, description, address, media_url, notes, contact, category_id, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [
-        userId, 
-        parseFloat(fireLatitude), 
-        parseFloat(fireLongitude), 
-        reporterLatitude ? parseFloat(reporterLatitude) : null,
-        reporterLongitude ? parseFloat(reporterLongitude) : null,
-        description, 
-        address, 
-        mediaUrl, 
-        notes, 
-        contact,
-        categoryId ? parseInt(categoryId) : 1, // Default to 1 (Kebakaran)
-        'pending', 
-        currentTimestamp
-      ]
-    );
+    // Try with category_id first, fallback to without if column doesn't exist
+    let reportId: number;
+    try {
+      reportId = await executeAndGetLastInsertId(
+        "INSERT INTO reports (user_id, fire_latitude, fire_longitude, reporter_latitude, reporter_longitude, description, address, media_url, notes, contact, category_id, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [
+          userId, 
+          parseFloat(fireLatitude), 
+          parseFloat(fireLongitude), 
+          reporterLatitude ? parseFloat(reporterLatitude) : null,
+          reporterLongitude ? parseFloat(reporterLongitude) : null,
+          description, 
+          address, 
+          mediaUrl, 
+          notes, 
+          contact,
+          categoryId ? parseInt(categoryId) : 1,
+          'pending', 
+          currentTimestamp
+        ]
+      );
+    } catch (dbError: any) {
+      // Fallback: insert without category_id if column doesn't exist
+      if (dbError.message?.includes('category_id') || dbError.message?.includes('no column')) {
+        reportId = await executeAndGetLastInsertId(
+          "INSERT INTO reports (user_id, fire_latitude, fire_longitude, reporter_latitude, reporter_longitude, description, address, media_url, notes, contact, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          [
+            userId, 
+            parseFloat(fireLatitude), 
+            parseFloat(fireLongitude), 
+            reporterLatitude ? parseFloat(reporterLatitude) : null,
+            reporterLongitude ? parseFloat(reporterLongitude) : null,
+            description, 
+            address, 
+            mediaUrl, 
+            notes, 
+            contact,
+            'pending', 
+            currentTimestamp
+          ]
+        );
+      } else {
+        throw dbError;
+      }
+    }
 
     if (global.wss) {
       const newReport = {

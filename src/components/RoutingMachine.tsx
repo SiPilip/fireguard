@@ -2,7 +2,7 @@ import L from "leaflet";
 import "leaflet-routing-machine";
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 import { useMap } from "react-leaflet";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 
 interface RoutingMachineProps {
   start: [number, number];
@@ -13,6 +13,13 @@ interface RoutingMachineProps {
 const RoutingMachine = ({ start, end, onRouteFound }: RoutingMachineProps) => {
   const map = useMap();
   const animationRef = useRef<number | null>(null);
+  const onRouteFoundRef = useRef(onRouteFound);
+  const lastRouteKey = useRef<string>("");
+  
+  // Update ref when callback changes
+  useEffect(() => {
+    onRouteFoundRef.current = onRouteFound;
+  }, [onRouteFound]);
 
   useEffect(() => {
     if (!map) return;
@@ -92,7 +99,6 @@ const RoutingMachine = ({ start, end, onRouteFound }: RoutingMachineProps) => {
             map.removeLayer(movingMarker);
             movingMarker = null;
           }
-          console.log('✨ Route animation completed');
         }
       };
 
@@ -106,12 +112,17 @@ const RoutingMachine = ({ start, end, onRouteFound }: RoutingMachineProps) => {
         if (!start || !end || start.length !== 2 || end.length !== 2) {
           return;
         }
+        
+        // Cek apakah route sudah sama dengan sebelumnya
+        const routeKey = `${start[0]},${start[1]}-${end[0]},${end[1]}`;
+        if (routeKey === lastRouteKey.current) {
+          return; // Skip jika route sama
+        }
+        lastRouteKey.current = routeKey;
 
         // PENTING: start dan end sudah dalam format [lat, lng] dari Leaflet
         // OSRM API membutuhkan format: longitude,latitude (dibalik!)
         const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson&alternatives=false&steps=true&annotations=true`;
-
-        console.log('🗺️ Fetching animated route...');
 
         // Fetch dengan timeout manual
         const controller = new AbortController();
@@ -155,8 +166,6 @@ const RoutingMachine = ({ start, end, onRouteFound }: RoutingMachineProps) => {
             map.removeLayer(movingMarker);
           }
 
-          console.log(`🎬 Starting route animation with ${coordinates.length} points...`);
-          
           // Mulai animasi route (durasi 2.5 detik)
           animateRoute(latlngs, 2500);
           
@@ -171,18 +180,12 @@ const RoutingMachine = ({ start, end, onRouteFound }: RoutingMachineProps) => {
           });
 
           // Kirim summary ke parent component
-          if (onRouteFound) {
-            onRouteFound({
+          if (onRouteFoundRef.current) {
+            onRouteFoundRef.current({
               totalDistance: route.distance, // dalam meter
               totalTime: route.duration, // dalam detik
             });
           }
-          
-          console.log('✅ Route animation initialized:', {
-            distance: `${(route.distance / 1000).toFixed(2)} km`,
-            duration: `${Math.round(route.duration / 60)} menit`,
-            points: coordinates.length,
-          });
         } else {
           throw new Error(data.message || 'No route found');
         }
@@ -205,7 +208,7 @@ const RoutingMachine = ({ start, end, onRouteFound }: RoutingMachineProps) => {
     };
 
     // Debounce fetch untuk menghindari spam request saat drag cepat
-    const fetchTimeoutId = setTimeout(fetchRoute, 500);
+    const fetchTimeoutId = setTimeout(fetchRoute, 800);
 
     return () => {
       // Cleanup: hapus polyline dan stop animasi
@@ -228,7 +231,7 @@ const RoutingMachine = ({ start, end, onRouteFound }: RoutingMachineProps) => {
         clearTimeout(fetchTimeoutId);
       }
     };
-  }, [map, start, end, onRouteFound]);
+  }, [map, start[0], start[1], end[0], end[1]]);
 
   return null;
 };
