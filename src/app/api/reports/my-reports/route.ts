@@ -16,13 +16,13 @@ async function getAuthPayload(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const user = await getAuthPayload(request);
-    
+
     if (user.isOperator) {
-        return NextResponse.json({ message: 'Endpoint ini hanya untuk pengguna biasa.' }, { status: 403 });
+      return NextResponse.json({ message: 'Endpoint ini hanya untuk pengguna biasa.' }, { status: 403 });
     }
 
     if (!user.id) {
-        return NextResponse.json({ message: 'User ID tidak valid.' }, { status: 401 });
+      return NextResponse.json({ message: 'User ID tidak valid.' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -38,15 +38,25 @@ export async function GET(request: NextRequest) {
           r.reporter_latitude,
           r.reporter_longitude, 
           COALESCE(r.description, r.address, 'Tidak ada deskripsi') as description,
-          r.address as location_name,
+          r.address,
           r.status, 
           r.created_at, 
           COALESCE(r.updated_at, r.created_at) as updated_at, 
           r.admin_notes, 
           r.media_url as photo_url,
-          u.phone_number as user_phone 
+          r.notes,
+          r.contact,
+          u.phone_number as user_phone,
+          c.id as category_id,
+          c.name as category_name,
+          c.icon as category_icon,
+          k.id as kelurahan_id,
+          k.name as kelurahan_name,
+          k.kecamatan
         FROM reports r 
-        LEFT JOIN users u ON r.user_id = u.id 
+        LEFT JOIN users u ON r.user_id = u.id
+        LEFT JOIN disaster_categories c ON r.category_id = c.id
+        LEFT JOIN kelurahan k ON r.kelurahan_id = k.id
         WHERE r.id = ? AND r.user_id = ?`,
         [reportId, user.id]
       );
@@ -61,32 +71,42 @@ export async function GET(request: NextRequest) {
     // Jika tidak ada reportId, ambil semua laporan user
     const reports = await queryRows(
       `SELECT 
-        id, 
-        fire_latitude, 
-        fire_longitude,
-        reporter_latitude,
-        reporter_longitude, 
-        COALESCE(description, address, 'Tidak ada deskripsi') as description,
-        address as location_name,
-        status, 
-        created_at, 
-        COALESCE(updated_at, created_at) as updated_at, 
-        admin_notes, 
-        media_url as photo_url
-      FROM reports 
-      WHERE user_id = ? 
-      ORDER BY created_at DESC`,
+        r.id, 
+        r.fire_latitude, 
+        r.fire_longitude,
+        r.reporter_latitude,
+        r.reporter_longitude, 
+        COALESCE(r.description, r.address, 'Tidak ada deskripsi') as description,
+        r.address,
+        r.status, 
+        r.created_at, 
+        COALESCE(r.updated_at, r.created_at) as updated_at, 
+        r.admin_notes, 
+        r.media_url as photo_url,
+        r.notes,
+        r.contact,
+        c.id as category_id,
+        c.name as category_name,
+        c.icon as category_icon,
+        k.id as kelurahan_id,
+        k.name as kelurahan_name,
+        k.kecamatan
+      FROM reports r
+      LEFT JOIN disaster_categories c ON r.category_id = c.id
+      LEFT JOIN kelurahan k ON r.kelurahan_id = k.id
+      WHERE r.user_id = ? 
+      ORDER BY r.created_at DESC`,
       [user.id]
     );
 
     return NextResponse.json({ reports });
-    
+
   } catch (error: any) {
     if (error.message.includes('autentikasi') || error.message.includes('Token')) {
       return NextResponse.json({ message: 'Akses ditolak.' }, { status: 401 });
     }
-    
-    return NextResponse.json({ 
+
+    return NextResponse.json({
       message: 'Terjadi kesalahan pada server.',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     }, { status: 500 });

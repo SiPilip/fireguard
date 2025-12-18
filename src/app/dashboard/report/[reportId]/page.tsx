@@ -39,12 +39,20 @@ interface Report {
   contact?: string;
   media_url?: string;
   user: {
-    phone: string;
+    name?: string;
+    email?: string;
+    phone?: string;
   };
   admin_notes?: string;
 }
 
-const statusConfig = {
+const statusConfig: Record<string, { label: string; color: string; bgColor: string; icon: any }> = {
+  pending: {
+    label: 'Menunggu Verifikasi',
+    color: 'text-yellow-600',
+    bgColor: 'bg-yellow-100',
+    icon: FaClock,
+  },
   submitted: {
     label: 'Menunggu Verifikasi',
     color: 'text-yellow-600',
@@ -57,8 +65,20 @@ const statusConfig = {
     bgColor: 'bg-blue-100',
     icon: FaCheckCircle,
   },
+  diproses: {
+    label: 'Sedang Diproses',
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-100',
+    icon: FaCheckCircle,
+  },
   dispatched: {
     label: 'Unit Dalam Perjalanan',
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-100',
+    icon: FaTruck,
+  },
+  dikirim: {
+    label: 'Tim Dikirim',
     color: 'text-purple-600',
     bgColor: 'bg-purple-100',
     icon: FaTruck,
@@ -69,11 +89,29 @@ const statusConfig = {
     bgColor: 'bg-indigo-100',
     icon: FaCheckCircle,
   },
+  ditangani: {
+    label: 'Sedang Ditangani',
+    color: 'text-cyan-600',
+    bgColor: 'bg-cyan-100',
+    icon: FaCheckCircle,
+  },
   completed: {
     label: 'Selesai',
     color: 'text-green-600',
     bgColor: 'bg-green-100',
     icon: FaCheckCircle,
+  },
+  selesai: {
+    label: 'Selesai',
+    color: 'text-green-600',
+    bgColor: 'bg-green-100',
+    icon: FaCheckCircle,
+  },
+  dibatalkan: {
+    label: 'Dibatalkan',
+    color: 'text-red-600',
+    bgColor: 'bg-red-100',
+    icon: FaTimesCircle,
   },
   false: {
     label: 'Laporan Palsu',
@@ -272,7 +310,7 @@ export default function ReportDetailPage() {
             <div className="space-y-3">
               <div className="flex items-center gap-3 text-gray-700">
                 <FaUser className="text-red-600" />
-                <span>{report.user?.phone || 'N/A'}</span>
+                <span>{report.user?.name || report.user?.email || 'N/A'}</span>
               </div>
               {report.contact && (
                 <div className="flex items-center gap-3 text-gray-700">

@@ -1,5 +1,5 @@
 /**
- * Script untuk menambahkan operator baru ke database
+ * Script untuk menambahkan operator baru ke database MySQL
  * 
  * Cara pakai:
  * npx tsx scripts/add-operator.ts <username> <password>
@@ -8,8 +8,9 @@
  * npx tsx scripts/add-operator.ts admin admin123
  */
 
-import { createClient } from '@libsql/client';
+import mysql from 'mysql2/promise';
 import bcrypt from 'bcrypt';
+import 'dotenv/config';
 
 const args = process.argv.slice(2);
 
@@ -22,9 +23,12 @@ const [username, password] = args;
 
 async function addOperator() {
   // Setup database connection
-  const db = createClient({
-    url: process.env.TURSO_DATABASE_URL || 'file:local.db',
-    authToken: process.env.TURSO_AUTH_TOKEN,
+  const db = await mysql.createConnection({
+    host: process.env.MYSQL_HOST || 'localhost',
+    port: parseInt(process.env.MYSQL_PORT || '3306'),
+    user: process.env.MYSQL_USER || 'root',
+    password: process.env.MYSQL_PASSWORD || '',
+    database: process.env.MYSQL_DATABASE || 'fireguard',
   });
 
   try {
@@ -32,21 +36,23 @@ async function addOperator() {
     const passwordHash = await bcrypt.hash(password, 10);
 
     // Insert operator
-    await db.execute({
-      sql: 'INSERT INTO operators (username, password_hash) VALUES (?, ?)',
-      args: [username, passwordHash],
-    });
+    await db.execute(
+      'INSERT INTO operators (username, password_hash) VALUES (?, ?)',
+      [username, passwordHash]
+    );
 
     console.log('✅ Operator berhasil ditambahkan!');
     console.log(`   Username: ${username}`);
     console.log(`   Password: ${password}`);
     console.log('\n⚠️  Simpan kredensial ini dengan aman!');
   } catch (error: any) {
-    if (error.message?.includes('UNIQUE constraint')) {
+    if (error.code === 'ER_DUP_ENTRY') {
       console.error('❌ Username sudah ada! Gunakan username lain.');
     } else {
       console.error('❌ Error:', error.message);
     }
+  } finally {
+    await db.end();
   }
 }
 

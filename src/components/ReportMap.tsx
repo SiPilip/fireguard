@@ -64,6 +64,70 @@ const fireLocationIcon = new L.DivIcon({
   iconAnchor: [20, 40],
 });
 
+// Fungsi untuk membuat icon berdasarkan kategori bencana
+const createCategoryIcon = (categoryId: number, categoryIcon?: string) => {
+  // Default emoji berdasarkan categoryId
+  const categoryEmojis: Record<number, { emoji: string; color: string }> = {
+    1: { emoji: '🔥', color: 'rgba(239, 68, 68, 0.3)' },  // Kebakaran
+    2: { emoji: '🏗️', color: 'rgba(245, 158, 11, 0.3)' }, // Kerusakan Infrastruktur
+    3: { emoji: '🌊', color: 'rgba(59, 130, 246, 0.3)' },  // Banjir
+    4: { emoji: '🌪️', color: 'rgba(139, 92, 246, 0.3)' },  // Angin Puting Beliung
+    5: { emoji: '⛰️', color: 'rgba(120, 53, 15, 0.3)' },   // Tanah Longsor
+    6: { emoji: '⚠️', color: 'rgba(234, 179, 8, 0.3)' },   // Kecelakaan
+    7: { emoji: '🚨', color: 'rgba(220, 38, 38, 0.3)' },   // Lainnya
+  };
+
+  const config = categoryEmojis[categoryId] || { emoji: categoryIcon || '📍', color: 'rgba(107, 114, 128, 0.3)' };
+  const emoji = categoryIcon || config.emoji;
+  const color = config.color;
+
+  return new L.DivIcon({
+    html: `
+        <div style="position: relative; width: 40px; height: 40px;">
+            <div style="
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 30px;
+                height: 30px;
+                background-color: ${color};
+                border-radius: 50%;
+                animation: pulse-category 2s infinite;
+            "></div>
+            <div style="
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 32px;
+                text-align: center;
+                line-height: 32px;
+                filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+            ">${emoji}</div>
+        </div>
+        <style>
+            @keyframes pulse-category {
+                0%, 100% {
+                    width: 30px;
+                    height: 30px;
+                    opacity: 1;
+                }
+                50% {
+                    width: 45px;
+                    height: 45px;
+                    opacity: 0.5;
+                }
+            }
+        </style>
+    `,
+    className: 'leaflet-category-icon',
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+  });
+};
+
+
 // Ikon untuk lokasi pelapor
 const reporterLocationIcon = new L.DivIcon({
   html: `
@@ -137,24 +201,34 @@ function MapClickHandler({ onMapClick }: { onMapClick: (latlng: [number, number]
 }
 
 // Komponen untuk kontrol mendapatkan lokasi
-function GetLocationButton({ setPosition }: { setPosition: (position: [number, number]) => void }) {
+function GetLocationButton({
+  setFirePosition,
+  setReporterPosition
+}: {
+  setFirePosition: (position: [number, number]) => void;
+  setReporterPosition?: (position: [number, number]) => void;
+}) {
   const map = useMap();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingFire, setIsLoadingFire] = useState(false);
+  const [isLoadingReporter, setIsLoadingReporter] = useState(false);
 
-  const handleGetLocation = () => {
-    setIsLoading(true);
-    
+  const handleGetFireLocation = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    setIsLoadingFire(true);
+
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const newPos: [number, number] = [position.coords.latitude, position.coords.longitude];
-          setPosition(newPos);
+          setFirePosition(newPos);
           map.setView(newPos, 16);
-          setIsLoading(false);
+          setIsLoadingFire(false);
         },
         (error) => {
           alert('Tidak dapat mengambil lokasi. Pastikan GPS aktif dan izin lokasi diberikan.');
-          setIsLoading(false);
+          setIsLoadingFire(false);
         },
         {
           enableHighAccuracy: true,
@@ -164,31 +238,106 @@ function GetLocationButton({ setPosition }: { setPosition: (position: [number, n
       );
     } else {
       alert('Browser tidak mendukung geolocation');
-      setIsLoading(false);
+      setIsLoadingFire(false);
+    }
+  };
+
+  const handleGetReporterLocation = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    if (!setReporterPosition) return;
+
+    setIsLoadingReporter(true);
+
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const newPos: [number, number] = [position.coords.latitude, position.coords.longitude];
+          setReporterPosition(newPos);
+          setIsLoadingReporter(false);
+        },
+        (error) => {
+          alert('Tidak dapat mengambil lokasi. Pastikan GPS aktif dan izin lokasi diberikan.');
+          setIsLoadingReporter(false);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    } else {
+      alert('Browser tidak mendukung geolocation');
+      setIsLoadingReporter(false);
     }
   };
 
   return (
-    <div className="leaflet-top leaflet-right" style={{ marginTop: '80px', marginRight: '10px' }}>
-      <div className="leaflet-control leaflet-bar">
+    <div
+      className="leaflet-top leaflet-left"
+      style={{ marginTop: '10px', marginLeft: '50px', pointerEvents: 'auto' }}
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+    >
+      <div
+        className="leaflet-control"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          pointerEvents: 'auto'
+        }}
+      >
+        {/* Tombol Lokasi Kejadian */}
         <button
-          onClick={handleGetLocation}
-          disabled={isLoading}
-          className="bg-white hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+          onClick={handleGetFireLocation}
+          onMouseDown={(e) => e.stopPropagation()}
+          disabled={isLoadingFire}
+          className="bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white transition-colors rounded-lg shadow-lg"
           style={{
-            width: '34px',
-            height: '34px',
+            padding: '8px 14px',
             border: 'none',
-            cursor: isLoading ? 'not-allowed' : 'pointer',
+            cursor: isLoadingFire ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '18px',
+            gap: '8px',
+            fontSize: '12px',
+            fontWeight: 600,
+            whiteSpace: 'nowrap',
+            pointerEvents: 'auto',
           }}
-          title="Dapatkan Lokasi Kebakaran"
+          title="Set lokasi kejadian ke lokasi GPS Anda"
         >
-          {isLoading ? '⏳' : '🔥'}
+          <span style={{ fontSize: '16px' }}>{isLoadingFire ? '⏳' : '🔥'}</span>
+          <span>Lokasi Kejadian</span>
         </button>
+
+        {/* Tombol Lokasi Saya */}
+        {setReporterPosition && (
+          <button
+            onClick={handleGetReporterLocation}
+            onMouseDown={(e) => e.stopPropagation()}
+            disabled={isLoadingReporter}
+            className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white transition-colors rounded-lg shadow-lg"
+            style={{
+              padding: '8px 14px',
+              border: 'none',
+              cursor: isLoadingReporter ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '12px',
+              fontWeight: 600,
+              whiteSpace: 'nowrap',
+              pointerEvents: 'auto',
+            }}
+            title="Set lokasi pelapor ke lokasi GPS Anda"
+          >
+            <span style={{ fontSize: '16px' }}>{isLoadingReporter ? '⏳' : '📍'}</span>
+            <span>Lokasi Saya</span>
+          </button>
+        )}
       </div>
     </div>
   );
@@ -229,17 +378,19 @@ interface ReportMapProps {
   reporterPosition?: [number, number] | null;
   setReporterPosition?: (position: [number, number]) => void;
   onNearestStationFound?: (info: NearestStationInfo | null) => void;
+  categoryId?: number; // ID kategori bencana
+  categoryIcon?: string; // Emoji icon dari kategori
 }
 
 // ... (Komponen ChangeView, GetLocationButton, createEmojiIcon, haversineDistance tetap sama)
 
-export default function ReportMap({ firePosition, setFirePosition, reporterPosition, setReporterPosition, onNearestStationFound }: ReportMapProps) {
+export default function ReportMap({ firePosition, setFirePosition, reporterPosition, setReporterPosition, onNearestStationFound, categoryId = 1, categoryIcon }: ReportMapProps) {
   const defaultPosition: [number, number] = [-2.976, 104.775];
   const [routeSummary, setRouteSummary] = useState<any>(null);
   const [nearestStation, setNearestStation] = useState<FireStation | null>(null);
   const [isCalculatingNearest, setIsCalculatingNearest] = useState(false);
   const onNearestStationFoundRef = useRef(onNearestStationFound);
-  
+
   // Update ref when callback changes
   useEffect(() => {
     onNearestStationFoundRef.current = onNearestStationFound;
@@ -364,11 +515,11 @@ export default function ReportMap({ firePosition, setFirePosition, reporterPosit
               position={firePosition}
               draggable={isInteractive}
               eventHandlers={isInteractive ? fireEventHandlers : undefined}
-              icon={fireLocationIcon}
+              icon={createCategoryIcon(categoryId, categoryIcon)}
             >
               <Popup>
                 <div className="text-center">
-                  <p className="font-bold text-red-600">🔥 Lokasi Kebakaran</p>
+                  <p className="font-bold text-red-600">📍 Lokasi Kejadian</p>
                   <p className="text-xs text-gray-600 mt-1">
                     {firePosition[0].toFixed(6)}, {firePosition[1].toFixed(6)}
                   </p>
@@ -414,11 +565,6 @@ export default function ReportMap({ firePosition, setFirePosition, reporterPosit
             end={firePosition}
             onRouteFound={setRouteSummary}
           />
-        )}
-
-        {/* Tombol untuk mendapatkan lokasi kebakaran */}
-        {isInteractive && setFirePosition && (
-          <GetLocationButton setPosition={setFirePosition} />
         )}
       </MapContainer>
     </>

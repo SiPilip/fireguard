@@ -21,6 +21,15 @@ interface Report {
   notes?: string;
   contact?: string;
   acknowledged?: boolean;
+  category?: {
+    id: number;
+    name: string;
+    icon: string;
+  };
+  kelurahan?: {
+    id: number;
+    name: string;
+  };
 }
 
 // Ikon untuk Pos Damkar
@@ -31,13 +40,37 @@ const fireStationIcon = new L.DivIcon({
   iconAnchor: [12, 24],
 });
 
-// Ikon untuk lokasi kebakaran
-const fireLocationIcon = new L.DivIcon({
-  html: `<div style="font-size: 28px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">🔥</div>`,
-  className: 'leaflet-emoji-icon',
-  iconSize: [28, 28],
-  iconAnchor: [14, 28],
-});
+// Fungsi untuk membuat icon berdasarkan kategori
+const createCategoryIcon = (categoryId?: number, categoryIcon?: string, isCompleted?: boolean) => {
+  if (isCompleted) {
+    return new L.DivIcon({
+      html: `<div style="font-size: 28px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">✅</div>`,
+      className: 'leaflet-emoji-icon',
+      iconSize: [28, 28],
+      iconAnchor: [14, 28],
+    });
+  }
+
+  // Default emoji berdasarkan categoryId
+  const categoryEmojis: Record<number, string> = {
+    1: '🔥',  // Kebakaran
+    2: '🏗️', // Kerusakan Infrastruktur
+    3: '🌊',  // Banjir
+    4: '🌪️',  // Angin Puting Beliung
+    5: '⛰️',   // Tanah Longsor
+    6: '⚠️',   // Kecelakaan
+    7: '🚨',   // Lainnya
+  };
+
+  const emoji = categoryIcon || categoryEmojis[categoryId || 1] || '🔥';
+
+  return new L.DivIcon({
+    html: `<div style="font-size: 28px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">${emoji}</div>`,
+    className: 'leaflet-emoji-icon',
+    iconSize: [28, 28],
+    iconAnchor: [14, 28],
+  });
+};
 
 // Ikon untuk lokasi pelapor
 const reporterLocationIcon = new L.DivIcon({
@@ -45,14 +78,6 @@ const reporterLocationIcon = new L.DivIcon({
   className: 'leaflet-emoji-icon',
   iconSize: [24, 24],
   iconAnchor: [12, 24],
-});
-
-// Ikon untuk laporan selesai
-const completedFireIcon = new L.DivIcon({
-  html: `<div style="font-size: 28px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">✅</div>`,
-  className: 'leaflet-emoji-icon',
-  iconSize: [28, 28],
-  iconAnchor: [14, 28],
 });
 
 interface AdminMapProps {
@@ -119,32 +144,19 @@ export default function AdminMap({ reports, onReportClick, selectedReport }: Adm
       ))}
 
       {/* Tampilkan semua laporan */}
-      {reports.map(report => (
-        <div key={`report-group-${report.id}`}>
-          {/* Marker lokasi kebakaran */}
-          <Marker
-            key={`fire-${report.id}`}
-            position={[report.fire_latitude, report.fire_longitude]}
-            icon={(report.status === 'Selesai' || report.status === 'completed') ? completedFireIcon : fireLocationIcon}
-            eventHandlers={{
-              click: () => {
-                onReportClick(report);
-              }
-            }}
-          >
-            <Popup>
-              <strong>{(report.status === 'Selesai' || report.status === 'completed') ? '✅ Kebakaran Padam' : '🔥 Lokasi Kebakaran'}</strong><br />
-              Laporan #{report.id} <br />
-              Status: {report.status}
-            </Popup>
-          </Marker>
+      {reports.map(report => {
+        const isCompleted = report.status === 'Selesai' || report.status === 'completed' || report.status === 'selesai';
+        const categoryIcon = createCategoryIcon(report.category?.id, report.category?.icon, isCompleted);
+        const categoryName = report.category?.name || 'Kebakaran';
+        const categoryEmoji = report.category?.icon || '🔥';
 
-          {/* Marker lokasi pelapor jika ada */}
-          {report.reporter_latitude && report.reporter_longitude && (
+        return (
+          <div key={`report-group-${report.id}`}>
+            {/* Marker lokasi kejadian */}
             <Marker
-              key={`reporter-${report.id}`}
-              position={[report.reporter_latitude, report.reporter_longitude]}
-              icon={reporterLocationIcon}
+              key={`fire-${report.id}`}
+              position={[report.fire_latitude, report.fire_longitude]}
+              icon={categoryIcon}
               eventHandlers={{
                 click: () => {
                   onReportClick(report);
@@ -152,13 +164,34 @@ export default function AdminMap({ reports, onReportClick, selectedReport }: Adm
               }}
             >
               <Popup>
-                <strong>📍 Lokasi Pelapor</strong><br />
-                Laporan #{report.id}
+                <strong>{isCompleted ? `✅ ${categoryName} - Selesai` : `${categoryEmoji} Lokasi ${categoryName}`}</strong><br />
+                Laporan #{report.id} <br />
+                Status: {report.status}
+                {report.kelurahan && <><br />Kelurahan: {report.kelurahan.name}</>}
               </Popup>
             </Marker>
-          )}
-        </div>
-      ))}
+
+            {/* Marker lokasi pelapor jika ada */}
+            {report.reporter_latitude && report.reporter_longitude && (
+              <Marker
+                key={`reporter-${report.id}`}
+                position={[report.reporter_latitude, report.reporter_longitude]}
+                icon={reporterLocationIcon}
+                eventHandlers={{
+                  click: () => {
+                    onReportClick(report);
+                  }
+                }}
+              >
+                <Popup>
+                  <strong>📍 Lokasi Pelapor</strong><br />
+                  Laporan #{report.id}
+                </Popup>
+              </Marker>
+            )}
+          </div>
+        );
+      })}
 
       {/* Tampilkan rute dari pos damkar terdekat ke lokasi kebakaran untuk laporan yang dipilih */}
       {selectedReport && nearestStation && selectedReport.status !== 'Selesai' && selectedReport.status !== 'completed' && (

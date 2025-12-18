@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { executeAndGetLastInsertId } from "@/lib/db";
+import { executeAndGetLastInsertId, formatDateForMySQL } from "@/lib/db";
 import * as jose from "jose";
 import { serialize } from "cookie";
 import path from "path";
@@ -13,29 +13,26 @@ async function getAuthPayload(request: NextRequest) {
   if (!token) throw new Error("Token autentikasi tidak ditemukan.");
   const secret = new TextEncoder().encode(JWT_SECRET);
   const { payload } = await jose.jwtVerify(token, secret);
-  return payload as { id: number; phone: string };
+  return payload as { id: number; email: string; name: string; phone?: string };
 }
 
 export async function POST(request: NextRequest) {
   try {
     const user = await getAuthPayload(request);
-    
-    // Verify user exists in database, create if not (untuk handle database reset)
-    const { queryRow, executeAndGetLastInsertId: createUser } = await import("@/lib/db");
+
+    // Verify user exists in database
+    const { queryRow } = await import("@/lib/db");
     const dbUser = await queryRow("SELECT id FROM users WHERE id = ?", [user.id]);
-    
-    let userId = user.id;
-    let needsNewToken = false;
-    
-    if (!dbUser && user.phone) {
-      // User tidak ada di database, buat user baru dengan phone dari token
-      userId = await createUser(
-        "INSERT INTO users (phone_number) VALUES (?)",
-        [user.phone]
+
+    if (!dbUser) {
+      return NextResponse.json(
+        { message: "User tidak ditemukan. Silakan login ulang." },
+        { status: 401 }
       );
-      needsNewToken = true; // Flag to create new JWT token
     }
-    
+
+    const userId = user.id;
+
     const formData = await request.formData();
     const fireLatitude = formData.get("fireLatitude") as string;
     const fireLongitude = formData.get("fireLongitude") as string;
@@ -47,42 +44,76 @@ export async function POST(request: NextRequest) {
     const notes = formData.get("notes") as string | null;
     const contact = formData.get("contact") as string | null;
     const categoryId = formData.get("categoryId") as string | null;
+    const kelurahanId = formData.get("kelurahanId") as string | null;
 
-    if (!fireLatitude || !fireLongitude || !mediaFile) {
+    if (!fireLatitude || !fireLongitude) {
       return NextResponse.json(
-        { message: "Data laporan tidak lengkap (lokasi kebakaran dan media wajib)." },
+        { message: "Data laporan tidak lengkap (lokasi kejadian wajib)." },
         { status: 400 }
       );
     }
 
-    // ... (kode upload file tetap sama)
-    const uploadsDir = path.join(process.cwd(), "public", "uploads");
-    await mkdir(uploadsDir, { recursive: true });
-    const buffer = Buffer.from(await mediaFile.arrayBuffer());
-    const filename = `${Date.now()}-${mediaFile.name.replace(/\s/g, "_")}`;
-    await writeFile(path.join(uploadsDir, filename), buffer);
-    const mediaUrl = `/uploads/${filename}`;
+    // Upload dan kompresi file jika ada (opsional)
+    let mediaUrl: string | null = null;
+    if (mediaFile && mediaFile.size > 0) {
+      const uploadsDir = path.join(process.cwd(), "public", "uploads");
+      await mkdir(uploadsDir, { recursive: true });
 
-    const currentTimestamp = new Date().toISOString();
-    
-    // Try with category_id first, fallback to without if column doesn't exist
+      const originalBuffer = Buffer.from(await mediaFile.arrayBuffer());
+      const isImage = mediaFile.type.startsWith('image/');
+      const isVideo = mediaFile.type.startsWith('video/');
+
+      let finalBuffer: Buffer | any = originalBuffer;
+      let extension = mediaFile.name.split('.').pop() || 'jpg';
+
+      // Kompresi hanya untuk gambar
+      if (isImage) {
+        try {
+          const sharp = (await import('sharp')).default;
+
+          // Kompresi gambar: resize max 1200px dan quality 80%
+          finalBuffer = await sharp(originalBuffer)
+            .resize(1200, 1200, {
+              fit: 'inside',
+              withoutEnlargement: true
+            })
+            .jpeg({ quality: 80 })
+            .toBuffer();
+
+          extension = 'jpg'; // Konversi semua ke JPEG
+          console.log(`Image compressed: ${originalBuffer.length} -> ${finalBuffer.length} bytes (${Math.round((1 - finalBuffer.length / originalBuffer.length) * 100)}% reduction)`);
+        } catch (compressError) {
+          console.error('Image compression failed, using original:', compressError);
+          finalBuffer = originalBuffer;
+        }
+      }
+
+      const filename = `${Date.now()}-${isImage ? 'img' : 'vid'}.${extension}`;
+      await writeFile(path.join(uploadsDir, filename), finalBuffer);
+      mediaUrl = `/uploads/${filename}`;
+    }
+
+    const currentTimestamp = formatDateForMySQL(new Date());
+
+    // Insert report dengan category_id dan kelurahan_id
     let reportId: number;
     try {
       reportId = await executeAndGetLastInsertId(
-        "INSERT INTO reports (user_id, fire_latitude, fire_longitude, reporter_latitude, reporter_longitude, description, address, media_url, notes, contact, category_id, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO reports (user_id, fire_latitude, fire_longitude, reporter_latitude, reporter_longitude, description, address, media_url, notes, contact, category_id, kelurahan_id, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
-          userId, 
-          parseFloat(fireLatitude), 
-          parseFloat(fireLongitude), 
+          userId,
+          parseFloat(fireLatitude),
+          parseFloat(fireLongitude),
           reporterLatitude ? parseFloat(reporterLatitude) : null,
           reporterLongitude ? parseFloat(reporterLongitude) : null,
-          description, 
-          address, 
-          mediaUrl, 
-          notes, 
+          description,
+          address,
+          mediaUrl,
+          notes,
           contact,
           categoryId ? parseInt(categoryId) : 1,
-          'pending', 
+          kelurahanId ? parseInt(kelurahanId) : null,
+          'pending',
           currentTimestamp
         ]
       );
@@ -92,17 +123,17 @@ export async function POST(request: NextRequest) {
         reportId = await executeAndGetLastInsertId(
           "INSERT INTO reports (user_id, fire_latitude, fire_longitude, reporter_latitude, reporter_longitude, description, address, media_url, notes, contact, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
           [
-            userId, 
-            parseFloat(fireLatitude), 
-            parseFloat(fireLongitude), 
+            userId,
+            parseFloat(fireLatitude),
+            parseFloat(fireLongitude),
             reporterLatitude ? parseFloat(reporterLatitude) : null,
             reporterLongitude ? parseFloat(reporterLongitude) : null,
-            description, 
-            address, 
-            mediaUrl, 
-            notes, 
+            description,
+            address,
+            mediaUrl,
+            notes,
             contact,
-            'pending', 
+            'pending',
             currentTimestamp
           ]
         );
@@ -128,32 +159,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // If new user was created, generate new JWT token with correct user_id
-    if (needsNewToken) {
-      const secret = new TextEncoder().encode(JWT_SECRET);
-      const newToken = await new jose.SignJWT({ id: userId, phone: user.phone })
-        .setProtectedHeader({ alg: 'HS256' })
-        .setIssuedAt()
-        .setExpirationTime('7d')
-        .sign(secret);
-
-      const serializedCookie = serialize(COOKIE_NAME, newToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-      });
-
-      return new NextResponse(
-        JSON.stringify({ message: "Laporan berhasil dikirim!", reportId }),
-        {
-          status: 201,
-          headers: { 'Set-Cookie': serializedCookie },
-        }
-      );
-    }
-
     return NextResponse.json(
       { message: "Laporan berhasil dikirim!", reportId },
       { status: 201 }
@@ -162,7 +167,7 @@ export async function POST(request: NextRequest) {
     if (error.message.includes("autentikasi")) {
       return NextResponse.json({ message: "Akses ditolak." }, { status: 401 });
     }
-    
+
     // Handle specific database errors
     if (error.code === 'SQLITE_CONSTRAINT') {
       return NextResponse.json(
@@ -170,9 +175,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
+
     return NextResponse.json(
-      { 
+      {
         message: "Terjadi kesalahan pada server.",
         error: process.env.NODE_ENV === 'development' ? error.message : undefined
       },

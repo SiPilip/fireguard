@@ -1,23 +1,28 @@
 /**
- * Script untuk melihat daftar operator di database
+ * Script untuk melihat daftar operator di database MySQL
  * 
  * Cara pakai:
  * npx tsx scripts/list-operators.ts
  */
 
-import { createClient } from '@libsql/client';
+import mysql from 'mysql2/promise';
+import 'dotenv/config';
 
 async function listOperators() {
   // Setup database connection
-  const db = createClient({
-    url: process.env.TURSO_DATABASE_URL || 'file:local.db',
-    authToken: process.env.TURSO_AUTH_TOKEN,
+  const db = await mysql.createConnection({
+    host: process.env.MYSQL_HOST || 'localhost',
+    port: parseInt(process.env.MYSQL_PORT || '3306'),
+    user: process.env.MYSQL_USER || 'root',
+    password: process.env.MYSQL_PASSWORD || '',
+    database: process.env.MYSQL_DATABASE || 'fireguard',
   });
 
   try {
-    const result = await db.execute('SELECT id, username FROM operators');
-    
-    if (result.rows.length === 0) {
+    const [rows] = await db.execute('SELECT id, username FROM operators');
+    const operators = rows as any[];
+
+    if (operators.length === 0) {
       console.log('❌ Tidak ada operator di database.');
       console.log('\n💡 Tambahkan operator dengan:');
       console.log('   npx tsx scripts/add-operator.ts <username> <password>');
@@ -25,12 +30,14 @@ async function listOperators() {
     }
 
     console.log('📋 Daftar Operator:\n');
-    result.rows.forEach((row: any) => {
+    operators.forEach((row: any) => {
       console.log(`   ID: ${row.id} | Username: ${row.username}`);
     });
-    console.log(`\n✅ Total: ${result.rows.length} operator`);
+    console.log(`\n✅ Total: ${operators.length} operator`);
   } catch (error: any) {
     console.error('❌ Error:', error.message);
+  } finally {
+    await db.end();
   }
 }
 

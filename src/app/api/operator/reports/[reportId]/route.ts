@@ -1,39 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import { queryRow, execute } from "@/lib/db";
 import { calculateETA, getAddressFromCoordinates } from "@/lib/geo";
+import { sendStatusUpdateEmail } from "@/lib/email";
 
-// --- Konfigurasi Fonnte ---
-const FONNTE_TOKEN = process.env.FONNTE_TOKEN || "YOUR_FONNTE_TOKEN";
+// --- Konfigurasi Fonnte (Opsional) ---
+const FONNTE_TOKEN = process.env.FONNTE_TOKEN || "";
+const ENABLE_WHATSAPP = process.env.ENABLE_WHATSAPP === "true";
 
 /**
- * Fungsi untuk mengirim pesan WhatsApp melalui Fonnte
- * @param target Nomor telepon tujuan (format internasional, misal: 628xxxx)
- * @param message Isi pesan yang akan dikirim
+ * Fungsi untuk mengirim pesan WhatsApp melalui Fonnte (Opsional)
  */
 async function sendWhatsAppMessage(target: string, message: string) {
+  if (!ENABLE_WHATSAPP || !FONNTE_TOKEN) return;
+
   const data = new FormData();
   data.append("target", target);
   data.append("message", message);
   data.append("countryCode", "62");
 
   try {
-    const response = await fetch("https://api.fonnte.com/send", {
+    await fetch("https://api.fonnte.com/send", {
       method: "POST",
-      headers: {
-        Authorization: FONNTE_TOKEN,
-      },
+      headers: { Authorization: FONNTE_TOKEN },
       body: data,
     });
-
-    if (!response.ok) {
-      return; // Jangan throw error agar tidak menghentikan alur utama
-    }
-
   } catch (error) {
-    // Error calling Fonnte API
+    // Ignore WhatsApp errors
   }
 }
-
 
 export async function GET(
   request: NextRequest,
@@ -42,8 +36,11 @@ export async function GET(
   try {
     const { reportId } = await params;
     const report = await queryRow(
-      `SELECT r.id, r.latitude, r.longitude, r.status, r.created_at, r.media_url, u.phone_number
-       FROM reports r JOIN users u ON r.user_id = u.id
+      `SELECT r.id, r.fire_latitude, r.fire_longitude, r.status, r.created_at, r.media_url, 
+              r.description, r.admin_notes,
+              u.name as user_name, u.email as user_email, u.phone_number
+       FROM reports r 
+       JOIN users u ON r.user_id = u.id
        WHERE r.id = ?`,
       [reportId]
     );
@@ -68,19 +65,43 @@ export async function PATCH(
 ) {
   try {
     const { reportId } = await params;
-    const { status: newStatus } = await request.json();
+    const { status: newStatus, adminNotes, kelurahanId, categoryId } = await request.json();
 
-    if (!newStatus) {
+    // Build dynamic SQL update
+    const updates: string[] = [];
+    const args: any[] = [];
+
+    if (newStatus) {
+      updates.push('status = ?');
+      args.push(newStatus);
+    }
+
+    if (adminNotes !== undefined) {
+      updates.push('admin_notes = ?');
+      args.push(adminNotes);
+    }
+
+    if (kelurahanId !== undefined) {
+      updates.push('kelurahan_id = ?');
+      args.push(kelurahanId);
+    }
+
+    if (categoryId !== undefined) {
+      updates.push('category_id = ?');
+      args.push(categoryId);
+    }
+
+    if (updates.length === 0) {
       return NextResponse.json(
-        { message: "Status baru tidak boleh kosong." },
+        { message: "Tidak ada data yang diubah." },
         { status: 400 }
       );
     }
 
-    const rowsAffected = await execute(
-      "UPDATE reports SET status = ? WHERE id = ?",
-      [newStatus, reportId]
-    );
+    const sql = `UPDATE reports SET ${updates.join(', ')} WHERE id = ?`;
+    args.push(reportId);
+
+    const rowsAffected = await execute(sql, args);
 
     if (rowsAffected === 0) {
       return NextResponse.json(
@@ -89,117 +110,89 @@ export async function PATCH(
       );
     }
 
-    // Kirim notifikasi WhatsApp berdasarkan status
-    if (newStatus === 'verified' || newStatus === 'dispatched' || newStatus === 'completed' || newStatus === 'false') {
-      const report = await queryRow<{ user_id: number; fire_latitude: number; fire_longitude: number }>(
-        'SELECT user_id, fire_latitude, fire_longitude FROM reports WHERE id = ?',
-        [reportId]
+    // Ambil data report dan user untuk notifikasi
+    const report = await queryRow<{
+      user_id: number;
+      fire_latitude: number;
+      fire_longitude: number;
+    }>(
+      'SELECT user_id, fire_latitude, fire_longitude FROM reports WHERE id = ?',
+      [reportId]
+    );
+
+    if (report && newStatus) {
+      const user = await queryRow<{ name: string; email: string; phone_number: string }>(
+        'SELECT name, email, phone_number FROM users WHERE id = ?',
+        [report.user_id]
       );
 
-      if (report) {
-        const user = await queryRow<{ phone_number: string }>(
-          'SELECT phone_number FROM users WHERE id = ?',
-          [report.user_id]
+      // Status labels untuk notifikasi
+      const statusLabels: Record<string, string> = {
+        pending: '⏳ Menunggu Verifikasi',
+        submitted: '📝 Baru Dikirim',
+        verified: '✅ Terverifikasi',
+        diproses: '🔄 Sedang Diproses',
+        dispatched: '🚒 Unit Dikirim',
+        dikirim: '🚒 Tim Dikirim',
+        arrived: '📍 Unit Tiba',
+        ditangani: '👨‍🚒 Sedang Ditangani',
+        completed: '✅ Selesai',
+        selesai: '✅ Selesai',
+        dibatalkan: '❌ Dibatalkan',
+        false: '⚠️ Laporan Palsu',
+      };
+
+      const statusLabel = statusLabels[newStatus] || newStatus;
+
+      // BARU: Simpan notifikasi ke database untuk web
+      try {
+        const { executeAndGetLastInsertId, formatDateForMySQL } = await import('@/lib/db');
+        const currentTimestamp = formatDateForMySQL(new Date());
+
+        const notifTitle = `Status Laporan #${reportId} Diperbarui`;
+        let notifMessage = `Status laporan Anda telah diperbarui menjadi: ${statusLabel}`;
+        if (adminNotes) {
+          notifMessage += `\n\nCatatan petugas: ${adminNotes}`;
+        }
+
+        await executeAndGetLastInsertId(
+          `INSERT INTO notifications (user_id, title, message, type, report_id, is_read, created_at) 
+           VALUES (?, ?, ?, ?, ?, FALSE, ?)`,
+          [report.user_id, notifTitle, notifMessage, 'status_update', parseInt(reportId), currentTimestamp]
+        );
+      } catch (notifError) {
+        console.error('Error creating notification:', notifError);
+        // Lanjutkan meskipun gagal buat notifikasi
+      }
+
+      if (user && user.email) {
+        // UTAMA: Kirim notifikasi via Email
+        sendStatusUpdateEmail(
+          user.email,
+          user.name,
+          parseInt(reportId),
+          newStatus,
+          adminNotes
         );
 
-        if (user && user.phone_number) {
-          let message = '';
+        // OPSIONAL: Kirim juga via WhatsApp jika diaktifkan
+        if (ENABLE_WHATSAPP && user.phone_number) {
+          const address = await getAddressFromCoordinates(report.fire_latitude, report.fire_longitude);
 
-          if (newStatus === 'verified') {
-            const address = await getAddressFromCoordinates(report.fire_latitude, report.fire_longitude);
+          let message = `*[FireGuard]*\n\nHalo ${user.name},\n\nLaporan Anda *#${reportId}* telah diperbarui:\n\n*Status:* ${statusLabel}\n*Alamat:* ${address}`;
 
-            message =
-              `*[FireGuard]*
-
-✓ Laporan Anda *#${reportId}* sedang dalam *PROSES VERIFIKASI*.
-
-*Alamat Terdeteksi:*
-${address}
-
-Tim operator sedang memverifikasi laporan Anda. Mohon tetap waspada dan amankan diri Anda.
-
-Unit pemadam kebakaran akan segera dikirim jika laporan terverifikasi.
-
-Pantau terus notifikasi untuk update selanjutnya.
-
-> _Sent via fonnte.com_`;
-          }
-          else if (newStatus === 'dispatched') {
-            // Dapatkan alamat dan ETA secara bersamaan
-            const [address, etaResult] = await Promise.all([
-              getAddressFromCoordinates(report.fire_latitude, report.fire_longitude),
-              calculateETA(report.fire_latitude, report.fire_longitude)
-            ]);
-
-            message =
-              `*[FireGuard]*
-
-Laporan Anda *#${reportId}* telah diverifikasi.
-
-Tim pemadam kebakaran dari *${etaResult.nearestStation.name}* telah dikirim ke lokasi Anda dan sedang dalam perjalanan.
-
-*Alamat Terdeteksi:*
-${address}
-
-*Estimasi Waktu Tiba:*
-*${etaResult.etaMinutes} menit* (jarak sekitar ${etaResult.distanceKm} km).
-
-Harap tetap tenang dan amankan diri Anda.`;
-          }
-          else if (newStatus === 'completed') {
-            const address = await getAddressFromCoordinates(report.fire_latitude, report.fire_longitude);
-
-            message =
-              `*[FireGuard]*
-
-✅ Laporan Anda *#${reportId}* telah *SELESAI* ditangani.
-
-*Alamat Lokasi:*
-${address}
-
-Terima kasih telah menggunakan layanan FireGuard. Kebakaran telah berhasil dipadamkan dan situasi sudah aman.
-
-Jika ada kerusakan atau memerlukan bantuan lebih lanjut, silakan hubungi:
-- Hotline Damkar: *113*
-- Email: damkar@palembang.go.id
-
-Harap tetap waspada dan pastikan tidak ada titik api yang tersisa.
-
-> _Sent via fonnte.com_`;
-          }
-          else if (newStatus === 'false') {
-            const address = await getAddressFromCoordinates(report.fire_latitude, report.fire_longitude);
-
-            message =
-              `*[FireGuard]*
-
-❌ Laporan Anda *#${reportId}* telah diverifikasi sebagai *LAPORAN PALSU*.
-
-*Alamat Terdeteksi:*
-${address}
-
-Setelah pengecekan tim, *tidak ditemukan indikasi kebakaran* di lokasi yang dilaporkan.
-
-⚠️ *PERINGATAN PENTING*:
-Laporan palsu dapat:
-- Menghambat penanganan darurat yang sesungguhnya
-- Membuang sumber daya pemadam kebakaran
-- Merugikan masyarakat yang membutuhkan bantuan nyata
-
-Mohon gunakan layanan darurat dengan bijak dan bertanggung jawab.
-
-> _Sent via fonnte.com_`;
+          if (adminNotes) {
+            message += `\n\n*Catatan Petugas:*\n${adminNotes}`;
           }
 
-          // Kirim di latar belakang jika ada pesan
-          if (message) {
-            sendWhatsAppMessage(user.phone_number, message);
-          }
+          message += `\n\n> _Sent via FireGuard_`;
+
+          sendWhatsAppMessage(user.phone_number, message);
         }
       }
     }
 
-    // Broadcast the status update to all connected clients
+    // Broadcast status update via WebSocket
     if (global.wss) {
       global.wss.broadcast(
         JSON.stringify({
@@ -213,6 +206,7 @@ Mohon gunakan layanan darurat dengan bijak dan bertanggung jawab.
       message: `Status laporan #${reportId} berhasil diperbarui menjadi ${newStatus}.`,
     });
   } catch (error) {
+    console.error("Error updating report:", error);
     return NextResponse.json(
       { message: "Terjadi kesalahan pada server." },
       { status: 500 }

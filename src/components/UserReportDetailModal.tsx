@@ -24,6 +24,21 @@ interface Report {
     notes?: string;
     contact?: string;
     description?: string;
+    address?: string;
+    category?: {
+        id: number;
+        name: string;
+        icon: string;
+    };
+    kelurahan?: {
+        id: number;
+        name: string;
+        kecamatan?: string;
+    };
+    category_name?: string;
+    category_icon?: string;
+    kelurahan_name?: string;
+    kecamatan?: string;
 }
 
 interface UserReportDetailModalProps {
@@ -46,11 +61,17 @@ export default function UserReportDetailModal({
 
     const getStatusDisplay = (status: string) => {
         const statusMap: { [key: string]: { text: string; color: string; bgColor: string } } = {
+            pending: { text: "Menunggu Verifikasi", color: "text-yellow-700", bgColor: "bg-yellow-50 border-yellow-200" },
             submitted: { text: "Menunggu Verifikasi", color: "text-yellow-700", bgColor: "bg-yellow-50 border-yellow-200" },
             verified: { text: "Terverifikasi", color: "text-blue-700", bgColor: "bg-blue-50 border-blue-200" },
+            diproses: { text: "Sedang Diproses", color: "text-blue-700", bgColor: "bg-blue-50 border-blue-200" },
             dispatched: { text: "Unit Dalam Perjalanan", color: "text-purple-700", bgColor: "bg-purple-50 border-purple-200" },
+            dikirim: { text: "Tim Dikirim", color: "text-purple-700", bgColor: "bg-purple-50 border-purple-200" },
             arrived: { text: "Unit Tiba di Lokasi", color: "text-indigo-700", bgColor: "bg-indigo-50 border-indigo-200" },
+            ditangani: { text: "Sedang Ditangani", color: "text-cyan-700", bgColor: "bg-cyan-50 border-cyan-200" },
             completed: { text: "Selesai", color: "text-green-700", bgColor: "bg-green-50 border-green-200" },
+            selesai: { text: "Selesai", color: "text-green-700", bgColor: "bg-green-50 border-green-200" },
+            dibatalkan: { text: "Dibatalkan", color: "text-red-700", bgColor: "bg-red-50 border-red-200" },
             false: { text: "Laporan Ditolak/Palsu", color: "text-red-700", bgColor: "bg-red-50 border-red-200" },
         };
         return (
@@ -105,6 +126,59 @@ export default function UserReportDetailModal({
                             </div>
                         </div>
                     </div>
+
+                    {/* Kategori dan Kelurahan */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Kategori Bencana */}
+                        <div className="bg-white rounded-xl p-5 border border-gray-200/60 shadow-sm">
+                            <div className="flex items-start gap-3">
+                                <div className="p-2 bg-red-100 rounded-lg">
+                                    <span className="text-lg">{report.category?.icon || report.category_icon || '🔥'}</span>
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-xs text-gray-500 mb-1.5">Kategori Bencana</p>
+                                    <p className="text-sm font-semibold text-gray-900">
+                                        {report.category?.name || report.category_name || 'Kebakaran'}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Kelurahan */}
+                        <div className="bg-white rounded-xl p-5 border border-gray-200/60 shadow-sm">
+                            <div className="flex items-start gap-3">
+                                <div className="p-2 bg-teal-100 rounded-lg">
+                                    <FaMapMarkerAlt className="text-teal-600 text-sm" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-xs text-gray-500 mb-1.5">Kelurahan</p>
+                                    <p className="text-sm font-semibold text-gray-900">
+                                        {report.kelurahan?.name || report.kelurahan_name || 'Tidak tersedia'}
+                                    </p>
+                                    {(report.kelurahan?.kecamatan || report.kecamatan) && (
+                                        <p className="text-xs text-gray-500 mt-0.5">
+                                            Kec. {report.kelurahan?.kecamatan || report.kecamatan}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Alamat/Patokan */}
+                    {report.address && (
+                        <div className="bg-white rounded-xl p-5 border border-gray-200/60 shadow-sm">
+                            <div className="flex items-start gap-3">
+                                <div className="p-2 bg-orange-100 rounded-lg">
+                                    <FaMapMarkerAlt className="text-orange-600 text-sm" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-xs text-gray-500 mb-1.5">Alamat/Patokan</p>
+                                    <p className="text-sm text-gray-900">{report.address}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Info Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -161,7 +235,7 @@ export default function UserReportDetailModal({
                             <div className="flex-1">
                                 <p className="text-xs text-gray-500 mb-1">Lokasi Kejadian</p>
                                 <p className="text-sm font-semibold text-gray-900 mb-2">
-                                    Koordinat: {report.fire_latitude.toFixed(6)}, {report.fire_longitude.toFixed(6)}
+                                    Koordinat: {Number(report.fire_latitude).toFixed(6)}, {Number(report.fire_longitude).toFixed(6)}
                                 </p>
                                 <a
                                     href={googleMapsUrl}

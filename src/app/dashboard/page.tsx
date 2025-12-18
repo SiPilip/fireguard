@@ -28,6 +28,9 @@ const UserReportDetailModal = dynamic(() => import('@/components/UserReportDetai
   ssr: false,
 });
 
+// Import NotificationBell
+import NotificationBell from '@/components/NotificationBell';
+
 interface Report {
   id: number;
   fire_latitude: number;
@@ -48,12 +51,20 @@ interface Report {
 
 interface User {
   id: number;
-  phone: string;
+  name: string;
+  email: string;
+  phone?: string;
 }
 
-type StatusType = 'submitted' | 'verified' | 'dispatched' | 'arrived' | 'completed' | 'false';
+type StatusType = 'pending' | 'submitted' | 'verified' | 'dispatched' | 'arrived' | 'completed' | 'diproses' | 'dikirim' | 'ditangani' | 'selesai' | 'dibatalkan' | 'false';
 
 const statusConfig: Record<StatusType, { label: string; color: string; textColor: string; icon: any }> = {
+  pending: {
+    label: 'Menunggu Verifikasi',
+    color: 'bg-yellow-500',
+    textColor: 'text-yellow-700',
+    icon: FaClock,
+  },
   submitted: {
     label: 'Menunggu Verifikasi',
     color: 'bg-yellow-500',
@@ -66,8 +77,20 @@ const statusConfig: Record<StatusType, { label: string; color: string; textColor
     textColor: 'text-blue-700',
     icon: FaCheckCircle,
   },
+  diproses: {
+    label: 'Sedang Diproses',
+    color: 'bg-blue-500',
+    textColor: 'text-blue-700',
+    icon: FaCheckCircle,
+  },
   dispatched: {
     label: 'Unit Dalam Perjalanan',
+    color: 'bg-purple-500',
+    textColor: 'text-purple-700',
+    icon: FaTruck,
+  },
+  dikirim: {
+    label: 'Tim Dikirim',
     color: 'bg-purple-500',
     textColor: 'text-purple-700',
     icon: FaTruck,
@@ -78,11 +101,29 @@ const statusConfig: Record<StatusType, { label: string; color: string; textColor
     textColor: 'text-indigo-700',
     icon: FaCheckCircle,
   },
+  ditangani: {
+    label: 'Sedang Ditangani',
+    color: 'bg-cyan-500',
+    textColor: 'text-cyan-700',
+    icon: FaCheckCircle,
+  },
   completed: {
     label: 'Selesai',
     color: 'bg-green-500',
     textColor: 'text-green-700',
     icon: FaCheckCircle,
+  },
+  selesai: {
+    label: 'Selesai',
+    color: 'bg-green-500',
+    textColor: 'text-green-700',
+    icon: FaCheckCircle,
+  },
+  dibatalkan: {
+    label: 'Dibatalkan',
+    color: 'bg-red-500',
+    textColor: 'text-red-700',
+    icon: FaTimesCircle,
   },
   false: {
     label: 'Laporan Palsu',
@@ -242,13 +283,19 @@ export default function DashboardPage() {
             </button>
             <div>
               <h1 className="text-base md:text-xl font-semibold text-gray-900">Dashboard Saya</h1>
-              <p className="text-xs text-gray-500 mt-0.5 hidden sm:block">Selamat datang, {user?.phone || 'Pengguna'}</p>
+              <p className="text-xs text-gray-500 mt-0.5 hidden sm:block">Selamat datang, {user?.name || user?.email || 'Pengguna'}</p>
             </div>
           </div>
           <div className="flex items-center gap-2 md:gap-3">
-            <button className="p-2 hover:bg-gray-100 rounded-xl transition-colors hidden sm:block">
-              <FaBell className="text-gray-500 text-base md:text-lg" />
-            </button>
+            {/* Notification Bell */}
+            <div className="hidden sm:block">
+              <NotificationBell
+                onViewReport={(reportId) => {
+                  const report = reports.find(r => r.id === reportId);
+                  if (report) setSelectedReport(report);
+                }}
+              />
+            </div>
             <button className="p-2 hover:bg-gray-100 rounded-xl transition-colors hidden sm:block">
               <FaCog className="text-gray-500 text-base md:text-lg" />
             </button>
@@ -263,9 +310,9 @@ export default function DashboardPage() {
           {/* Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 mb-4 md:mb-6">
             <StatCard title="Total Laporan" value={reports.length} icon={FaFileAlt} gradient="bg-gradient-to-br from-blue-500 to-cyan-600" />
-            <StatCard title="Menunggu" value={reports.filter((r) => r.status === 'submitted').length} icon={FaClock} gradient="bg-gradient-to-br from-yellow-500 to-amber-600" />
-            <StatCard title="Dalam Proses" value={reports.filter((r) => ['verified', 'dispatched', 'arrived'].includes(r.status)).length} icon={FaTruck} gradient="bg-gradient-to-br from-purple-500 to-indigo-600" />
-            <StatCard title="Selesai" value={reports.filter((r) => r.status === 'completed').length} icon={FaCheckCircle} gradient="bg-gradient-to-br from-green-500 to-emerald-600" />
+            <StatCard title="Menunggu" value={reports.filter((r) => ['submitted', 'pending'].includes(r.status)).length} icon={FaClock} gradient="bg-gradient-to-br from-yellow-500 to-amber-600" />
+            <StatCard title="Dalam Proses" value={reports.filter((r) => ['verified', 'dispatched', 'arrived', 'diproses', 'dikirim', 'ditangani'].includes(r.status)).length} icon={FaTruck} gradient="bg-gradient-to-br from-purple-500 to-indigo-600" />
+            <StatCard title="Selesai" value={reports.filter((r) => ['completed', 'selesai'].includes(r.status)).length} icon={FaCheckCircle} gradient="bg-gradient-to-br from-green-500 to-emerald-600" />
           </div>
 
           {/* Reports List */}

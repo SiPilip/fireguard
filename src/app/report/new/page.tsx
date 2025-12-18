@@ -16,6 +16,10 @@ import {
   FaRoad,
   FaExclamationTriangle,
   FaTimes,
+  FaFire,
+  FaUser,
+  FaCheckCircle,
+  FaCrosshairs,
 } from "react-icons/fa";
 
 const MapWithNoSSR = dynamic(() => import("@/components/ReportMap"), {
@@ -130,6 +134,8 @@ export default function NewReportPage() {
   const [contact, setContact] = useState("");
   const [categoryId, setCategoryId] = useState<number>(1); // Default: Kebakaran
   const [categories, setCategories] = useState<any[]>([]);
+  const [kelurahanId, setKelurahanId] = useState<number | null>(null);
+  const [kelurahanList, setKelurahanList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [nearestStation, setNearestStation] =
@@ -170,6 +176,29 @@ export default function NewReportPage() {
     fetchCategories();
   }, []);
 
+  // Fetch kelurahan list and set Plaju Darat as default
+  useEffect(() => {
+    const fetchKelurahan = async () => {
+      try {
+        const response = await fetch('/api/kelurahan');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            setKelurahanList(data.data);
+            // Set Plaju Darat as default (only on first load)
+            const plajuDarat = data.data.find((kel: any) => kel.name.toLowerCase().includes('plaju darat'));
+            if (plajuDarat) {
+              setKelurahanId((prev) => prev === null ? plajuDarat.id : prev);
+            }
+          }
+        }
+      } catch (error) {
+        // Error fetching kelurahan
+      }
+    };
+    fetchKelurahan();
+  }, []);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
@@ -180,10 +209,6 @@ export default function NewReportPage() {
     e.preventDefault();
     if (!firePosition) {
       setError("Lokasi kebakaran belum ditentukan. Mohon tandai lokasi di peta.");
-      return;
-    }
-    if (!file) {
-      setError("Bukti foto/video belum diunggah.");
       return;
     }
 
@@ -199,10 +224,16 @@ export default function NewReportPage() {
     }
     formData.append("description", description);
     formData.append("address", address);
-    formData.append("media", file);
+    // Foto opsional - hanya append jika ada
+    if (file) {
+      formData.append("media", file);
+    }
     formData.append("notes", notes);
     formData.append("contact", contact);
     formData.append("categoryId", categoryId.toString());
+    if (kelurahanId) {
+      formData.append("kelurahanId", kelurahanId.toString());
+    }
 
     try {
       const response = await fetch("/api/reports", {
@@ -275,38 +306,12 @@ export default function NewReportPage() {
           <div className="lg:col-span-3 space-y-5">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200/60 overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-5 bg-gradient-to-b from-red-500 to-orange-500 rounded-full"></div>
-                    <div>
-                      <h2 className="text-base font-semibold text-gray-900">Lokasi Kejadian</h2>
-                      <p className="text-xs text-gray-500 mt-0.5">Klik peta untuk menandai lokasi kebakaran</p>
-                    </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-5 bg-gradient-to-b from-red-500 to-orange-500 rounded-full"></div>
+                  <div>
+                    <h2 className="text-base font-semibold text-gray-900">Lokasi Kejadian</h2>
+                    <p className="text-xs text-gray-500 mt-0.5">Klik peta untuk menandai lokasi kebakaran</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (navigator.geolocation) {
-                        navigator.geolocation.getCurrentPosition(
-                          (position) => {
-                            const pos: [number, number] = [position.coords.latitude, position.coords.longitude];
-                            setReporterPosition(pos);
-                            if (!firePosition) {
-                              setFirePosition(pos);
-                            }
-                          },
-                          (error) => {
-                            console.error("Error getting location:", error);
-                            alert("Tidak dapat mengakses lokasi GPS Anda");
-                          }
-                        );
-                      }
-                    }}
-                    className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all"
-                  >
-                    <FaMapMarkerAlt />
-                    Set Lokasi Saya
-                  </button>
                 </div>
               </div>
               <div className="p-4">
@@ -317,8 +322,72 @@ export default function NewReportPage() {
                     reporterPosition={reporterPosition}
                     setReporterPosition={setReporterPosition}
                     onNearestStationFound={setNearestStation}
+                    categoryId={categoryId}
+                    categoryIcon={categories.find(c => c.id === categoryId)?.icon}
                   />
                 </div>
+
+                {/* Tombol-tombol di bawah peta */}
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                          (position) => {
+                            const pos: [number, number] = [position.coords.latitude, position.coords.longitude];
+                            setFirePosition(pos);
+                          },
+                          (error) => {
+                            console.error("Error getting location:", error);
+                            alert("Tidak dapat mengakses lokasi GPS Anda");
+                          }
+                        );
+                      }
+                    }}
+                    className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-xl transition-all shadow-sm"
+                  >
+                    <FaFire />
+                    Lokasi Kejadian
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                          (position) => {
+                            const pos: [number, number] = [position.coords.latitude, position.coords.longitude];
+                            setReporterPosition(pos);
+                          },
+                          (error) => {
+                            console.error("Error getting location:", error);
+                            alert("Tidak dapat mengakses lokasi GPS Anda");
+                          }
+                        );
+                      }
+                    }}
+                    className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-xl transition-all shadow-sm"
+                  >
+                    <FaUser />
+                    Lokasi Saya
+                  </button>
+                </div>
+
+                {/* Indikator Lokasi Terpilih */}
+                {firePosition && (
+                  <div className="mt-3 flex items-center gap-2 px-4 py-2.5 bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl">
+                    <FaCheckCircle className="text-green-600" />
+                    <span>Lokasi Kejadian: {firePosition[0].toFixed(6)}, {firePosition[1].toFixed(6)}</span>
+                  </div>
+                )}
+
+                {reporterPosition && (
+                  <div className="mt-2 flex items-center gap-2 px-4 py-2.5 bg-blue-50 border border-blue-200 text-blue-700 text-sm rounded-xl">
+                    <FaCheckCircle className="text-blue-600" />
+                    <span>Lokasi Saya: {reporterPosition[0].toFixed(6)}, {reporterPosition[1].toFixed(6)}</span>
+                  </div>
+                )}
+
                 <MapInstructions />
                 {nearestStation && <NearestStationInfoBox info={nearestStation} />}
               </div>
@@ -360,6 +429,26 @@ export default function NewReportPage() {
                   <p className="text-xs text-gray-500 mt-1.5">Pilih jenis bencana yang terjadi</p>
                 </div>
                 <div>
+                  <label htmlFor="kelurahan" className="block mb-2 text-xs font-medium text-gray-700">
+                    Kelurahan <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="kelurahan"
+                    value={kelurahanId || ''}
+                    onChange={(e) => setKelurahanId(e.target.value ? Number(e.target.value) : null)}
+                    className="w-full px-4 py-2.5 text-sm text-gray-900 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all bg-white"
+                    required
+                  >
+                    <option value="">-- Pilih Kelurahan --</option>
+                    {kelurahanList.map((kel) => (
+                      <option key={kel.id} value={kel.id}>
+                        {kel.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1.5">Pilih kelurahan lokasi kejadian (Kec. Plaju)</p>
+                </div>
+                <div>
                   <label htmlFor="description" className="block mb-2 text-xs font-medium text-gray-700">
                     Deskripsi <span className="text-red-500">*</span>
                   </label>
@@ -399,7 +488,7 @@ export default function NewReportPage() {
               </div>
               <div className="p-6">
                 <label htmlFor="media" className="block mb-2 text-xs font-medium text-gray-700">
-                  Upload Foto/Video <span className="text-red-500">*</span>
+                  Upload Foto/Video <span className="text-gray-400">(Opsional)</span>
                 </label>
                 <div className="relative">
                   <input
@@ -408,7 +497,6 @@ export default function NewReportPage() {
                     onChange={handleFileChange}
                     accept="image/*,video/*"
                     className="block w-full text-sm text-gray-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-gradient-to-r file:from-red-500 file:to-orange-500 file:text-white hover:file:from-red-600 hover:file:to-orange-600 file:transition-all file:cursor-pointer cursor-pointer border border-gray-200 rounded-xl p-2"
-                    required
                   />
                 </div>
                 {file && (
@@ -470,7 +558,7 @@ export default function NewReportPage() {
 
               <button
                 type="submit"
-                disabled={isLoading || !firePosition || !file}
+                disabled={isLoading || !firePosition}
                 className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-red-500 to-orange-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-red-500/25 hover:shadow-xl hover:shadow-red-500/30 hover:from-red-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:from-gray-300 disabled:to-gray-400 disabled:shadow-none disabled:cursor-not-allowed transition-all duration-200"
               >
                 {isLoading ? (

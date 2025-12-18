@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { execute } from "@/lib/db";
+import { execute, formatDateForMySQL } from "@/lib/db";
 import { hashOtp } from "@/lib/auth";
 
 // --- Konfigurasi Fonnte ---
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     ]);
     await execute(
       "INSERT INTO otp_attempts (phone_number, otp_hash, expires_at) VALUES (?, ?, ?)",
-      [phoneNumber, hashedOtp, expiresAt.toISOString()]
+      [phoneNumber, hashedOtp, formatDateForMySQL(expiresAt)]
     );
 
     // Kirim OTP via WhatsApp menggunakan Fonnte

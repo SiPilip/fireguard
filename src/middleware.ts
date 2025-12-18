@@ -11,7 +11,7 @@ export async function middleware(request: NextRequest) {
   const secret = new TextEncoder().encode(JWT_SECRET);
 
   // Halaman publik yang tidak memerlukan login
-  const publicPaths = ["/", "/login", "/login/verify", "/operator/login", "/report/new"];
+  const publicPaths = ["/", "/login", "/login/verify", "/register", "/operator/login", "/report/new"];
 
   // Izinkan akses ke API, file Next.js, static files, dan halaman publik
   if (

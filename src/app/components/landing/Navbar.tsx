@@ -8,7 +8,7 @@ import { FaFire, FaUser, FaChevronDown, FaSignOutAlt, FaBars, FaTimes } from 're
 const Navbar = () => {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState<{ phone?: string; id?: number } | null>(null);
+  const [user, setUser] = useState<{ name?: string; email?: string; phone?: string; id?: number } | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -76,7 +76,7 @@ const Navbar = () => {
           <Link href="#contact" className={`${scrolled ? 'text-gray-700 hover:text-gray-900' : 'text-white/90 hover:text-white'} font-medium transition-colors`}>Kontak</Link>
         </div>
         {/* Mobile Menu Button */}
-        <button 
+        <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           className="md:hidden p-2 rounded-xl transition-colors hover:bg-white/10"
         >
@@ -100,7 +100,7 @@ const Navbar = () => {
               {dropdownOpen && (
                 <div className="absolute right-0 mt-3 w-52 bg-white rounded-xl shadow-xl border border-gray-200/60 py-2 z-50">
                   <div className="px-4 py-2.5 border-b border-gray-100">
-                    <p className="text-sm font-semibold text-gray-900">{user?.phone || 'User'}</p>
+                    <p className="text-sm font-semibold text-gray-900">{user?.name || user?.email || 'User'}</p>
                   </div>
                   <button onClick={() => { setDropdownOpen(false); router.push('/dashboard'); }} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5 transition-colors">
                     <FaUser size={14} />
@@ -129,22 +129,22 @@ const Navbar = () => {
       {mobileMenuOpen && (
         <div className="md:hidden bg-white border-t border-gray-200/60 shadow-lg">
           <div className="px-6 py-4 space-y-3">
-            <Link 
-              href="#features" 
+            <Link
+              href="#features"
               onClick={() => setMobileMenuOpen(false)}
               className="block py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
             >
               Fitur
             </Link>
-            <Link 
-              href="#stations" 
+            <Link
+              href="#stations"
               onClick={() => setMobileMenuOpen(false)}
               className="block py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
             >
               Lokasi Pos
             </Link>
-            <Link 
-              href="#contact" 
+            <Link
+              href="#contact"
               onClick={() => setMobileMenuOpen(false)}
               className="block py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
             >
@@ -153,14 +153,14 @@ const Navbar = () => {
             <hr className="border-gray-200" />
             {isLoggedIn ? (
               <>
-                <button 
+                <button
                   onClick={() => { setMobileMenuOpen(false); router.push('/dashboard'); }}
                   className="w-full text-left py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors flex items-center gap-2"
                 >
                   <FaUser size={14} />
-                  <span>Dashboard ({user?.phone})</span>
+                  <span>Dashboard ({user?.name || user?.email})</span>
                 </button>
-                <button 
+                <button
                   onClick={() => { setMobileMenuOpen(false); handleLogout(); }}
                   className="w-full text-left py-2 text-sm font-medium text-red-600 hover:text-red-700 transition-colors flex items-center gap-2"
                 >
@@ -169,14 +169,14 @@ const Navbar = () => {
                 </button>
               </>
             ) : (
-              <button 
+              <button
                 onClick={() => { setMobileMenuOpen(false); router.push('/login'); }}
                 className="w-full text-left py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
               >
                 Login
               </button>
             )}
-            <button 
+            <button
               onClick={() => { setMobileMenuOpen(false); router.push('/report/new'); }}
               className="w-full bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white px-5 py-3 rounded-xl font-semibold text-sm transition-all shadow-lg shadow-red-500/25"
             >
