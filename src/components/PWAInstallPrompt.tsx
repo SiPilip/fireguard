@@ -123,8 +123,8 @@ export default function PWAInstallPrompt() {
                 <div className="p-6">
                     {/* Icon & Title */}
                     <div className="flex items-center gap-4 mb-4">
-                        <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-4xl shadow-lg flex-shrink-0">
-                            🔥
+                        <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 overflow-hidden p-1">
+                            <img src="/logofireguard.png" alt="FireGuard" className="w-full h-full object-contain" />
                         </div>
                         <div className="flex-1">
                             <h3 className="font-bold text-lg mb-1">

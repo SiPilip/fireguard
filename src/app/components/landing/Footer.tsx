@@ -9,8 +9,8 @@ const Footer = () => (
       <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
         <div className="md:col-span-1">
           <Link href="/" className="flex items-center gap-2.5 mb-4">
-            <div className="p-2 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl">
-              <FaFire className="text-white text-lg" />
+            <div className="p-1 bg-white/10 rounded-xl overflow-hidden">
+              <img src="/logofireguard.png" alt="FireGuard" className="w-8 h-8 object-contain" />
             </div>
             <span className="text-xl font-semibold">FireGuard</span>
           </Link>

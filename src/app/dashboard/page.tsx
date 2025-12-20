@@ -1,16 +1,14 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import {
-  FaFire,
   FaChartBar,
   FaFileAlt,
   FaPlus,
   FaUserCircle,
-  FaBell,
   FaCog,
   FaSignOutAlt,
   FaHome,
@@ -21,6 +19,9 @@ import {
   FaExclamationCircle,
   FaBars,
   FaTimes,
+  FaUser,
+  FaEdit,
+  FaChevronDown,
 } from 'react-icons/fa';
 
 // Import UserReportDetailModal dynamically to avoid SSR issues if it uses map
@@ -161,6 +162,19 @@ export default function DashboardPage() {
   const [error, setError] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+        setProfileDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const checkAuth = useCallback(async () => {
     try {
@@ -236,8 +250,8 @@ export default function DashboardPage() {
         }`}>
         <div className="flex items-center justify-between gap-2.5 px-6 h-16 md:h-20 border-b border-gray-200/60">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl">
-              <FaFire className="text-white text-base md:text-lg" />
+            <div className="p-1.5 bg-white rounded-xl shadow-sm overflow-hidden">
+              <img src="/logofireguard.png" alt="FireGuard" className="w-6 h-6 md:w-7 md:h-7 object-contain" />
             </div>
             <span className="text-lg md:text-xl font-semibold text-gray-900">FireGuard</span>
           </div>
@@ -260,6 +274,15 @@ export default function DashboardPage() {
           <Link href="/report/new" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
             <FaPlus className="text-base" />
             <span>Lapor Baru</span>
+          </Link>
+          <hr className="my-3 border-gray-200/60" />
+          <Link href="/dashboard/profile" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+            <FaUser className="text-base" />
+            <span>Edit Profil</span>
+          </Link>
+          <Link href="/dashboard/settings" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+            <FaCog className="text-base" />
+            <span>Pengaturan</span>
           </Link>
         </nav>
         <div className="px-4 py-6 border-t border-gray-200/60">
@@ -288,19 +311,164 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center gap-2 md:gap-3">
             {/* Notification Bell */}
-            <div className="hidden sm:block">
-              <NotificationBell
-                onViewReport={(reportId) => {
-                  const report = reports.find(r => r.id === reportId);
-                  if (report) setSelectedReport(report);
-                }}
-              />
-            </div>
-            <button className="p-2 hover:bg-gray-100 rounded-xl transition-colors hidden sm:block">
-              <FaCog className="text-gray-500 text-base md:text-lg" />
-            </button>
-            <div className="w-8 h-8 md:w-9 md:h-9 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl flex items-center justify-center">
-              <FaUserCircle className="text-white text-base md:text-lg" />
+            <NotificationBell
+              onViewReport={(reportId) => {
+                const report = reports.find(r => r.id === reportId);
+                if (report) setSelectedReport(report);
+              }}
+            />
+
+            {/* Profile Dropdown */}
+            <div className="relative" ref={profileDropdownRef}>
+              <button
+                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                className="flex items-center gap-2 p-1.5 hover:bg-gray-100 rounded-xl transition-colors"
+              >
+                <div className="w-8 h-8 md:w-9 md:h-9 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl flex items-center justify-center">
+                  <FaUserCircle className="text-white text-base md:text-lg" />
+                </div>
+                <FaChevronDown className={`hidden sm:block text-gray-400 text-xs transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Dropdown Menu */}
+              {profileDropdownOpen && (
+                <>
+                  {/* Mobile overlay */}
+                  <div
+                    className="fixed inset-0 bg-black/50 z-40 sm:hidden"
+                    onClick={() => setProfileDropdownOpen(false)}
+                  />
+
+                  {/* Desktop Dropdown */}
+                  <div className="hidden sm:block absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-xl border border-gray-200/60 z-50 overflow-hidden">
+                    {/* Profile Info */}
+                    <div className="px-5 py-4 border-b border-gray-100 bg-gradient-to-br from-red-50 to-orange-50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl flex items-center justify-center shadow-sm">
+                          <FaUser className="text-white text-lg" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-gray-900 truncate">{user?.name || 'Pengguna'}</p>
+                          <p className="text-xs text-gray-500 truncate">{user?.email || '-'}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Menu Items */}
+                    <div className="py-2">
+                      <button
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          router.push('/dashboard/profile');
+                        }}
+                        className="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <FaEdit className="text-gray-400" />
+                        <span>Edit Profil</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          router.push('/dashboard/settings');
+                        }}
+                        className="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <FaCog className="text-gray-400" />
+                        <span>Pengaturan</span>
+                      </button>
+
+                      <hr className="my-2 border-gray-100" />
+
+                      <button
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          handleLogout();
+                        }}
+                        className="w-full flex items-center gap-3 px-5 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <FaSignOutAlt className="text-red-500" />
+                        <span>Logout</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Mobile Bottom Sheet */}
+                  <div className="sm:hidden fixed inset-x-0 bottom-0 z-50 transform transition-transform duration-300 ease-out">
+                    <div className="bg-white rounded-t-3xl shadow-2xl max-h-[80vh] overflow-hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+                      {/* Handle bar */}
+                      <div className="flex justify-center py-3">
+                        <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+                      </div>
+
+                      {/* Profile Info */}
+                      <div className="px-5 py-4 border-b border-gray-100 bg-gradient-to-br from-red-50 to-orange-50">
+                        <div className="flex items-center gap-3">
+                          <div className="w-14 h-14 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl flex items-center justify-center shadow-sm">
+                            <FaUser className="text-white text-xl" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-gray-900 text-lg truncate">{user?.name || 'Pengguna'}</p>
+                            <p className="text-sm text-gray-500 truncate">{user?.email || '-'}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Menu Items */}
+                      <div className="py-3">
+                        <button
+                          onClick={() => {
+                            setProfileDropdownOpen(false);
+                            router.push('/dashboard/profile');
+                          }}
+                          className="w-full flex items-center gap-4 px-5 py-4 text-base text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                        >
+                          <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <FaEdit className="text-blue-600" />
+                          </div>
+                          <span className="font-medium">Edit Profil</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setProfileDropdownOpen(false);
+                            router.push('/dashboard/settings');
+                          }}
+                          className="w-full flex items-center gap-4 px-5 py-4 text-base text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                        >
+                          <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
+                            <FaCog className="text-gray-600" />
+                          </div>
+                          <span className="font-medium">Pengaturan</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setProfileDropdownOpen(false);
+                            handleLogout();
+                          }}
+                          className="w-full flex items-center gap-4 px-5 py-4 text-base text-red-600 hover:bg-red-50 active:bg-red-100 transition-colors"
+                        >
+                          <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+                            <FaSignOutAlt className="text-red-600" />
+                          </div>
+                          <span className="font-medium">Logout</span>
+                        </button>
+                      </div>
+
+                      {/* Close button */}
+                      <div className="px-5 pb-5">
+                        <button
+                          onClick={() => setProfileDropdownOpen(false)}
+                          className="w-full py-4 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-2xl text-base font-semibold text-gray-700 transition-colors"
+                        >
+                          Tutup
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </header>
@@ -333,7 +501,7 @@ export default function DashboardPage() {
               </div>
             ) : reports.length === 0 ? (
               <div className="text-center py-12">
-                <FaFire className="mx-auto text-gray-400 mb-3 h-10 w-10" />
+                <img src="/logofireguard.png" alt="FireGuard" className="mx-auto mb-3 h-16 w-16 opacity-50" />
                 <p className="text-base text-gray-900 font-semibold">Belum Ada Laporan</p>
                 <p className="text-xs text-gray-500 mt-1">Laporan yang Anda buat akan muncul di sini</p>
                 <Link href="/report/new" className="inline-flex items-center gap-2 mt-6 bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white px-6 py-3 rounded-xl font-semibold text-sm transition-all shadow-lg shadow-red-500/25 hover:shadow-xl hover:shadow-red-500/30">

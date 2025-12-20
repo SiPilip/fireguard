@@ -65,8 +65,8 @@ const Navbar = () => {
     <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-md shadow-sm' : 'bg-black/10 backdrop-blur-sm'}`}>
       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className={`p-2 rounded-xl transition-all ${scrolled ? 'bg-gradient-to-br from-red-500 to-orange-600' : 'bg-white/20'}`}>
-            <FaFire className={`text-lg ${scrolled ? 'text-white' : 'text-white'}`} />
+          <div className={`p-1.5 rounded-xl transition-all overflow-hidden ${scrolled ? 'bg-white' : 'bg-white/20'}`}>
+            <img src="/logofireguard.png" alt="FireGuard" className="w-7 h-7 object-contain" />
           </div>
           <span className={`text-xl font-semibold ${scrolled ? 'text-gray-900' : 'text-white'}`}>FireGuard</span>
         </Link>

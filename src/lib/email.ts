@@ -33,10 +33,18 @@ export async function sendEmailOTP(email: string, otp: string, type: 'register' 
     ? '🔐 Kode Verifikasi Pendaftaran FireGuard'
     : '🔐 Kode Login FireGuard';
 
+  // Logo base URL - gunakan URL publik atau base64
+  const logoUrl = process.env.NEXT_PUBLIC_BASE_URL
+    ? `${process.env.NEXT_PUBLIC_BASE_URL}/logofireguard.png`
+    : 'https://fireguard-palembang.vercel.app/logofireguard.png';
+
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="background: linear-gradient(135deg, #EF4444 0%, #F97316 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
-        <h1 style="color: white; margin: 0; font-size: 28px;">🔥 FireGuard</h1>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
+          <img src="${logoUrl}" alt="FireGuard" width="48" height="48" style="border-radius: 12px; background: white; padding: 4px;" />
+          <h1 style="color: white; margin: 0; font-size: 28px;">FireGuard</h1>
+        </div>
         <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Sistem Pelaporan Bencana Kec. Plaju</p>
       </div>
       <div style="background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none;">
@@ -106,10 +114,18 @@ export async function sendStatusUpdateEmail(
 
   const status = statusLabels[newStatus] || { label: newStatus, color: '#6B7280', emoji: '📋' };
 
+  // Logo base URL
+  const logoUrl = process.env.NEXT_PUBLIC_BASE_URL
+    ? `${process.env.NEXT_PUBLIC_BASE_URL}/logofireguard.png`
+    : 'https://fireguard-palembang.vercel.app/logofireguard.png';
+
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="background: linear-gradient(135deg, #EF4444 0%, #F97316 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
-        <h1 style="color: white; margin: 0; font-size: 28px;">🔥 FireGuard</h1>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
+          <img src="${logoUrl}" alt="FireGuard" width="48" height="48" style="border-radius: 12px; background: white; padding: 4px;" />
+          <h1 style="color: white; margin: 0; font-size: 28px;">FireGuard</h1>
+        </div>
         <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Update Status Laporan</p>
       </div>
       <div style="background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none;">
