@@ -6,6 +6,7 @@ import Features from './components/landing/Features';
 import Stations from './components/landing/Stations';
 import Contact from './components/landing/Contact';
 import Footer from './components/landing/Footer';
+import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 
 export default function LandingPage() {
   return (
@@ -18,6 +19,7 @@ export default function LandingPage() {
         <Contact />
       </main>
       <Footer />
+      <PWAInstallPrompt />
     </div>
   );
 }
