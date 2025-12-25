@@ -22,6 +22,7 @@ import {
   FaUser,
   FaEdit,
   FaChevronDown,
+  FaFire,
 } from 'react-icons/fa';
 
 // Import UserReportDetailModal dynamically to avoid SSR issues if it uses map
@@ -223,8 +224,14 @@ export default function DashboardPage() {
   };
 
   const handleLogout = async () => {
-    await fetch('/api/auth/logout');
-    router.push('/login');
+    try {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      // Force full page reload to clear all cached state
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout error:', error);
+      window.location.href = '/';
+    }
   };
 
   return (
@@ -250,8 +257,8 @@ export default function DashboardPage() {
         }`}>
         <div className="flex items-center justify-between gap-2.5 px-6 h-16 md:h-20 border-b border-gray-200/60">
           <div className="flex items-center gap-2.5">
-            <div className="p-1.5 bg-white rounded-xl shadow-sm overflow-hidden">
-              <img src="/logofireguard.png" alt="FireGuard" className="w-6 h-6 md:w-7 md:h-7 object-contain" />
+            <div className="p-2 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl shadow-sm">
+              <FaFire className="text-white text-lg md:text-xl" />
             </div>
             <span className="text-lg md:text-xl font-semibold text-gray-900">FireGuard</span>
           </div>
@@ -474,7 +481,9 @@ export default function DashboardPage() {
               </div>
             ) : reports.length === 0 ? (
               <div className="text-center py-12">
-                <img src="/logofireguard.png" alt="FireGuard" className="mx-auto mb-3 h-16 w-16 opacity-50" />
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-red-500/20 to-orange-500/20 rounded-2xl mb-3">
+                  <FaFire className="text-red-400 text-2xl" />
+                </div>
                 <p className="text-base text-gray-900 font-semibold">Belum Ada Laporan</p>
                 <p className="text-xs text-gray-500 mt-1">Laporan yang Anda buat akan muncul di sini</p>
                 <Link href="/report/new" className="inline-flex items-center gap-2 mt-6 bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white px-6 py-3 rounded-xl font-semibold text-sm transition-all shadow-lg shadow-red-500/25 hover:shadow-xl hover:shadow-red-500/30">

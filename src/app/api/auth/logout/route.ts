@@ -10,11 +10,21 @@ export async function POST() {
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
-    maxAge: -1, // Atur maxAge ke nilai negatif untuk menghapus cookie
+    maxAge: 0, // Set ke 0 untuk menghapus cookie
+    expires: new Date(0), // Juga set expires ke masa lalu
   });
 
-  return new NextResponse(JSON.stringify({ message: 'Logout berhasil.' }), {
+  const response = new NextResponse(JSON.stringify({ message: 'Logout berhasil.' }), {
     status: 200,
-    headers: { 'Set-Cookie': serializedCookie },
+    headers: {
+      'Content-Type': 'application/json',
+      'Set-Cookie': serializedCookie,
+      // Header untuk mencegah caching
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    },
   });
+
+  return response;
 }

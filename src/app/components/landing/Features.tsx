@@ -1,55 +1,97 @@
 'use client';
 
 import { FaMapMarkerAlt, FaRoute, FaClock, FaMobileAlt } from 'react-icons/fa';
-import { motion, useInView } from 'framer-motion';
-import { useRef } from 'react';
+import { motion } from 'framer-motion';
 
-const FeatureCard = ({ icon, title, description, index }: { icon: React.ReactNode; title: string; description: string; index: number }) => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true });
+const features = [
+  {
+    icon: <FaMapMarkerAlt className="w-6 h-6" />,
+    title: "Lokasi Real-time",
+    description: "Deteksi lokasi otomatis menggunakan GPS untuk pelaporan yang akurat dan cepat.",
+    color: "text-red-500",
+    bg: "bg-red-50"
+  },
+  {
+    icon: <FaRoute className="w-6 h-6" />,
+    title: "Rute Tercepat",
+    description: "Algoritma cerdas untuk menentukan rute tercepat dari pos damkar terdekat ke lokasi Anda.",
+    color: "text-orange-500",
+    bg: "bg-orange-50"
+  },
+  {
+    icon: <FaClock className="w-6 h-6" />,
+    title: "Estimasi Waktu",
+    description: "Perhitungan ETA yang akurat untuk membantu koordinasi dan persiapan di lokasi.",
+    color: "text-blue-500",
+    bg: "bg-blue-50"
+  },
+  {
+    icon: <FaMobileAlt className="w-6 h-6" />,
+    title: "Akses Mudah",
+    description: "Dapat diakses dari berbagai perangkat, baik desktop maupun smartphone, tanpa perlu instalasi.",
+    color: "text-green-500",
+    bg: "bg-green-50"
+  }
+];
 
-  const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
-  };
-
+const Features = () => {
   return (
-    <motion.div
-      ref={ref}
-      variants={cardVariants}
-      initial="hidden"
-      animate={isInView ? 'visible' : 'hidden'}
-      transition={{ duration: 0.6, delay: index * 0.1, ease: "easeOut" }}
-      className="bg-white p-6 rounded-2xl border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-300 group"
-    >
-      <div className="w-14 h-14 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl flex items-center justify-center text-white mb-5 group-hover:scale-110 transition-transform">
-        <div className="text-2xl">{icon}</div>
+    <section id="features" className="py-24 bg-white relative overflow-hidden">
+      {/* Decorative background elements */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-30 pointer-events-none">
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-red-50 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 right-0 w-64 h-64 bg-orange-50 rounded-full blur-3xl"></div>
       </div>
-      <h3 className="text-lg font-semibold mb-3 text-gray-900">{title}</h3>
-      <p className="text-sm text-gray-600 leading-relaxed">{description}</p>
-    </motion.div>
+
+      <div className="max-w-7xl mx-auto px-6 relative z-10">
+        <div className="mb-16 md:mb-24">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="flex flex-col md:flex-row md:items-end justify-between gap-6"
+          >
+            <div className="max-w-2xl">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="w-8 h-[2px] bg-red-600"></span>
+                <span className="text-sm font-bold text-red-600 uppercase tracking-widest">Fitur Unggulan</span>
+              </div>
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
+                Teknologi Canggih untuk <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-600">Keamanan Maksimal</span>
+              </h2>
+            </div>
+            <p className="text-gray-600 max-w-md text-lg leading-relaxed mb-2">
+              Sistem terintegrasi yang dirancang untuk memberikan respons tercepat dalam situasi darurat.
+            </p>
+          </motion.div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {features.map((feature, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.1, duration: 0.5 }}
+              className="group relative bg-white rounded-3xl p-8 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+            >
+              <div className={`w-14 h-14 ${feature.bg} ${feature.color} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                {feature.icon}
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-red-600 transition-colors">
+                {feature.title}
+              </h3>
+              <p className="text-gray-500 leading-relaxed text-sm">
+                {feature.description}
+              </p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 };
-
-const Features = () => (
-  <section id="features" className="py-20 bg-gradient-to-br from-gray-50 via-white to-gray-50">
-    <div className="max-w-7xl mx-auto px-6">
-      <div className="text-center mb-14">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 rounded-full mb-4">
-          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-          <span className="text-xs font-semibold text-red-600 uppercase tracking-wide">Fitur Unggulan</span>
-        </div>
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Teknologi Canggih</h2>
-        <p className="text-base text-gray-600 max-w-2xl mx-auto">Sistem terintegrasi untuk keamanan dan respons cepat maksimal</p>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <FeatureCard icon={<FaMapMarkerAlt />} title="Lokasi Real-time" description="Deteksi lokasi otomatis menggunakan GPS untuk pelaporan yang akurat dan cepat." index={0} />
-        <FeatureCard icon={<FaRoute />} title="Rute Tercepat" description="Algoritma cerdas untuk menentukan rute tercepat dari pos damkar terdekat ke lokasi Anda." index={1} />
-        <FeatureCard icon={<FaClock />} title="Estimasi Waktu" description="Perhitungan ETA yang akurat untuk membantu koordinasi dan persiapan di lokasi." index={2} />
-        <FeatureCard icon={<FaMobileAlt />} title="Akses Mudah" description="Dapat diakses dari berbagai perangkat, baik desktop maupun smartphone, tanpa perlu instalasi." index={3} />
-      </div>
-    </div>
-  </section>
-);
 
 export default Features;

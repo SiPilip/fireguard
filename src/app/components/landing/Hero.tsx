@@ -23,9 +23,8 @@ const Hero = () => {
       {images.map((image, index) => (
         <div
           key={index}
-          className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${
-            index === currentSlide ? 'opacity-100' : 'opacity-0'
-          }`}
+          className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${index === currentSlide ? 'opacity-100' : 'opacity-0'
+            }`}
           style={{ backgroundImage: `url('${image}')` }}
         />
       ))}
@@ -55,18 +54,17 @@ const Hero = () => {
             Pelajari Fitur
           </Link>
         </div>
-        
+
         {/* Slide Indicators */}
         <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2 z-20">
           {images.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentSlide(index)}
-              className={`transition-all duration-300 rounded-full ${
-                index === currentSlide
-                  ? 'w-8 h-2 bg-white'
-                  : 'w-2 h-2 bg-white/50 hover:bg-white/75'
-              }`}
+              className={`transition-all duration-300 rounded-full ${index === currentSlide
+                ? 'w-8 h-2 bg-white'
+                : 'w-2 h-2 bg-white/50 hover:bg-white/75'
+                }`}
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}

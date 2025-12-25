@@ -20,7 +20,20 @@ const transporter = isDevelopment && (!process.env.GMAIL_USER || !process.env.GM
       user: process.env.GMAIL_USER,
       pass: process.env.GMAIL_APP_PASSWORD,
     },
+    // Optimasi untuk pengiriman lebih cepat
+    pool: true, // Gunakan connection pooling
+    maxConnections: 5, // Maksimal 5 koneksi paralel
+    maxMessages: 100, // Maksimal 100 pesan per koneksi
+    rateDelta: 1000, // 1 detik antara batch
+    rateLimit: 10, // Maksimal 10 email per detik
   });
+
+// Verify transporter connection on startup
+transporter.verify().then(() => {
+  console.log('✅ Email transporter is ready');
+}).catch((error) => {
+  console.error('❌ Email transporter error:', error);
+});
 
 // Email pengirim default
 const FROM_EMAIL = process.env.GMAIL_USER || 'fireguard@plaju.go.id';

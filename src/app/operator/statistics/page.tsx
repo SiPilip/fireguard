@@ -160,9 +160,9 @@ const KelurahanRankingChart = ({
                 {topData.length > 0 ? topData.map((item, index) => (
                     <div key={item.kelurahan_id || index} className="flex items-center gap-3">
                         <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${index === 0 ? 'bg-yellow-500 text-white' :
-                                index === 1 ? 'bg-gray-400 text-white' :
-                                    index === 2 ? 'bg-amber-700 text-white' :
-                                        'bg-gray-100 text-gray-600'
+                            index === 1 ? 'bg-gray-400 text-white' :
+                                index === 2 ? 'bg-amber-700 text-white' :
+                                    'bg-gray-100 text-gray-600'
                             }`}>
                             {index + 1}
                         </span>
@@ -271,8 +271,8 @@ const YearlyComparisonChart = ({
                             <div className="w-full bg-gray-100 rounded-full h-2">
                                 <div
                                     className={`h-2 rounded-full transition-all duration-500 ${item.year === selectedYear
-                                            ? 'bg-gradient-to-r from-red-500 to-orange-500'
-                                            : 'bg-gray-400'
+                                        ? 'bg-gradient-to-r from-red-500 to-orange-500'
+                                        : 'bg-gray-400'
                                         }`}
                                     style={{
                                         width: `${(item.total / maxValue) * 100}%`,
@@ -391,8 +391,14 @@ export default function StatisticsPage() {
     }, [fetchStatistics]);
 
     const handleLogout = async () => {
-        await fetch("/api/auth/logout", { method: "POST" });
-        router.replace("/operator/login");
+        try {
+            await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+            // Force full page reload to clear all cached state
+            window.location.href = "/operator/login";
+        } catch (error) {
+            console.error("Logout error:", error);
+            window.location.href = "/operator/login";
+        }
     };
 
     // Prepare monthly chart data
@@ -413,7 +419,7 @@ export default function StatisticsPage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans">
             {/* Header */}
-            <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/60 shadow-sm sticky top-0 z-40">
+            <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/60 shadow-sm sticky top-0 z-[1000]">
                 <div className="max-w-[1600px] mx-auto px-4 md:px-6 py-3 md:py-4 flex justify-between items-center">
                     <div className="flex items-center gap-3">
                         <button
@@ -546,7 +552,7 @@ export default function StatisticsPage() {
                                         {statistics.hotspots?.length || 0} titik
                                     </span>
                                 </div>
-                                <div className="h-[400px] rounded-xl overflow-hidden border border-gray-200">
+                                <div className="h-[400px] rounded-xl overflow-hidden border border-gray-200 relative z-0">
                                     <HotspotMap
                                         hotspots={statistics.hotspots || []}
                                         year={selectedYear}

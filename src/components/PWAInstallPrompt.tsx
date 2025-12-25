@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { FiX, FiDownload } from 'react-icons/fi';
+import { FaFire } from 'react-icons/fa';
 
 interface BeforeInstallPromptEvent extends Event {
     prompt: () => Promise<void>;
@@ -123,8 +124,8 @@ export default function PWAInstallPrompt() {
                 <div className="p-6">
                     {/* Icon & Title */}
                     <div className="flex items-center gap-4 mb-4">
-                        <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 overflow-hidden p-2">
-                            <img src="/logofireguard.png" alt="FireGuard" className="w-full h-full object-contain" />
+                        <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0">
+                            <FaFire className="text-white text-3xl" />
                         </div>
                         <div className="flex-1">
                             <h3 className="font-bold text-lg text-gray-900 mb-1">

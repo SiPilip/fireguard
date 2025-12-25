@@ -370,9 +370,15 @@ export default function OperatorDashboard() {
   }, []);
 
   const handleLogout = async () => {
-    stopAlarm();
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.replace("/operator/login");
+    try {
+      stopAlarm();
+      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+      // Force full page reload to clear all cached state
+      window.location.href = "/operator/login";
+    } catch (error) {
+      console.error("Logout error:", error);
+      window.location.href = "/operator/login";
+    }
   };
 
   const handleDeleteAllReports = async () => {
@@ -421,8 +427,8 @@ export default function OperatorDashboard() {
           <div className="max-w-[1600px] mx-auto px-4 md:px-6 py-3 md:py-4 flex justify-between items-center">
             <div className="flex items-center gap-2 md:gap-4">
               <div className="flex items-center gap-2 md:gap-3">
-                <div className="bg-white p-1.5 md:p-2 rounded-xl shadow-sm overflow-hidden">
-                  <img src="/logofireguard.png" alt="FireGuard" className="w-6 h-6 md:w-7 md:h-7 object-contain" />
+                <div className="bg-gradient-to-br from-red-500 to-orange-600 p-1.5 md:p-2 rounded-xl shadow-sm">
+                  <FaFire className="text-white text-lg md:text-xl" />
                 </div>
                 <div>
                   <h1 className="text-sm md:text-lg font-semibold text-gray-900">FireGuard Admin</h1>

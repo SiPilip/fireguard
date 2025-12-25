@@ -41,8 +41,8 @@ const StationCard = ({ station, index }: { station: any; index: number }) => {
       className="bg-white p-5 rounded-xl border border-gray-200/60 shadow-sm hover:shadow-md transition-all group"
     >
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-sm overflow-hidden p-1">
-          <img src="/logofireguard.png" alt="FireGuard" className="w-full h-full object-contain" />
+        <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-600 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-sm">
+          <FaFire className="text-white text-lg" />
         </div>
         <div className="flex-1">
           <h3 className="text-sm font-semibold text-gray-900 mb-1">{station.name}</h3>
@@ -121,8 +121,8 @@ const Stations = () => {
         {/* Info Box */}
         <div className="mt-8 bg-gradient-to-r from-red-50 to-orange-50 border border-red-200/60 rounded-xl p-6">
           <div className="flex items-start gap-4">
-            <div className="p-2 bg-white rounded-xl shadow-sm">
-              <img src="/logofireguard.png" alt="FireGuard" className="w-10 h-10 object-contain" />
+            <div className="p-3 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl shadow-sm">
+              <FaFire className="text-white text-xl" />
             </div>
             <div>
               <h3 className="text-base font-semibold text-gray-900 mb-2">Layanan Darurat 24/7</h3>
