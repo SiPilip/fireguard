@@ -11,7 +11,7 @@ const FONNTE_TOKEN = process.env.FONNTE_TOKEN || "HV2NYWTpKWSbwd25KQU8";
  * @param target Nomor telepon tujuan (format internasional, misal: 628xxxx)
  * @param otp Kode OTP yang akan dikirim
  */
-async function sendWhatsAppOtp(target: string, otp: string) {
+async function sendWhatsAppOtp(target: string, otp: string): Promise<{ status: boolean; message?: string }> {
   const data = new FormData();
   data.append("target", target);
   data.append(
@@ -21,6 +21,8 @@ async function sendWhatsAppOtp(target: string, otp: string) {
   data.append("countryCode", "62"); // Sesuaikan jika perlu
 
   try {
+    console.log(`📱 Sending OTP via WhatsApp to: ${target}`);
+
     const response = await fetch("https://api.fonnte.com/send", {
       method: "POST",
       headers: {
@@ -30,16 +32,16 @@ async function sendWhatsAppOtp(target: string, otp: string) {
     });
 
     if (!response.ok) {
-      throw new Error(
-        `Gagal mengirim OTP via WhatsApp, status: ${response.status}`
-      );
+      console.error(`❌ WhatsApp API error, status: ${response.status}`);
+      return { status: false, message: `API error: ${response.status}` };
     }
 
     const result = await response.json();
-    return result;
-  } catch (error) {
-    // Jangan throw error di sini agar proses utama tetap berjalan,
-    // namun OTP tidak akan terkirim. Cukup log errornya.
+    console.log(`✅ WhatsApp OTP sent successfully:`, result);
+    return { status: true, ...result };
+  } catch (error: any) {
+    console.error("❌ Error sending WhatsApp OTP:", error);
+    return { status: false, message: error.message || "Unknown error" };
   }
 }
 
@@ -70,15 +72,24 @@ export async function POST(request: NextRequest) {
       [phoneNumber, hashedOtp, formatDateForMySQL(expiresAt)]
     );
 
-    // Kirim OTP via WhatsApp menggunakan Fonnte
-    // Proses ini berjalan di latar belakang dan tidak memblokir respons API
-    sendWhatsAppOtp(phoneNumber, otp);
+    // Kirim OTP via WhatsApp menggunakan Fonnte - REALTIME dengan await
+    const whatsappResult = await sendWhatsAppOtp(phoneNumber, otp);
+
+    // Cek apakah pengiriman berhasil
+    if (!whatsappResult || whatsappResult.status === false) {
+      console.error("❌ Gagal mengirim OTP via WhatsApp:", whatsappResult);
+      return NextResponse.json(
+        { message: "Gagal mengirim OTP. Silakan coba lagi." },
+        { status: 500 }
+      );
+    }
 
     // Beri tahu pengguna bahwa OTP telah dikirim tanpa menyertakan OTP dalam respons
     return NextResponse.json({
       message: `Kode OTP telah dikirim ke ${phoneNumber}.`,
     });
   } catch (error) {
+    console.error("❌ Error in send OTP:", error);
     return NextResponse.json(
       { message: "Terjadi kesalahan pada server." },
       { status: 500 }

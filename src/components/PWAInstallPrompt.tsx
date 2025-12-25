@@ -110,43 +110,43 @@ export default function PWAInstallPrompt() {
 
     return (
         <div className="fixed bottom-0 left-0 right-0 z-50 p-4 animate-slide-up">
-            <div className="max-w-md mx-auto bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-2xl shadow-2xl overflow-hidden">
+            <div className="max-w-md mx-auto bg-white text-gray-900 rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
                 {/* Close Button */}
                 <button
                     onClick={handleDismiss}
-                    className="absolute top-3 right-3 p-2 hover:bg-white/20 rounded-full transition-colors"
+                    className="absolute top-3 right-3 p-2 hover:bg-gray-100 rounded-full transition-colors"
                     aria-label="Tutup"
                 >
-                    <FiX className="w-5 h-5" />
+                    <FiX className="w-5 h-5 text-gray-500" />
                 </button>
 
                 <div className="p-6">
                     {/* Icon & Title */}
                     <div className="flex items-center gap-4 mb-4">
-                        <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 overflow-hidden p-1">
+                        <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 overflow-hidden p-2">
                             <img src="/logofireguard.png" alt="FireGuard" className="w-full h-full object-contain" />
                         </div>
                         <div className="flex-1">
-                            <h3 className="font-bold text-lg mb-1">
+                            <h3 className="font-bold text-lg text-gray-900 mb-1">
                                 Install FireGuard
                             </h3>
-                            <p className="text-sm text-white/90">
+                            <p className="text-sm text-gray-600">
                                 Akses lebih cepat & notifikasi real-time
                             </p>
                         </div>
                     </div>
 
                     {/* Features */}
-                    <div className="space-y-2 mb-4 bg-white/10 rounded-xl p-3">
-                        <div className="flex items-center gap-2 text-sm">
+                    <div className="space-y-2 mb-4 bg-gray-50 rounded-xl p-3">
+                        <div className="flex items-center gap-2 text-sm text-gray-700">
                             <span className="text-lg">⚡</span>
                             <span>Akses instan dari home screen</span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm">
+                        <div className="flex items-center gap-2 text-sm text-gray-700">
                             <span className="text-lg">📱</span>
                             <span>Bekerja offline</span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm">
+                        <div className="flex items-center gap-2 text-sm text-gray-700">
                             <span className="text-lg">🔔</span>
                             <span>Notifikasi darurat kebakaran</span>
                         </div>
@@ -154,11 +154,11 @@ export default function PWAInstallPrompt() {
 
                     {/* iOS Instructions */}
                     {isIOS ? (
-                        <div className="bg-white/10 rounded-xl p-4 text-sm">
-                            <p className="font-semibold mb-2">Cara Install di iOS:</p>
+                        <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700">
+                            <p className="font-semibold mb-2 text-gray-900">Cara Install di iOS:</p>
                             <ol className="space-y-1 list-decimal list-inside">
                                 <li>Tap tombol Share
-                                    <span className="inline-block mx-1 px-2 py-0.5 bg-white/20 rounded text-xs">
+                                    <span className="inline-block mx-1 px-2 py-0.5 bg-gray-200 rounded text-xs">
                                         ⬆️
                                     </span>
                                 </li>
@@ -170,7 +170,7 @@ export default function PWAInstallPrompt() {
                         /* Install Button for Android/Desktop */
                         <button
                             onClick={handleInstallClick}
-                            className="w-full bg-white text-red-500 font-bold py-3 px-6 rounded-xl hover:bg-gray-100 transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2 shadow-lg"
+                            className="w-full bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold py-3 px-6 rounded-xl hover:from-red-600 hover:to-orange-600 transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2 shadow-lg"
                         >
                             <FiDownload className="w-5 h-5" />
                             Install Sekarang
@@ -180,7 +180,7 @@ export default function PWAInstallPrompt() {
                     {/* Dismiss Link */}
                     <button
                         onClick={handleDismiss}
-                        className="w-full text-center text-sm text-white/80 hover:text-white mt-3 underline"
+                        className="w-full text-center text-sm text-gray-500 hover:text-gray-700 mt-3 underline"
                     >
                         Lain kali
                     </button>

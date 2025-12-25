@@ -280,23 +280,24 @@ export default function NewReportPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
       <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto flex items-center gap-4 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between px-4 md:px-6 py-3 md:py-4">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-all rounded-xl hover:bg-gray-100"
+            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-all rounded-xl hover:bg-gray-100"
           >
             <FaArrowLeft className="text-xs" />
-            <span>Kembali</span>
+            <span className="hidden sm:inline">Kembali</span>
           </button>
           <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-br from-red-500 to-orange-600 p-2.5 rounded-xl shadow-sm">
-              <FaFireExtinguisher className="text-white text-lg" />
+            <div className="bg-gradient-to-br from-red-500 to-orange-600 p-2 md:p-2.5 rounded-xl shadow-sm">
+              <FaFireExtinguisher className="text-white text-base md:text-lg" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-gray-900">Laporan Baru</h1>
-              <p className="text-xs text-gray-500">Laporkan kejadian kebakaran</p>
+              <h1 className="text-base md:text-lg font-semibold text-gray-900">Laporan Baru</h1>
+              <p className="text-xs text-gray-500 hidden sm:block">Laporkan kejadian kebakaran</p>
             </div>
           </div>
+          <div className="w-[72px] sm:w-[88px]"></div>
         </div>
       </header>
 

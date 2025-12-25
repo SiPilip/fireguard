@@ -265,7 +265,7 @@ export default function DashboardPage() {
         <nav className="flex-1 px-4 py-6 space-y-1.5">
           <Link href="/" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
             <FaHome className="text-base" />
-            <span>Landing Page</span>
+            <span>Beranda</span>
           </Link>
           <Link href="/dashboard" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-900 bg-red-50 rounded-xl font-medium">
             <FaChartBar className="text-base text-red-600" />
@@ -333,12 +333,6 @@ export default function DashboardPage() {
               {/* Dropdown Menu */}
               {profileDropdownOpen && (
                 <>
-                  {/* Mobile overlay */}
-                  <div
-                    className="fixed inset-0 bg-black/50 z-40 sm:hidden"
-                    onClick={() => setProfileDropdownOpen(false)}
-                  />
-
                   {/* Desktop Dropdown */}
                   <div className="hidden sm:block absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-xl border border-gray-200/60 z-50 overflow-hidden">
                     {/* Profile Info */}
@@ -393,78 +387,57 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  {/* Mobile Bottom Sheet */}
-                  <div className="sm:hidden fixed inset-x-0 bottom-0 z-50 transform transition-transform duration-300 ease-out">
-                    <div className="bg-white rounded-t-3xl shadow-2xl max-h-[80vh] overflow-hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-                      {/* Handle bar */}
-                      <div className="flex justify-center py-3">
-                        <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
-                      </div>
-
-                      {/* Profile Info */}
-                      <div className="px-5 py-4 border-b border-gray-100 bg-gradient-to-br from-red-50 to-orange-50">
-                        <div className="flex items-center gap-3">
-                          <div className="w-14 h-14 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl flex items-center justify-center shadow-sm">
-                            <FaUser className="text-white text-xl" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-gray-900 text-lg truncate">{user?.name || 'Pengguna'}</p>
-                            <p className="text-sm text-gray-500 truncate">{user?.email || '-'}</p>
-                          </div>
+                  {/* Mobile Dropdown */}
+                  <div className="sm:hidden absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-200/60 z-50 overflow-hidden">
+                    {/* Profile Info */}
+                    <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-br from-red-50 to-orange-50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl flex items-center justify-center shadow-sm">
+                          <FaUser className="text-white text-base" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-gray-900 text-sm truncate">{user?.name || 'Pengguna'}</p>
+                          <p className="text-xs text-gray-500 truncate">{user?.email || '-'}</p>
                         </div>
                       </div>
+                    </div>
 
-                      {/* Menu Items */}
-                      <div className="py-3">
-                        <button
-                          onClick={() => {
-                            setProfileDropdownOpen(false);
-                            router.push('/dashboard/profile');
-                          }}
-                          className="w-full flex items-center gap-4 px-5 py-4 text-base text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
-                        >
-                          <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                            <FaEdit className="text-blue-600" />
-                          </div>
-                          <span className="font-medium">Edit Profil</span>
-                        </button>
+                    {/* Menu Items */}
+                    <div className="py-2">
+                      <button
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          router.push('/dashboard/profile');
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                      >
+                        <FaEdit className="text-gray-400" />
+                        <span>Edit Profil</span>
+                      </button>
 
-                        <button
-                          onClick={() => {
-                            setProfileDropdownOpen(false);
-                            router.push('/dashboard/settings');
-                          }}
-                          className="w-full flex items-center gap-4 px-5 py-4 text-base text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
-                        >
-                          <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
-                            <FaCog className="text-gray-600" />
-                          </div>
-                          <span className="font-medium">Pengaturan</span>
-                        </button>
+                      <button
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          router.push('/dashboard/settings');
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                      >
+                        <FaCog className="text-gray-400" />
+                        <span>Pengaturan</span>
+                      </button>
 
-                        <button
-                          onClick={() => {
-                            setProfileDropdownOpen(false);
-                            handleLogout();
-                          }}
-                          className="w-full flex items-center gap-4 px-5 py-4 text-base text-red-600 hover:bg-red-50 active:bg-red-100 transition-colors"
-                        >
-                          <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
-                            <FaSignOutAlt className="text-red-600" />
-                          </div>
-                          <span className="font-medium">Logout</span>
-                        </button>
-                      </div>
+                      <hr className="my-2 border-gray-100" />
 
-                      {/* Close button */}
-                      <div className="px-5 pb-5">
-                        <button
-                          onClick={() => setProfileDropdownOpen(false)}
-                          className="w-full py-4 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-2xl text-base font-semibold text-gray-700 transition-colors"
-                        >
-                          Tutup
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          handleLogout();
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 active:bg-red-100 transition-colors"
+                      >
+                        <FaSignOutAlt className="text-red-500" />
+                        <span>Logout</span>
+                      </button>
                     </div>
                   </div>
                 </>

@@ -1,11 +1,43 @@
 'use client';
 
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { fireStations, FireStation } from '@/lib/fire-stations';
 import RoutingMachine from './RoutingMachine';
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
+
+// Komponen untuk memperbaiki ukuran peta saat container berubah
+function MapResizeHandler() {
+  const map = useMap();
+
+  useEffect(() => {
+    // Invalidate size setelah mount dengan delay kecil
+    const timeoutId = setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
+
+    // Juga invalidate saat window resize
+    const handleResize = () => {
+      map.invalidateSize();
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Invalidate lagi setelah beberapa saat untuk memastikan CSS sudah sepenuhnya applied
+    const secondTimeoutId = setTimeout(() => {
+      map.invalidateSize();
+    }, 500);
+
+    return () => {
+      clearTimeout(timeoutId);
+      clearTimeout(secondTimeoutId);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [map]);
+
+  return null;
+}
 
 // Definisikan tipe untuk Laporan
 interface Report {
@@ -127,6 +159,7 @@ export default function AdminMap({ reports, onReportClick, selectedReport }: Adm
 
   return (
     <MapContainer center={defaultPosition} zoom={12} style={{ height: '100%', width: '100%', backgroundColor: '#ffffff' }}>
+      <MapResizeHandler />
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
