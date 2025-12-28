@@ -57,7 +57,7 @@ const HowItWorks = () => {
                             initial={{ opacity: 0, y: 30 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
-                            transition={{ delay: idx * 0.2 }}
+                            transition={{ duration: 0.3 }}
                             className="relative flex flex-col items-center text-center"
                         >
                             <div className={`w-24 h-24 ${step.color} rounded-3xl rotate-3 flex items-center justify-center text-white shadow-xl mb-8 z-10 transition-transform hover:rotate-6 duration-300`}>

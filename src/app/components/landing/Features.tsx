@@ -45,10 +45,7 @@ const Features = () => {
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="mb-16 md:mb-24">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+          <div
             className="flex flex-col md:flex-row md:items-end justify-between gap-6"
           >
             <div className="max-w-2xl">
@@ -64,17 +61,13 @@ const Features = () => {
             <p className="text-gray-600 max-w-md text-lg leading-relaxed mb-2">
               Sistem terintegrasi yang dirancang untuk memberikan respons tercepat dalam situasi darurat.
             </p>
-          </motion.div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((feature, idx) => (
-            <motion.div
+            <div
               key={idx}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: idx * 0.1, duration: 0.5 }}
               className="group relative bg-white rounded-3xl p-8 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
             >
               <div className={`w-14 h-14 ${feature.bg} ${feature.color} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
@@ -86,11 +79,11 @@ const Features = () => {
               <p className="text-gray-500 leading-relaxed text-sm">
                 {feature.description}
               </p>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>
-    </section>
+    </section >
   );
 };
 

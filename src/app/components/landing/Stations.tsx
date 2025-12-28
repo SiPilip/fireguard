@@ -3,8 +3,6 @@
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { FaMapMarkerAlt, FaPhone, FaFire } from 'react-icons/fa';
-import { motion, useInView } from 'framer-motion';
-import { useRef } from 'react';
 
 // Dynamic import untuk map
 const StationsMap = dynamic(() => import('../../../components/StationsMap'), {
@@ -23,21 +21,8 @@ const StationsMap = dynamic(() => import('../../../components/StationsMap'), {
 import { fireStations } from '@/lib/fire-stations';
 
 const StationCard = ({ station, index }: { station: any; index: number }) => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true });
-
-  const cardVariants = {
-    hidden: { opacity: 0, y: 15 },
-    visible: { opacity: 1, y: 0 },
-  };
-
   return (
-    <motion.div
-      ref={ref}
-      variants={cardVariants}
-      initial="hidden"
-      animate={isInView ? 'visible' : 'hidden'}
-      transition={{ duration: 0.5, delay: index * 0.05, ease: "easeOut" }}
+    <div
       className="bg-white p-5 rounded-xl border border-gray-200/60 shadow-sm hover:shadow-md transition-all group"
     >
       <div className="flex items-start gap-3">
@@ -60,7 +45,7 @@ const StationCard = ({ station, index }: { station: any; index: number }) => {
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

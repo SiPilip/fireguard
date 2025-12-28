@@ -52,7 +52,7 @@ const Contact = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
+            transition={{ duration: 0.3 }}
             className="bg-white p-8 rounded-3xl border border-gray-100 shadow-lg hover:shadow-xl transition-shadow flex flex-col md:flex-row items-center gap-6 text-center md:text-left"
           >
             <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shrink-0">
@@ -68,7 +68,7 @@ const Contact = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.3 }}
+            transition={{ duration: 0.3 }}
             className="lg:col-span-2 bg-white p-8 rounded-3xl border border-gray-100 shadow-lg hover:shadow-xl transition-shadow flex flex-col md:flex-row items-center gap-6 text-center md:text-left"
           >
             <div className="w-16 h-16 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center shrink-0">
