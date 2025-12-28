@@ -7,7 +7,7 @@ import { FaPlus, FaMinus } from 'react-icons/fa';
 const faqs = [
     {
         question: "Apakah layanan FireGuard ini gratis?",
-        answer: "Ya, layanan FireGuard sepenuhnya GRATIS 100% untuk seluruh masyarakat Palembang. Pelayanan pemadam kebakaran adalah hak publik yang ditanggung oleh pemerintah kota."
+        answer: "Ya, layanan FireGuard sepenuhnya GRATIS 100% untuk seluruh masyarakat Plaju, Palembang. Pelayanan pemadam kebakaran adalah hak publik yang ditanggung oleh pemerintah kota."
     },
     {
         question: "Apakah bisa melapor tanpa koneksi internet?",
@@ -15,7 +15,7 @@ const faqs = [
     },
     {
         question: "Wilayah mana saja yang dicakup layanan ini?",
-        answer: "Saat ini FireGuard berfokus melayani seluruh wilayah administratif Kota Palembang. Laporan di luar wilayah ini akan diarahkan ke unit pemadam kebakaran kabupaten/kota tetangga yang relevan."
+        answer: "Saat ini FireGuard berfokus melayani seluruh wilayah administratif Kecamatan Plaju, Palembang. Laporan di luar wilayah ini akan diarahkan ke unit pemadam kebakaran kecamatan tetangga yang relevan."
     },
     {
         question: "Apakah identitas pelapor dirahasiakan?",

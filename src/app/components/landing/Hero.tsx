@@ -35,10 +35,10 @@ const Hero = () => {
           <span className="text-sm font-medium">Sistem Tanggap Darurat 24/7</span>
         </div>
         <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6">
-          FireGuard Palembang
+          FireGuard Plaju, Palembang
         </h1>
         <p className="text-base md:text-lg max-w-2xl mx-auto mb-10 text-white/90 leading-relaxed">
-          Solusi cepat tanggap untuk setiap laporan kebakaran di kota Palembang. Keselamatan Anda adalah prioritas kami.
+          Solusi cepat tanggap untuk setiap laporan kebakaran di Plaju, Palembang. Keselamatan Anda adalah prioritas kami.
         </p>
         <div className="flex flex-wrap justify-center gap-4">
           <button

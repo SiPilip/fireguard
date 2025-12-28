@@ -79,7 +79,7 @@ export async function sendEmailOTP(email: string, otp: string, type: 'register' 
       </div>
       <div style="background: #1f2937; padding: 20px; border-radius: 0 0 12px 12px; text-align: center;">
         <p style="color: #9ca3af; margin: 0; font-size: 12px;">
-          © 2024 FireGuard - Kec. Plaju, Palembang
+          © 2026 FireGuard - Kec. Plaju, Palembang
         </p>
       </div>
     </div>
@@ -164,7 +164,7 @@ export async function sendStatusUpdateEmail(
       </div>
       <div style="background: #1f2937; padding: 20px; border-radius: 0 0 12px 12px; text-align: center;">
         <p style="color: #9ca3af; margin: 0; font-size: 12px;">
-          © 2024 FireGuard - Kec. Plaju, Palembang
+          © 2026 FireGuard - Kec. Plaju, Palembang
         </p>
       </div>
     </div>

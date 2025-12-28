@@ -6,8 +6,8 @@ export interface FireStation {
   phone?: string;
 }
 
-// Data lengkap untuk pos damkar di Palembang (Terverifikasi)
-// Data ini telah diverifikasi berdasarkan lokasi resmi pos pemadam kebakaran di Kota Palembang
+// Data lengkap untuk pos damkar di Plaju, Palembang (Terverifikasi)
+// Data ini telah diverifikasi berdasarkan lokasi resmi pos pemadam kebakaran di wilayah Plaju, Palembang
 export const fireStations: FireStation[] = [
   {
     name: "Kantor Dinas Damkar & PB Kota Palembang",

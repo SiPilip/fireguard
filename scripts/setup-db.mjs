@@ -71,7 +71,7 @@ async function setup() {
         name VARCHAR(100) NOT NULL UNIQUE,
         kode_pos VARCHAR(10) NOT NULL,
         kecamatan VARCHAR(100) NOT NULL DEFAULT 'Plaju',
-        kota VARCHAR(100) NOT NULL DEFAULT 'Palembang',
+        kota VARCHAR(100) NOT NULL DEFAULT 'Plaju, Palembang',
         description TEXT,
         is_active TINYINT(1) DEFAULT 1,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -195,7 +195,7 @@ async function setup() {
     for (const kel of kelurahanPlaju) {
       await db.execute(
         'INSERT INTO kelurahan (name, kode_pos, kecamatan, kota, description) VALUES (?, ?, ?, ?, ?)', 
-        [kel.name, kel.kode_pos, 'Plaju', 'Palembang', kel.description]
+        [kel.name, kel.kode_pos, 'Plaju', 'Plaju, Palembang', kel.description]
       );
       console.log(`  ✓ Added kelurahan: ${kel.name} (${kel.kode_pos})`);
     }

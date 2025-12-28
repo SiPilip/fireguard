@@ -169,8 +169,8 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => switchMethod("email")}
                   className={`flex-1 py-4 px-4 text-sm font-medium flex items-center justify-center gap-2 transition-all ${loginMethod === "email"
-                      ? "text-red-600 border-b-2 border-red-500 bg-red-50/50"
-                      : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                    ? "text-red-600 border-b-2 border-red-500 bg-red-50/50"
+                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                     }`}
                 >
                   <FaEnvelope />
@@ -180,8 +180,8 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => switchMethod("whatsapp")}
                   className={`flex-1 py-4 px-4 text-sm font-medium flex items-center justify-center gap-2 transition-all ${loginMethod === "whatsapp"
-                      ? "text-green-600 border-b-2 border-green-500 bg-green-50/50"
-                      : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                    ? "text-green-600 border-b-2 border-green-500 bg-green-50/50"
+                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                     }`}
                 >
                   <FaWhatsapp />
@@ -257,8 +257,8 @@ export default function LoginPage() {
                   type="submit"
                   disabled={isLoading}
                   className={`w-full py-3 text-white font-semibold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 ${loginMethod === "email"
-                      ? "bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700"
-                      : "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                    ? "bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700"
+                    : "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
                     }`}
                 >
                   {isLoading ? (
@@ -338,8 +338,8 @@ export default function LoginPage() {
                 type="submit"
                 disabled={isLoading || otp.length !== 6}
                 className={`w-full py-3 text-white font-semibold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 ${loginMethod === "email"
-                    ? "bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700"
-                    : "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                  ? "bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700"
+                  : "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
                   }`}
               >
                 {isLoading ? (
@@ -365,7 +365,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-xs text-gray-400 mt-6">
-          © 2024 FireGuard - Kec. Plaju, Palembang
+          © 2026 FireGuard - Kec. Plaju, Palembang
         </p>
       </div>
     </div>

@@ -1,7 +1,7 @@
 {
-    "name": "FireGuard Palembang",
+    "name": "FireGuard Plaju, Palembang",
     "short_name": "FireGuard",
-    "description": "Sistem Cepat Tanggap Kebakaran Palembang - Laporkan dan pantau insiden kebakaran secara real-time",
+    "description": "Sistem Cepat Tanggap Kebakaran Plaju, Palembang - Laporkan dan pantau insiden kebakaran secara real-time",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#ffffff",

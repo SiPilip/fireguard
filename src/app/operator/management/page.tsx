@@ -54,7 +54,7 @@ export default function ManagementPage() {
     // Kelurahan form
     const [kelurahanName, setKelurahanName] = useState('');
     const [kecamatan, setKecamatan] = useState('Plaju');
-    const [kota, setKota] = useState('Palembang');
+    const [kota, setKota] = useState('Plaju, Palembang');
 
     const fetchCategories = useCallback(async () => {
         try {
@@ -217,7 +217,7 @@ export default function ManagementPage() {
     const resetKelurahanForm = () => {
         setKelurahanName('');
         setKecamatan('Plaju');
-        setKota('Palembang');
+        setKota('Plaju, Palembang');
         setEditingKelurahan(null);
         setShowKelurahanForm(false);
     };
@@ -285,8 +285,8 @@ export default function ManagementPage() {
                     <button
                         onClick={() => setActiveTab('categories')}
                         className={`px-5 py-2.5 rounded-xl font-medium text-sm transition-all ${activeTab === 'categories'
-                                ? 'bg-red-500 text-white shadow-lg'
-                                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                            ? 'bg-red-500 text-white shadow-lg'
+                            : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
                             }`}
                     >
                         <FaFire className="inline mr-2" />
@@ -295,8 +295,8 @@ export default function ManagementPage() {
                     <button
                         onClick={() => setActiveTab('kelurahan')}
                         className={`px-5 py-2.5 rounded-xl font-medium text-sm transition-all ${activeTab === 'kelurahan'
-                                ? 'bg-teal-500 text-white shadow-lg'
-                                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                            ? 'bg-teal-500 text-white shadow-lg'
+                            : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
                             }`}
                     >
                         <FaMapMarkerAlt className="inline mr-2" />
@@ -355,8 +355,8 @@ export default function ManagementPage() {
                                                             type="button"
                                                             onClick={() => setCategoryIcon(emoji)}
                                                             className={`text-2xl p-2 rounded-lg border-2 transition-all ${categoryIcon === emoji
-                                                                    ? 'border-red-500 bg-red-50'
-                                                                    : 'border-gray-200 hover:border-gray-300'
+                                                                ? 'border-red-500 bg-red-50'
+                                                                : 'border-gray-200 hover:border-gray-300'
                                                                 }`}
                                                         >
                                                             {emoji}
@@ -499,7 +499,7 @@ export default function ManagementPage() {
                                                     value={kota}
                                                     onChange={(e) => setKota(e.target.value)}
                                                     className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm"
-                                                    placeholder="Contoh: Palembang"
+                                                    placeholder="Contoh: Plaju, Palembang"
                                                 />
                                             </div>
                                         </div>

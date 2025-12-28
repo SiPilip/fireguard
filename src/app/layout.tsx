@@ -15,8 +15,8 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: 'FireGuard Palembang',
-  description: 'Sistem Cepat Tanggap Kebakaran Palembang - Laporkan dan pantau insiden kebakaran secara real-time',
+  title: 'FireGuard Plaju, Palembang',
+  description: 'Sistem Cepat Tanggap Kebakaran Plaju, Palembang - Laporkan dan pantau insiden kebakaran secara real-time',
   manifest: '/manifest.json',
   icons: {
     icon: '/logofireguard.png',
@@ -34,22 +34,22 @@ export const metadata: Metadata = {
     statusBarStyle: 'black-translucent',
     title: 'FireGuard',
   },
-  applicationName: 'FireGuard Palembang',
+  applicationName: 'FireGuard Plaju, Palembang',
   keywords: ['kebakaran', 'palembang', 'emergency', 'fire', 'report', 'pemadam'],
   authors: [{ name: 'FireGuard Team' }],
   creator: 'FireGuard Team',
-  publisher: 'FireGuard Palembang',
+  publisher: 'FireGuard Plaju, Palembang',
   formatDetection: {
     telephone: true,
     email: true,
     address: true,
   },
   openGraph: {
-    title: 'FireGuard Palembang',
-    description: 'Sistem Cepat Tanggap Kebakaran Palembang',
+    title: 'FireGuard Plaju, Palembang',
+    description: 'Sistem Cepat Tanggap Kebakaran Plaju, Palembang',
     type: 'website',
     locale: 'id_ID',
-    siteName: 'FireGuard Palembang',
+    siteName: 'FireGuard Plaju, Palembang',
   },
 };
 
@@ -62,7 +62,7 @@ export default function RootLayout({
     <html lang="id">
       <head>
         {/* PWA Meta Tags */}
-        <meta name="application-name" content="FireGuard Palembang" />
+        <meta name="application-name" content="FireGuard Plaju, Palembang" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="FireGuard" />

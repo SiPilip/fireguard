@@ -52,7 +52,7 @@ const groupHotspotsByLocation = (hotspots: Hotspot[]) => {
 };
 
 export default function HotspotMap({ hotspots, year }: HotspotMapProps) {
-    const defaultPosition: [number, number] = [-2.976, 104.775]; // Palembang
+    const defaultPosition: [number, number] = [-2.976, 104.775]; // Plaju, Palembang
 
     // Group hotspots for heatmap-like visualization
     const groupedHotspots = useMemo(() => groupHotspotsByLocation(hotspots), [hotspots]);

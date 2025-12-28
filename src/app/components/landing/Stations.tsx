@@ -76,9 +76,9 @@ const Stations = () => {
             <div className="w-2 h-2 bg-red-500 rounded-full"></div>
             <span className="text-xs font-semibold text-red-600 uppercase tracking-wide">Lokasi Pos Damkar</span>
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Pos Pemadam Kebakaran Palembang</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Pos Pemadam Kebakaran Plaju, Palembang</h2>
           <p className="text-base text-gray-600 max-w-2xl mx-auto">
-            Terdapat {fireStations.length} pos damkar yang siap melayani masyarakat Palembang 24/7
+            Terdapat {fireStations.length} pos damkar yang siap melayani masyarakat Plaju, Palembang 24/7
           </p>
         </div>
 
@@ -127,7 +127,7 @@ const Stations = () => {
             <div>
               <h3 className="text-base font-semibold text-gray-900 mb-2">Layanan Darurat 24/7</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
-                Semua pos damkar Palembang siap melayani panggilan darurat kapan saja.
+                Semua pos damkar Plaju, Palembang siap melayani panggilan darurat kapan saja.
                 Hubungi <span className="font-semibold text-red-600">113</span> atau gunakan aplikasi ini untuk melapor kebakaran.
               </p>
             </div>

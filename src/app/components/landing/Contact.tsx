@@ -15,7 +15,7 @@ const Contact = () => {
         >
           <span className="text-sm font-bold text-red-600 uppercase tracking-widest mb-2 block">Kontak Darurat</span>
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Butuh Bantuan Segera?</h2>
-          <p className="text-gray-600 text-lg">Layanan tanggap darurat kami aktif 24/7 untuk warga Palembang.</p>
+          <p className="text-gray-600 text-lg">Layanan tanggap darurat kami aktif 24/7 untuk warga Plaju, Palembang.</p>
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -76,7 +76,7 @@ const Contact = () => {
             </div>
             <div>
               <h4 className="text-lg font-bold text-gray-900 mb-1">Markas Pusat</h4>
-              <p className="text-gray-600 font-medium">Jl. Merdeka No.1, Palembang, Sumatera Selatan</p>
+              <p className="text-gray-600 font-medium">Jl. Merdeka No.1, Plaju, Palembang, Sumatera Selatan</p>
             </div>
           </motion.div>
         </div>

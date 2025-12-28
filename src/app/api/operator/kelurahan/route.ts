@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
         const id = await executeAndGetLastInsertId(
             'INSERT INTO kelurahan (name, kecamatan, kota) VALUES (?, ?, ?)',
-            [name, kecamatan || 'Plaju', kota || 'Palembang']
+            [name, kecamatan || 'Plaju', kota || 'Plaju, Palembang']
         );
 
         return NextResponse.json({

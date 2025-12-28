@@ -14,7 +14,7 @@ const Footer = () => (
             </div>
             <span className="text-xl font-semibold">FireGuard</span>
           </Link>
-          <p className="text-sm text-gray-400 leading-relaxed">Sistem Cepat Tanggap Kebakaran Palembang untuk keamanan maksimal.</p>
+          <p className="text-sm text-gray-400 leading-relaxed">Sistem Cepat Tanggap Kebakaran Plaju, Palembang untuk keamanan maksimal.</p>
         </div>
         <div>
           <h3 className="text-base font-semibold mb-4">Tautan Cepat</h3>
@@ -27,7 +27,7 @@ const Footer = () => (
         <div>
           <h3 className="text-base font-semibold mb-4">Hubungi Kami</h3>
           <ul className="space-y-2.5 text-sm text-gray-400">
-            <li>Jl. Merdeka No.1, Palembang</li>
+            <li>Jl. Merdeka No.1, Plaju, Palembang</li>
             <li>damkar@palembang.go.id</li>
             <li>Hotline: 113</li>
           </ul>
@@ -42,7 +42,7 @@ const Footer = () => (
         </div>
       </div>
       <div className="mt-12 pt-8 border-t border-gray-800 text-center">
-        <p className="text-xs text-gray-500">&copy; {new Date().getFullYear()} FireGuard Palembang. Hak Cipta Dilindungi.</p>
+        <p className="text-xs text-gray-500">&copy; {new Date().getFullYear()} FireGuard Plaju, Palembang. Hak Cipta Dilindungi.</p>
       </div>
     </div>
   </footer>

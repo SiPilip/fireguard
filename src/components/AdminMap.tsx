@@ -137,7 +137,7 @@ function haversineDistance(coords1: [number, number], coords2: [number, number])
 }
 
 export default function AdminMap({ reports, onReportClick, selectedReport }: AdminMapProps) {
-  const defaultPosition: [number, number] = [-2.976, 104.775]; // Palembang
+  const defaultPosition: [number, number] = [-2.976, 104.775]; // Plaju, Palembang
 
   // Hitung pos damkar terdekat untuk laporan yang dipilih
   const nearestStation: FireStation | null = useMemo(() => {

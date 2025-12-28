@@ -258,7 +258,7 @@ export default function EditProfilePage() {
 
                 {/* Footer */}
                 <p className="text-center text-xs text-gray-400 mt-6">
-                    © 2024 FireGuard - Kec. Plaju, Palembang
+                    © 2026 FireGuard - Kec. Plaju, Palembang
                 </p>
             </div>
         </div>

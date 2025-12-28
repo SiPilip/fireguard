@@ -17,7 +17,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
 
         await execute(
             'UPDATE kelurahan SET name = ?, kecamatan = ?, kota = ? WHERE id = ?',
-            [name, kecamatan || 'Plaju', kota || 'Palembang', id]
+            [name, kecamatan || 'Plaju', kota || 'Plaju, Palembang', id]
         );
 
         return NextResponse.json({
