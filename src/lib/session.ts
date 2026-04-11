@@ -1,0 +1,9 @@
+export const COOKIE_NAME = "auth_token";
+
+export const USER_SESSION_DAYS = 365;
+export const USER_JWT_EXPIRATION = `${USER_SESSION_DAYS}d`;
+export const USER_SESSION_MAX_AGE = 60 * 60 * 24 * USER_SESSION_DAYS;
+
+export const OPERATOR_SESSION_DAYS = 1;
+export const OPERATOR_JWT_EXPIRATION = `${OPERATOR_SESSION_DAYS}d`;
+export const OPERATOR_SESSION_MAX_AGE = 60 * 60 * 24 * OPERATOR_SESSION_DAYS;

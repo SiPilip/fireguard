@@ -4,16 +4,17 @@ import * as jose from "jose";
 import { serialize } from "cookie";
 import path from "path";
 import { writeFile, mkdir } from "fs/promises";
+import { COOKIE_NAME } from "@/lib/session";
+import { getJwtSecretKey } from "@/lib/secrets";
+import { getAuthPayloadFromRequest, handleCorsOptions, jsonWithCors } from "@/lib/cors";
 
-const JWT_SECRET = process.env.JWT_SECRET || "super-secret-jwt-key-for-dev";
-const COOKIE_NAME = "auth_token";
+// OPTIONS: CORS preflight
+export async function OPTIONS() {
+  return handleCorsOptions();
+}
 
 async function getAuthPayload(request: NextRequest) {
-  const token = request.cookies.get(COOKIE_NAME)?.value;
-  if (!token) throw new Error("Token autentikasi tidak ditemukan.");
-  const secret = new TextEncoder().encode(JWT_SECRET);
-  const { payload } = await jose.jwtVerify(token, secret);
-  return payload as { id: number; email: string; name: string; phone?: string };
+  return getAuthPayloadFromRequest(request);
 }
 
 export async function POST(request: NextRequest) {
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
     const dbUser = await queryRow("SELECT id FROM users WHERE id = ?", [user.id]);
 
     if (!dbUser) {
-      return NextResponse.json(
+      return jsonWithCors(
         { message: "User tidak ditemukan. Silakan login ulang." },
         { status: 401 }
       );
@@ -34,20 +35,21 @@ export async function POST(request: NextRequest) {
     const userId = user.id;
 
     const formData = await request.formData();
-    const fireLatitude = formData.get("fireLatitude") as string;
-    const fireLongitude = formData.get("fireLongitude") as string;
-    const reporterLatitude = formData.get("reporterLatitude") as string | null;
-    const reporterLongitude = formData.get("reporterLongitude") as string | null;
+    // Flutter sends snake_case field names
+    const fireLatitude = (formData.get("fire_latitude") ?? formData.get("fireLatitude")) as string;
+    const fireLongitude = (formData.get("fire_longitude") ?? formData.get("fireLongitude")) as string;
+    const reporterLatitude = (formData.get("reporter_latitude") ?? formData.get("reporterLatitude")) as string | null;
+    const reporterLongitude = (formData.get("reporter_longitude") ?? formData.get("reporterLongitude")) as string | null;
     const description = formData.get("description") as string | null;
     const address = formData.get("address") as string | null;
     const mediaFile = formData.get("media") as File | null;
     const notes = formData.get("notes") as string | null;
     const contact = formData.get("contact") as string | null;
-    const categoryId = formData.get("categoryId") as string | null;
-    const kelurahanId = formData.get("kelurahanId") as string | null;
+    const categoryId = (formData.get("category_id") ?? formData.get("categoryId")) as string | null;
+    const kelurahanId = (formData.get("kelurahan_id") ?? formData.get("kelurahanId")) as string | null;
 
     if (!fireLatitude || !fireLongitude) {
-      return NextResponse.json(
+      return jsonWithCors(
         { message: "Data laporan tidak lengkap (lokasi kejadian wajib)." },
         { status: 400 }
       );
@@ -159,24 +161,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(
+    return jsonWithCors(
       { message: "Laporan berhasil dikirim!", reportId },
       { status: 201 }
     );
   } catch (error: any) {
     if (error.message.includes("autentikasi")) {
-      return NextResponse.json({ message: "Akses ditolak." }, { status: 401 });
+      return jsonWithCors({ message: "Akses ditolak." }, { status: 401 });
     }
 
-    // Handle specific database errors
     if (error.code === 'SQLITE_CONSTRAINT') {
-      return NextResponse.json(
+      return jsonWithCors(
         { message: "Terjadi kesalahan validasi data. Silakan login ulang dan coba lagi." },
         { status: 400 }
       );
     }
 
-    return NextResponse.json(
+    return jsonWithCors(
       {
         message: "Terjadi kesalahan pada server.",
         error: process.env.NODE_ENV === 'development' ? error.message : undefined

@@ -1,78 +1,118 @@
 import { NextRequest, NextResponse } from "next/server";
 import { execute, queryRow, formatDateForMySQL } from "@/lib/db";
-import { hashOtp } from "@/lib/auth";
+import { hashOtp, verifyPassword } from "@/lib/auth";
 import { sendEmailOTP } from "@/lib/email";
+import * as jose from "jose";
+import { serialize } from "cookie";
+import { COOKIE_NAME, USER_JWT_EXPIRATION, USER_SESSION_MAX_AGE } from "@/lib/session";
+import { getJwtSecretKey } from "@/lib/secrets";
+import { corsHeaders, handleCorsOptions, jsonWithCors } from "@/lib/cors";
 
-function generateOtp(): string {
-    return Math.floor(100000 + Math.random() * 900000).toString();
+// OPTIONS: CORS preflight
+export async function OPTIONS() {
+    return handleCorsOptions();
 }
 
-// POST: Kirim OTP untuk login
+// POST: Login dengan password
 export async function POST(request: NextRequest) {
     try {
-        const { email } = await request.json();
+        const { email, password } = await request.json();
 
         // Validasi input
         if (!email) {
-            return NextResponse.json(
-                { message: "Email wajib diisi." },
-                { status: 400 }
-            );
+            return jsonWithCors({ message: "Email wajib diisi." }, { status: 400 });
         }
 
         // Validasi format email
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            return NextResponse.json(
-                { message: "Format email tidak valid." },
-                { status: 400 }
-            );
+            return jsonWithCors({ message: "Format email tidak valid." }, { status: 400 });
         }
 
         // Cek apakah email sudah terdaftar
-        const user = await queryRow<{ id: number; name: string }>(
-            "SELECT id, name FROM users WHERE email = ?",
+        const user = await queryRow<{
+            id: number;
+            name: string;
+            email: string;
+            phone_number: string | null;
+            password_hash: string | null;
+        }>(
+            "SELECT id, name, email, phone_number, password_hash FROM users WHERE email = ?",
             [email]
         );
 
         if (!user) {
-            return NextResponse.json(
+            return jsonWithCors(
                 { message: "Email belum terdaftar. Silakan daftar terlebih dahulu." },
                 { status: 404 }
             );
         }
 
-        // Generate OTP
-        const otp = generateOtp();
-        const hashedOtp = hashOtp(otp);
-        const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 menit
+        // Mode utama: login dengan password
+        if (typeof password === "string" && password.length > 0) {
+            if (!user.password_hash) {
+                return jsonWithCors(
+                    {
+                        message: "Akun Anda belum memiliki password. Silakan reset password atau hubungi admin.",
+                    },
+                    { status: 409 }
+                );
+            }
 
-        // Hapus OTP lama untuk email ini
-        await execute("DELETE FROM otp_attempts WHERE email = ?", [email]);
+            const isValidPassword = await verifyPassword(password, user.password_hash);
+            if (!isValidPassword) {
+                return jsonWithCors(
+                    { message: "Email atau password salah." },
+                    { status: 401 }
+                );
+            }
 
-        // Simpan OTP baru
-        await execute(
-            "INSERT INTO otp_attempts (email, otp_hash, type, expires_at) VALUES (?, ?, ?, ?)",
-            [email, hashedOtp, "login", formatDateForMySQL(expiresAt)]
-        );
+            const secret = getJwtSecretKey();
+            const token = await new jose.SignJWT({
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                phone: user.phone_number,
+                isOperator: false,
+            })
+                .setProtectedHeader({ alg: "HS256" })
+                .setIssuedAt()
+                .setExpirationTime(USER_JWT_EXPIRATION)
+                .sign(secret);
 
-        // Kirim OTP via email
-        const emailResult = await sendEmailOTP(email, otp, "login");
+            const serializedCookie = serialize(COOKIE_NAME, token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "lax",
+                path: "/",
+                maxAge: USER_SESSION_MAX_AGE,
+            });
 
-        if (!emailResult.success) {
-            return NextResponse.json(
-                { message: "Gagal mengirim OTP. Silakan coba lagi." },
-                { status: 500 }
+            // Return token in body (for Flutter Bearer auth) + cookie (for web)
+            return new NextResponse(
+                JSON.stringify({
+                    message: "Login berhasil!",
+                    token: token,
+                    user: { id: user.id, name: user.name, email: user.email },
+                }),
+                {
+                    status: 200,
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Set-Cookie": serializedCookie,
+                        ...corsHeaders(),
+                    },
+                }
             );
         }
 
-        return NextResponse.json({
-            message: `Kode OTP telah dikirim ke ${email}`,
-            userName: user.name,
-        });
+        return jsonWithCors(
+            { message: "Email dan password wajib diisi." },
+            { status: 400 }
+        );
     } catch (error: any) {
         console.error("Error in login:", error);
-        return NextResponse.json(
+        return jsonWithCors(
             { message: "Terjadi kesalahan pada server." },
             { status: 500 }
         );

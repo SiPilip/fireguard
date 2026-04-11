@@ -1,5 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { queryRows } from "@/lib/db";
+import { handleCorsOptions, jsonWithCors } from "@/lib/cors";
+
+// OPTIONS: CORS preflight
+export async function OPTIONS() {
+    return handleCorsOptions();
+}
 
 // GET: Fetch all active kelurahan
 export async function GET(request: NextRequest) {
@@ -13,12 +19,12 @@ export async function GET(request: NextRequest) {
 
         const kelurahan = await queryRows(sql);
 
-        return NextResponse.json({
+        return jsonWithCors({
             success: true,
             data: kelurahan,
         });
     } catch (error) {
-        return NextResponse.json(
+        return jsonWithCors(
             { success: false, message: "Failed to fetch kelurahan" },
             { status: 500 }
         );

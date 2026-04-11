@@ -21,10 +21,10 @@ const fs = require('fs');
 const path = require('path');
 
 const dev = process.env.NODE_ENV !== 'production';
-const hostname = 'localhost';
+const hostname = '0.0.0.0'; // Listen di semua interface → HP fisik bisa konek
 const port = 3000;
 
-const app = next({ dev, hostname, port });
+const app = next({ dev, hostname: 'localhost', port });
 const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
@@ -115,7 +115,9 @@ app.prepare().then(() => {
     });
   };
 
-  server.listen(port, (err) => {
+  server.listen(port, hostname, (err) => {
     if (err) throw err;
+    console.log(`> Server berjalan di http://localhost:${port}`);
+    console.log(`> Akses dari HP/device: http://192.168.100.6:${port}`);
   });
 });

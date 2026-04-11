@@ -2,24 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import * as jose from 'jose';
 import { pool } from '@/lib/db';
 import { RowDataPacket } from 'mysql2';
+import { COOKIE_NAME, USER_JWT_EXPIRATION, USER_SESSION_MAX_AGE } from '@/lib/session';
+import { getJwtSecretKey } from '@/lib/secrets';
+import { getAuthPayloadFromRequest, handleCorsOptions, jsonWithCors, getTokenFromRequest } from '@/lib/cors';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-jwt-key-for-dev';
-const COOKIE_NAME = 'auth_token';
+// OPTIONS: CORS preflight
+export async function OPTIONS() {
+    return handleCorsOptions();
+}
 
 // GET - Get current user profile from database
 export async function GET(request: NextRequest) {
-    const token = request.cookies.get(COOKIE_NAME)?.value;
-
-    if (!token) {
-        return NextResponse.json({ message: 'Token tidak ditemukan.' }, { status: 401 });
-    }
-
     try {
-        const secret = new TextEncoder().encode(JWT_SECRET);
-        const { payload } = await jose.jwtVerify(token, secret);
+        const payload = await getAuthPayloadFromRequest(request);
 
         if (!payload.id) {
-            return NextResponse.json({ message: 'User ID tidak ditemukan.' }, { status: 401 });
+            return jsonWithCors({ message: 'User ID tidak ditemukan.' }, { status: 401 });
         }
 
         // Get fresh data from database
@@ -29,30 +27,23 @@ export async function GET(request: NextRequest) {
         );
 
         if (rows.length === 0) {
-            return NextResponse.json({ message: 'User tidak ditemukan.' }, { status: 404 });
+            return jsonWithCors({ message: 'User tidak ditemukan.' }, { status: 404 });
         }
 
-        return NextResponse.json(rows[0]);
+        return jsonWithCors(rows[0]);
     } catch (error) {
         console.error('Error getting profile:', error);
-        return NextResponse.json({ message: 'Token tidak valid atau kedaluwarsa.' }, { status: 401 });
+        return jsonWithCors({ message: 'Token tidak valid atau kedaluwarsa.' }, { status: 401 });
     }
 }
 
 // PUT - Update user profile
 export async function PUT(request: NextRequest) {
-    const token = request.cookies.get(COOKIE_NAME)?.value;
-
-    if (!token) {
-        return NextResponse.json({ message: 'Token tidak ditemukan.' }, { status: 401 });
-    }
-
     try {
-        const secret = new TextEncoder().encode(JWT_SECRET);
-        const { payload } = await jose.jwtVerify(token, secret);
+        const payload = await getAuthPayloadFromRequest(request);
 
         if (!payload.id) {
-            return NextResponse.json({ message: 'User ID tidak ditemukan.' }, { status: 401 });
+            return jsonWithCors({ message: 'User ID tidak ditemukan.' }, { status: 401 });
         }
 
         const body = await request.json();
@@ -60,11 +51,11 @@ export async function PUT(request: NextRequest) {
 
         // Validate input
         if (!name || name.trim().length < 2) {
-            return NextResponse.json({ message: 'Nama harus minimal 2 karakter.' }, { status: 400 });
+            return jsonWithCors({ message: 'Nama harus minimal 2 karakter.' }, { status: 400 });
         }
 
         if (name.trim().length > 100) {
-            return NextResponse.json({ message: 'Nama maksimal 100 karakter.' }, { status: 400 });
+            return jsonWithCors({ message: 'Nama maksimal 100 karakter.' }, { status: 400 });
         }
 
         // Validate phone number format (optional, but if provided must be valid)
@@ -72,7 +63,7 @@ export async function PUT(request: NextRequest) {
             const phoneRegex = /^(\+62|62|0)[0-9]{9,13}$/;
             const cleanPhone = phone_number.replace(/[\s-]/g, '');
             if (!phoneRegex.test(cleanPhone)) {
-                return NextResponse.json({ message: 'Format nomor telepon tidak valid.' }, { status: 400 });
+                return jsonWithCors({ message: 'Format nomor telepon tidak valid.' }, { status: 400 });
             }
         }
 
@@ -89,10 +80,11 @@ export async function PUT(request: NextRequest) {
         );
 
         if (rows.length === 0) {
-            return NextResponse.json({ message: 'User tidak ditemukan.' }, { status: 404 });
+            return jsonWithCors({ message: 'User tidak ditemukan.' }, { status: 404 });
         }
 
         // Create new JWT token with updated data
+        const secret = getJwtSecretKey();
         const newToken = await new jose.SignJWT({
             id: rows[0].id,
             name: rows[0].name,
@@ -101,12 +93,14 @@ export async function PUT(request: NextRequest) {
             isOperator: false,
         })
             .setProtectedHeader({ alg: 'HS256' })
-            .setExpirationTime('7d')
+            .setIssuedAt()
+            .setExpirationTime(USER_JWT_EXPIRATION)
             .sign(secret);
 
-        // Create response with updated cookie
-        const response = NextResponse.json({
+        // Create response with updated cookie (web) + token in body (Flutter)
+        const response = jsonWithCors({
             message: 'Profil berhasil diperbarui.',
+            token: newToken,
             user: rows[0],
         });
 
@@ -114,13 +108,13 @@ export async function PUT(request: NextRequest) {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
-            maxAge: 60 * 60 * 24 * 7, // 7 days
+            maxAge: USER_SESSION_MAX_AGE,
             path: '/',
         });
 
         return response;
     } catch (error) {
         console.error('Error updating profile:', error);
-        return NextResponse.json({ message: 'Gagal memperbarui profil.' }, { status: 500 });
+        return jsonWithCors({ message: 'Gagal memperbarui profil.' }, { status: 500 });
     }
 }

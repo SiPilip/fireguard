@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FaFire, FaUser, FaChevronDown, FaSignOutAlt, FaBars, FaTimes } from 'react-icons/fa';
+import { getPostLogoutRedirectPath } from '@/lib/app-mode';
 
 const Navbar = () => {
   const router = useRouter();
@@ -54,16 +55,18 @@ const Navbar = () => {
   }, []);
 
   const handleLogout = async () => {
+    const redirectTarget = getPostLogoutRedirectPath();
+
     try {
       await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
       setIsLoggedIn(false);
       setUser(null);
       setDropdownOpen(false);
       // Force full page reload to clear all cached state
-      window.location.href = '/';
+      window.location.href = redirectTarget;
     } catch (error) {
       console.error('Logout error:', error);
-      window.location.href = '/';
+      window.location.href = redirectTarget;
     }
   };
 

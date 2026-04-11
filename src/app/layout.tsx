@@ -1,6 +1,8 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Poppins, Roboto } from 'next/font/google';
 import './globals.css';
+
+export const dynamic = 'force-dynamic';
 
 const poppins = Poppins({
   variable: '--font-poppins',
@@ -15,42 +17,43 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: 'FireGuard Plaju, Palembang',
-  description: 'Sistem Cepat Tanggap Kebakaran Plaju, Palembang - Laporkan dan pantau insiden kebakaran secara real-time',
+  title: 'FireGuard Plaju Darat, Palembang',
+  description: 'Sistem Cepat Tanggap Kebakaran Plaju Darat, Palembang - Laporkan dan pantau insiden kebakaran secara real-time',
   manifest: '/manifest.json',
   icons: {
     icon: '/logofireguard.png',
     apple: '/logofireguard.png',
-  },
-  themeColor: '#ef4444',
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 5,
-    userScalable: true,
   },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
     title: 'FireGuard',
   },
-  applicationName: 'FireGuard Plaju, Palembang',
+  applicationName: 'FireGuard Plaju Darat, Palembang',
   keywords: ['kebakaran', 'palembang', 'emergency', 'fire', 'report', 'pemadam'],
   authors: [{ name: 'FireGuard Team' }],
   creator: 'FireGuard Team',
-  publisher: 'FireGuard Plaju, Palembang',
+  publisher: 'FireGuard Plaju Darat, Palembang',
   formatDetection: {
     telephone: true,
     email: true,
     address: true,
   },
   openGraph: {
-    title: 'FireGuard Plaju, Palembang',
-    description: 'Sistem Cepat Tanggap Kebakaran Plaju, Palembang',
+    title: 'FireGuard Plaju Darat, Palembang',
+    description: 'Sistem Cepat Tanggap Kebakaran Plaju Darat, Palembang',
     type: 'website',
     locale: 'id_ID',
-    siteName: 'FireGuard Plaju, Palembang',
+    siteName: 'FireGuard Plaju Darat, Palembang',
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: '#ef4444',
 };
 
 export default function RootLayout({
@@ -62,7 +65,7 @@ export default function RootLayout({
     <html lang="id">
       <head>
         {/* PWA Meta Tags */}
-        <meta name="application-name" content="FireGuard Plaju, Palembang" />
+        <meta name="application-name" content="FireGuard Plaju Darat, Palembang" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="FireGuard" />

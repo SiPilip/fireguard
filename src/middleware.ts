@@ -1,26 +1,42 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import * as jose from "jose";
-
-const JWT_SECRET = process.env.JWT_SECRET || "super-secret-jwt-key-for-dev";
-const COOKIE_NAME = "auth_token";
+import { COOKIE_NAME } from "@/lib/session";
+import { getJwtSecretKey } from "@/lib/secrets";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get(COOKIE_NAME)?.value;
-  const secret = new TextEncoder().encode(JWT_SECRET);
+  const secret = getJwtSecretKey();
 
-  // Halaman publik yang tidak memerlukan login
-  const publicPaths = ["/", "/login", "/login/verify", "/register", "/operator/login", "/report/new"];
+  const publicPaths = ["/", "/onboarding"];
+  const authPaths = ["/login", "/register", "/operator/login", "/onboarding"];
 
-  // Izinkan akses ke API, file Next.js, static files, dan halaman publik
+  // Izinkan akses ke API, file Next.js, dan static files
   if (
     pathname.startsWith("/api") ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/static") ||
-    pathname.includes(".") || // File dengan extension (.js, .css, .png, dll)
-    publicPaths.includes(pathname)
+    pathname.includes(".") // File dengan extension (.js, .css, .png, dll)
   ) {
+    return NextResponse.next();
+  }
+
+  // Jika user sudah login, jangan izinkan kembali ke halaman auth.
+  if (authPaths.includes(pathname) && token) {
+    try {
+      const { payload } = await jose.jwtVerify(token, secret);
+      const isOperator = payload.isOperator === true;
+      return NextResponse.redirect(new URL(isOperator ? "/operator/dashboard" : "/dashboard", request.url));
+    } catch {
+      const response = NextResponse.next();
+      response.cookies.delete(COOKIE_NAME);
+      return response;
+    }
+  }
+
+  // Halaman publik yang tidak memerlukan login
+  if (publicPaths.includes(pathname) || authPaths.includes(pathname)) {
     return NextResponse.next();
   }
 

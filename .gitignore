@@ -8,7 +8,9 @@ build/
 dist/
 
 # Ignore environment files
-#
+.env
+.env.local
+.env.*.local
 
 # Ignore logs
 npm-debug.log*
@@ -40,3 +42,6 @@ coverage/
 # Ignore cache
 .cache/
 .parcel-cache/
+
+# Ignore mobile repository (separate repo)
+fireguard_flutter/

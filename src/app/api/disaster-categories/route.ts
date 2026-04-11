@@ -1,5 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { queryRows } from "@/lib/db";
+import { handleCorsOptions, jsonWithCors } from "@/lib/cors";
+
+// OPTIONS: CORS preflight
+export async function OPTIONS() {
+  return handleCorsOptions();
+}
 
 // GET: Fetch all active disaster categories
 export async function GET(request: NextRequest) {
@@ -13,12 +19,12 @@ export async function GET(request: NextRequest) {
 
     const categories = await queryRows(sql);
 
-    return NextResponse.json({
+    return jsonWithCors({
       success: true,
       data: categories,
     });
   } catch (error) {
-    return NextResponse.json(
+    return jsonWithCors(
       { success: false, message: "Failed to fetch disaster categories" },
       { status: 500 }
     );

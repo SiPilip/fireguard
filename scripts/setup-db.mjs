@@ -46,12 +46,13 @@ async function setup() {
         name VARCHAR(100) NOT NULL,
         email VARCHAR(100) NOT NULL UNIQUE,
         phone_number VARCHAR(20),
+        password_hash VARCHAR(255),
         is_verified TINYINT(1) DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
-    console.log('  ✓ Table users created (with name, email, phone_number)');
+    console.log('  ✓ Table users created (with name, email, phone_number, password_hash)');
 
     // Create operators table
     await db.execute(`

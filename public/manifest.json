@@ -47,7 +47,7 @@
             "name": "Lihat Peta",
             "short_name": "Peta",
             "description": "Lihat peta kebakaran",
-            "url": "/dashboard/map",
+            "url": "/dashboard",
             "icons": [
                 {
                     "src": "/logofireguard.png",

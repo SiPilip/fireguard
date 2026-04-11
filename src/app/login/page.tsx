@@ -1,119 +1,96 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { FaEnvelope, FaArrowLeft, FaSpinner, FaFire, FaShieldAlt, FaWhatsapp, FaPhone } from "react-icons/fa";
+import { FaArrowLeft, FaEnvelope, FaFire, FaKey, FaLock, FaShieldAlt, FaSpinner } from "react-icons/fa";
+import { isStandaloneApp } from "@/lib/app-mode";
+import { hasCompletedOnboarding } from "@/lib/onboarding";
 
-type LoginMethod = "email" | "whatsapp";
-type Step = "input" | "otp";
+type Step = "password" | "otp" | "setup-password";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [loginMethod, setLoginMethod] = useState<LoginMethod>("email");
-  const [step, setStep] = useState<Step>("input");
+
+  const [step, setStep] = useState<Step>("password");
   const [email, setEmail] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [userName, setUserName] = useState("");
+  const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [userName, setUserName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
   const [isVerifying, setIsVerifying] = useState(true);
+  const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
 
   useEffect(() => {
     const verifySession = async () => {
+      if (isStandaloneApp() && !hasCompletedOnboarding()) {
+        router.replace("/onboarding");
+        return;
+      }
+
       try {
         const response = await fetch("/api/auth/me", { credentials: "include" });
         if (response.ok) {
           const data = await response.json();
-          if (!data.isOperator) {
-            router.replace("/");
-          } else {
-            setIsVerifying(false);
-          }
-        } else {
-          setIsVerifying(false);
+          router.replace(data.isOperator ? "/operator/dashboard" : "/dashboard");
+          return;
         }
       } catch {
+      } finally {
         setIsVerifying(false);
       }
     };
+
     verifySession();
   }, [router]);
 
-  const handleSendOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
+  const requestOtpFallback = async () => {
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, requestOtpFallback: true }),
+    });
 
-    try {
-      if (loginMethod === "email") {
-        // Login via Email
-        const response = await fetch("/api/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.message || "Gagal mengirim OTP");
-        }
-
-        setUserName(data.userName || "");
-      } else {
-        // Login via WhatsApp
-        const response = await fetch("/api/auth/login/whatsapp", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phoneNumber }),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.message || "Gagal mengirim OTP");
-        }
-
-        setUserName(data.userName || "");
-      }
-
-      setStep("otp");
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || "Gagal mengirim OTP fallback.");
     }
+
+    setUserName(data.userName || "");
+    setStep("otp");
+    setInfo("Kode OTP fallback sudah dikirim ke email Anda.");
   };
 
-  const handleVerifyOTP = async (e: React.FormEvent) => {
+  const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
+    setInfo("");
 
     try {
-      const endpoint = loginMethod === "email"
-        ? "/api/auth/login/verify"
-        : "/api/auth/login/whatsapp/verify";
-
-      const body = loginMethod === "email"
-        ? { email, otp }
-        : { phoneNumber, otp };
-
-      const response = await fetch(endpoint, {
+      const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.message || "Verifikasi gagal");
+      if (response.ok) {
+        router.push("/dashboard");
+        return;
       }
 
-      router.push("/");
+      if (response.status === 409 && data.requiresOtpFallback) {
+        setInfo(data.message || "Akun lama terdeteksi. Mengirim OTP fallback...");
+        await requestOtpFallback();
+        return;
+      }
+
+      throw new Error(data.message || "Login gagal.");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -121,19 +98,69 @@ export default function LoginPage() {
     }
   };
 
-  const resetForm = () => {
-    setStep("input");
-    setOtp("");
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
     setError("");
+    setInfo("");
+
+    try {
+      const response = await fetch("/api/auth/login/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Verifikasi OTP gagal.");
+      }
+
+      if (data.requiresPasswordSetup) {
+        setStep("setup-password");
+        setInfo("Login berhasil. Silakan buat password agar login berikutnya lebih cepat.");
+        return;
+      }
+
+      router.push("/dashboard");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const switchMethod = (method: LoginMethod) => {
-    setLoginMethod(method);
-    setStep("input");
-    setEmail("");
-    setPhoneNumber("");
-    setOtp("");
+  const handleSetupPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
     setError("");
+    setInfo("");
+
+    try {
+      if (newPassword.length < 8) {
+        throw new Error("Password minimal 8 karakter.");
+      }
+      if (newPassword !== confirmPassword) {
+        throw new Error("Konfirmasi password tidak cocok.");
+      }
+
+      const response = await fetch("/api/auth/password/setup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: newPassword, confirmPassword }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Gagal menyimpan password.");
+      }
+
+      router.push("/dashboard");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isVerifying) {
@@ -150,143 +177,94 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-red-500 to-orange-600 rounded-2xl shadow-lg mb-4">
             <FaFire className="text-white text-3xl" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Login FireGuard</h1>
-          <p className="text-gray-500 mt-1">Masuk ke akun Anda</p>
+          <p className="text-gray-500 mt-1">Masuk cepat dengan email dan password</p>
         </div>
 
-        {/* Card */}
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-          {step === "input" ? (
-            <>
-              {/* Method Tabs */}
-              <div className="flex border-b border-gray-200">
-                <button
-                  type="button"
-                  onClick={() => switchMethod("email")}
-                  className={`flex-1 py-4 px-4 text-sm font-medium flex items-center justify-center gap-2 transition-all ${loginMethod === "email"
-                    ? "text-red-600 border-b-2 border-red-500 bg-red-50/50"
-                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                    }`}
-                >
-                  <FaEnvelope />
-                  <span>Email</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => switchMethod("whatsapp")}
-                  className={`flex-1 py-4 px-4 text-sm font-medium flex items-center justify-center gap-2 transition-all ${loginMethod === "whatsapp"
-                    ? "text-green-600 border-b-2 border-green-500 bg-green-50/50"
-                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                    }`}
-                >
-                  <FaWhatsapp />
-                  <span>WhatsApp</span>
-                </button>
+          {step === "password" && (
+            <form onSubmit={handlePasswordLogin} className="p-6 space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="p-2 rounded-lg bg-red-100">
+                  <FaShieldAlt className="text-red-600" />
+                </div>
+                <div>
+                  <h2 className="font-semibold text-gray-900">Login dengan Password</h2>
+                  <p className="text-xs text-gray-500">Untuk akun lama, OTP fallback tetap tersedia sementara.</p>
+                </div>
               </div>
 
-              <form onSubmit={handleSendOTP} className="p-6 space-y-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className={`p-2 rounded-lg ${loginMethod === "email" ? "bg-red-100" : "bg-green-100"}`}>
-                    {loginMethod === "email" ? (
-                      <FaShieldAlt className="text-red-600" />
-                    ) : (
-                      <FaWhatsapp className="text-green-600" />
-                    )}
-                  </div>
-                  <div>
-                    <h2 className="font-semibold text-gray-900">
-                      {loginMethod === "email" ? "Login dengan Email" : "Login dengan WhatsApp"}
-                    </h2>
-                    <p className="text-xs text-gray-500">
-                      {loginMethod === "email"
-                        ? "OTP akan dikirim ke email Anda"
-                        : "OTP akan dikirim ke WhatsApp Anda"}
-                    </p>
-                  </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <div className="relative">
+                  <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all bg-white text-gray-900 placeholder:text-gray-400"
+                    placeholder="contoh@email.com"
+                    required
+                  />
                 </div>
+              </div>
 
-                {loginMethod === "email" ? (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email
-                    </label>
-                    <div className="relative">
-                      <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all bg-white text-gray-900 placeholder:text-gray-400"
-                        placeholder="contoh@email.com"
-                        required
-                      />
-                    </div>
-                  </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                <div className="relative">
+                  <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all bg-white text-gray-900 placeholder:text-gray-400"
+                    placeholder="Masukkan password"
+                    required
+                  />
+                </div>
+              </div>
+
+              {info && <div className="bg-blue-50 text-blue-700 p-3 rounded-lg text-sm">{info}</div>}
+              {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{error}</div>}
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3 text-white font-semibold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700"
+              >
+                {isLoading ? (
+                  <>
+                    <FaSpinner className="animate-spin" />
+                    Memproses...
+                  </>
                 ) : (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Nomor WhatsApp
-                    </label>
-                    <div className="relative">
-                      <FaPhone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                      <input
-                        type="tel"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
-                        className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all bg-white text-gray-900 placeholder:text-gray-400"
-                        placeholder="08123456789"
-                        required
-                      />
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">Gunakan nomor yang terdaftar saat pendaftaran</p>
-                  </div>
+                  <>
+                    <FaLock />
+                    Login
+                  </>
                 )}
+              </button>
 
-                {error && (
-                  <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
-                    {error}
-                  </div>
-                )}
+              <p className="text-center text-sm text-gray-500">
+                Belum punya akun? <Link href="/register" className="text-red-600 font-medium hover:underline">Daftar di sini</Link>
+              </p>
+            </form>
+          )}
 
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className={`w-full py-3 text-white font-semibold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 ${loginMethod === "email"
-                    ? "bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700"
-                    : "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
-                    }`}
-                >
-                  {isLoading ? (
-                    <>
-                      <FaSpinner className="animate-spin" />
-                      Mengirim OTP...
-                    </>
-                  ) : (
-                    <>
-                      {loginMethod === "email" ? <FaEnvelope /> : <FaWhatsapp />}
-                      Kirim Kode OTP
-                    </>
-                  )}
-                </button>
-
-                <p className="text-center text-sm text-gray-500">
-                  Belum punya akun?{" "}
-                  <Link href="/register" className="text-red-600 font-medium hover:underline">
-                    Daftar di sini
-                  </Link>
-                </p>
-              </form>
-            </>
-          ) : (
-            <form onSubmit={handleVerifyOTP} className="p-6 space-y-4">
+          {step === "otp" && (
+            <form onSubmit={handleVerifyOtp} className="p-6 space-y-4">
               <button
                 type="button"
-                onClick={resetForm}
+                onClick={() => {
+                  setStep("password");
+                  setOtp("");
+                  setError("");
+                  setInfo("");
+                }}
                 className="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors"
               >
                 <FaArrowLeft className="text-sm" />
@@ -294,29 +272,15 @@ export default function LoginPage() {
               </button>
 
               <div className="text-center py-4">
-                <div className={`inline-flex items-center justify-center w-14 h-14 rounded-full mb-3 ${loginMethod === "email" ? "bg-green-100" : "bg-green-100"
-                  }`}>
-                  {loginMethod === "email" ? (
-                    <FaEnvelope className="text-2xl text-green-600" />
-                  ) : (
-                    <FaWhatsapp className="text-2xl text-green-600" />
-                  )}
+                <div className="inline-flex items-center justify-center w-14 h-14 bg-green-100 rounded-full mb-3">
+                  <FaEnvelope className="text-2xl text-green-600" />
                 </div>
-                <h3 className="font-semibold text-gray-900">
-                  Halo, {userName || "Pengguna"}!
-                </h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  Kode OTP telah dikirim ke<br />
-                  <strong className="text-gray-700">
-                    {loginMethod === "email" ? email : phoneNumber}
-                  </strong>
-                </p>
+                <h3 className="font-semibold text-gray-900">Halo, {userName || "Pengguna"}!</h3>
+                <p className="text-sm text-gray-500 mt-1">OTP fallback dikirim ke <strong className="text-gray-700">{email}</strong></p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Kode OTP
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Kode OTP</label>
                 <input
                   type="text"
                   value={otp}
@@ -328,19 +292,13 @@ export default function LoginPage() {
                 />
               </div>
 
-              {error && (
-                <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
-                  {error}
-                </div>
-              )}
+              {info && <div className="bg-blue-50 text-blue-700 p-3 rounded-lg text-sm">{info}</div>}
+              {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{error}</div>}
 
               <button
                 type="submit"
                 disabled={isLoading || otp.length !== 6}
-                className={`w-full py-3 text-white font-semibold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 ${loginMethod === "email"
-                  ? "bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700"
-                  : "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
-                  }`}
+                className="w-full py-3 text-white font-semibold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700"
               >
                 {isLoading ? (
                   <>
@@ -348,13 +306,13 @@ export default function LoginPage() {
                     Memverifikasi...
                   </>
                 ) : (
-                  "Login"
+                  "Login dengan OTP Sekali"
                 )}
               </button>
 
               <button
                 type="button"
-                onClick={handleSendOTP}
+                onClick={requestOtpFallback}
                 disabled={isLoading}
                 className="w-full py-2 text-sm text-gray-500 hover:text-red-600 transition-colors"
               >
@@ -362,11 +320,69 @@ export default function LoginPage() {
               </button>
             </form>
           )}
+
+          {step === "setup-password" && (
+            <form onSubmit={handleSetupPassword} className="p-6 space-y-4">
+              <div className="text-center py-2">
+                <div className="inline-flex items-center justify-center w-14 h-14 bg-amber-100 rounded-full mb-3">
+                  <FaKey className="text-2xl text-amber-600" />
+                </div>
+                <h3 className="font-semibold text-gray-900">Aktivasi Password</h3>
+                <p className="text-sm text-gray-500 mt-1">Buat password agar login berikutnya tidak perlu OTP lagi.</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Password Baru</label>
+                <div className="relative">
+                  <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all bg-white text-gray-900 placeholder:text-gray-400"
+                    placeholder="Minimal 8 karakter"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Konfirmasi Password</label>
+                <div className="relative">
+                  <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all bg-white text-gray-900 placeholder:text-gray-400"
+                    placeholder="Ulangi password"
+                    required
+                  />
+                </div>
+              </div>
+
+              {info && <div className="bg-blue-50 text-blue-700 p-3 rounded-lg text-sm">{info}</div>}
+              {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{error}</div>}
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3 text-white font-semibold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700"
+              >
+                {isLoading ? (
+                  <>
+                    <FaSpinner className="animate-spin" />
+                    Menyimpan...
+                  </>
+                ) : (
+                  "Simpan Password & Lanjutkan"
+                )}
+              </button>
+            </form>
+          )}
         </div>
 
-        <p className="text-center text-xs text-gray-400 mt-6">
-          © 2026 FireGuard - Kec. Plaju, Palembang
-        </p>
+        <p className="text-center text-xs text-gray-400 mt-6">(c) 2026 FireGuard - Kec. Plaju, Palembang</p>
       </div>
     </div>
   );

@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { queryRows, queryRow } from '@/lib/db';
-import * as jose from 'jose';
+import { getAuthPayloadFromRequest, handleCorsOptions, jsonWithCors } from '@/lib/cors';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-jwt-key-for-dev';
-const COOKIE_NAME = 'auth_token';
+// OPTIONS: CORS preflight
+export async function OPTIONS() {
+  return handleCorsOptions();
+}
 
 async function getAuthPayload(request: NextRequest) {
-  const token = request.cookies.get(COOKIE_NAME)?.value;
-  if (!token) throw new Error('Token autentikasi tidak ditemukan.');
-  const secret = new TextEncoder().encode(JWT_SECRET);
-  const { payload } = await jose.jwtVerify(token, secret);
-  return payload as { id: number; phone: string, isOperator?: boolean };
+  return getAuthPayloadFromRequest(request);
 }
 
 export async function GET(request: NextRequest) {
@@ -18,11 +16,11 @@ export async function GET(request: NextRequest) {
     const user = await getAuthPayload(request);
 
     if (user.isOperator) {
-      return NextResponse.json({ message: 'Endpoint ini hanya untuk pengguna biasa.' }, { status: 403 });
+      return jsonWithCors({ message: 'Endpoint ini hanya untuk pengguna biasa.' }, { status: 403 });
     }
 
     if (!user.id) {
-      return NextResponse.json({ message: 'User ID tidak valid.' }, { status: 401 });
+      return jsonWithCors({ message: 'User ID tidak valid.' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -62,10 +60,10 @@ export async function GET(request: NextRequest) {
       );
 
       if (!report) {
-        return NextResponse.json({ message: 'Laporan tidak ditemukan.' }, { status: 404 });
+        return jsonWithCors({ message: 'Laporan tidak ditemukan.' }, { status: 404 });
       }
 
-      return NextResponse.json({ report });
+      return jsonWithCors({ report });
     }
 
     // Jika tidak ada reportId, ambil semua laporan user
@@ -99,14 +97,14 @@ export async function GET(request: NextRequest) {
       [user.id]
     );
 
-    return NextResponse.json({ reports });
+    return jsonWithCors({ reports });
 
   } catch (error: any) {
     if (error.message.includes('autentikasi') || error.message.includes('Token')) {
-      return NextResponse.json({ message: 'Akses ditolak.' }, { status: 401 });
+      return jsonWithCors({ message: 'Akses ditolak.' }, { status: 401 });
     }
 
-    return NextResponse.json({
+    return jsonWithCors({
       message: 'Terjadi kesalahan pada server.',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     }, { status: 500 });

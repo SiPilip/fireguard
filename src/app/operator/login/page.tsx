@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaFire, FaUser, FaLock, FaUserShield } from 'react-icons/fa';
+import { isStandaloneApp } from '@/lib/app-mode';
+import { hasCompletedOnboarding } from '@/lib/onboarding';
 
 export default function OperatorLoginPage() {
   const [username, setUsername] = useState('');
@@ -14,6 +16,11 @@ export default function OperatorLoginPage() {
 
   useEffect(() => {
     const verifySession = async () => {
+      if (isStandaloneApp() && !hasCompletedOnboarding()) {
+        router.replace('/onboarding');
+        return;
+      }
+
       try {
         const response = await fetch('/api/auth/me');
         if (response.ok) {

@@ -1,10 +1,8 @@
 import { createHmac } from 'crypto';
 import bcrypt from 'bcrypt';
+import { getOtpHashSecret } from './secrets';
 
 const SALT_ROUNDS = 10;
-
-// Di aplikasi nyata, SANGAT PENTING untuk menggunakan secret dari environment variable
-const HASH_SECRET = process.env.OTP_HASH_SECRET || 'secret-development-key';
 
 /**
  * Membuat hash dari string OTP.
@@ -12,7 +10,7 @@ const HASH_SECRET = process.env.OTP_HASH_SECRET || 'secret-development-key';
  * @returns Hash dari OTP.
  */
 export function hashOtp(otp: string): string {
-  return createHmac('sha256', HASH_SECRET).update(otp).digest('hex');
+  return createHmac('sha256', getOtpHashSecret()).update(otp).digest('hex');
 }
 
 /**

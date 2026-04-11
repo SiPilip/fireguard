@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { queryRows, execute, executeAndGetLastInsertId, formatDateForMySQL } from '@/lib/db';
-import * as jose from 'jose';
+import { getAuthPayloadFromRequest, handleCorsOptions, jsonWithCors } from '@/lib/cors';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-jwt-key-for-dev';
-const COOKIE_NAME = 'auth_token';
+// OPTIONS: CORS preflight
+export async function OPTIONS() {
+    return handleCorsOptions();
+}
 
 async function getAuthPayload(request: NextRequest) {
-    const token = request.cookies.get(COOKIE_NAME)?.value;
-    if (!token) throw new Error('Token autentikasi tidak ditemukan.');
-    const secret = new TextEncoder().encode(JWT_SECRET);
-    const { payload } = await jose.jwtVerify(token, secret);
-    return payload as { id: number; email: string; name: string };
+    return getAuthPayloadFromRequest(request);
 }
 
 interface Notification {
@@ -67,7 +65,7 @@ export async function GET(request: NextRequest) {
         // Hitung jumlah belum dibaca
         const unreadCount = notifications.filter(n => !n.is_read).length;
 
-        return NextResponse.json({
+        return jsonWithCors({
             success: true,
             data: notifications,
             unreadCount
@@ -75,9 +73,9 @@ export async function GET(request: NextRequest) {
     } catch (error: any) {
         console.error('Error fetching notifications:', error);
         if (error.message?.includes('autentikasi')) {
-            return NextResponse.json({ message: 'Akses ditolak.' }, { status: 401 });
+            return jsonWithCors({ message: 'Akses ditolak.' }, { status: 401 });
         }
-        return NextResponse.json({ message: 'Gagal mengambil notifikasi' }, { status: 500 });
+        return jsonWithCors({ message: 'Gagal mengambil notifikasi' }, { status: 500 });
     }
 }
 
@@ -101,10 +99,10 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        return NextResponse.json({ success: true, message: 'Notifikasi diperbarui' });
+        return jsonWithCors({ success: true, message: 'Notifikasi diperbarui' });
     } catch (error: any) {
         console.error('Error updating notification:', error);
-        return NextResponse.json({ message: 'Gagal memperbarui notifikasi' }, { status: 500 });
+        return jsonWithCors({ message: 'Gagal memperbarui notifikasi' }, { status: 500 });
     }
 }
 

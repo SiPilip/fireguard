@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { queryRows, queryRow } from "@/lib/db";
 import * as jose from "jose";
-
-const JWT_SECRET = process.env.JWT_SECRET || "super-secret-jwt-key-for-dev";
-const COOKIE_NAME = "auth_token";
+import { COOKIE_NAME } from "@/lib/session";
+import { getJwtSecretKey } from "@/lib/secrets";
 
 // Middleware untuk check operator authentication
 async function checkOperatorAuth(request: NextRequest) {
@@ -11,7 +10,7 @@ async function checkOperatorAuth(request: NextRequest) {
     if (!token) return null;
 
     try {
-        const secret = new TextEncoder().encode(JWT_SECRET);
+        const secret = getJwtSecretKey();
         const { payload } = await jose.jwtVerify(token, secret);
 
         // Cek apakah ini operator

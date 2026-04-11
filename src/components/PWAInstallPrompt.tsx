@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { FiX, FiDownload } from 'react-icons/fi';
 import { FaFire } from 'react-icons/fa';
+import { isStandaloneApp } from '@/lib/app-mode';
 
 interface BeforeInstallPromptEvent extends Event {
     prompt: () => Promise<void>;
@@ -16,16 +17,7 @@ export default function PWAInstallPrompt() {
     const [isStandalone, setIsStandalone] = useState(false);
 
     useEffect(() => {
-        // Cek apakah sudah dalam mode standalone (sudah diinstall)
-        const isInStandaloneMode = () => {
-            return (
-                window.matchMedia('(display-mode: standalone)').matches ||
-                (window.navigator as any).standalone ||
-                document.referrer.includes('android-app://')
-            );
-        };
-
-        setIsStandalone(isInStandaloneMode());
+        setIsStandalone(isStandaloneApp());
 
         // Cek apakah iOS
         const checkIsIOS = () => {
@@ -56,7 +48,7 @@ export default function PWAInstallPrompt() {
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
         // Untuk iOS, tampilkan manual prompt jika belum installed dan belum pernah dismiss
-        if (checkIsIOS() && !isInStandaloneMode()) {
+        if (checkIsIOS() && !isStandaloneApp()) {
             const hasSeenIOSPrompt = localStorage.getItem('pwa-ios-install-dismissed');
             if (!hasSeenIOSPrompt) {
                 setTimeout(() => setShowPrompt(true), 5000); // Delay 5 detik untuk iOS

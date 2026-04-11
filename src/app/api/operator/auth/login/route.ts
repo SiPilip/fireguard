@@ -3,9 +3,8 @@ import { queryRow } from '@/lib/db';
 import { verifyPassword } from '@/lib/auth';
 import * as jose from 'jose';
 import { serialize } from 'cookie';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-jwt-key-for-dev';
-const COOKIE_NAME = 'auth_token';
+import { COOKIE_NAME, OPERATOR_JWT_EXPIRATION, OPERATOR_SESSION_MAX_AGE } from '@/lib/session';
+import { getJwtSecretKey } from '@/lib/secrets';
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,11 +21,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Username atau password salah.' }, { status: 401 });
     }
 
-    const secret = new TextEncoder().encode(JWT_SECRET);
+    const secret = getJwtSecretKey();
     const token = await new jose.SignJWT({ id: operator.id, username: operator.username, isOperator: true })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
-      .setExpirationTime('1d')
+      .setExpirationTime(OPERATOR_JWT_EXPIRATION)
       .sign(secret);
 
     const serializedCookie = serialize(COOKIE_NAME, token, {
@@ -34,7 +33,7 @@ export async function POST(request: NextRequest) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 60 * 60 * 24 * 1, // 1 day
+      maxAge: OPERATOR_SESSION_MAX_AGE,
     });
 
     return new NextResponse(JSON.stringify({ message: 'Login berhasil!' }), {

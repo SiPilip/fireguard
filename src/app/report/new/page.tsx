@@ -257,7 +257,7 @@ export default function NewReportPage() {
       success(
         "Laporan Terkirim!",
         "Laporan Anda akan segera ditindaklanjuti oleh petugas.",
-        () => router.push("/")
+        () => router.push("/dashboard")
       );
     } catch (err: any) {
       errorToast(err.message);

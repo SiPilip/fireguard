@@ -1,26 +1,20 @@
-import { NextRequest, NextResponse } from 'next/server';
-import * as jose from 'jose';
+import { NextRequest } from 'next/server';
+import { getAuthPayloadFromRequest, handleCorsOptions, jsonWithCors } from '@/lib/cors';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-jwt-key-for-dev';
-const COOKIE_NAME = 'auth_token';
+// OPTIONS: CORS preflight
+export async function OPTIONS() {
+  return handleCorsOptions();
+}
 
 export async function GET(request: NextRequest) {
-  // Middleware sudah melindungi rute API, tapi kita verifikasi lagi di sini
-  // untuk mendapatkan payload token.
-  const token = request.cookies.get(COOKIE_NAME)?.value;
-
-  if (!token) {
-    return NextResponse.json({ message: 'Token tidak ditemukan.' }, { status: 401 });
-  }
-
   try {
-    const secret = new TextEncoder().encode(JWT_SECRET);
-    const { payload } = await jose.jwtVerify(token, secret);
+    // Support dual-mode: Bearer token (Flutter) dan Cookie (Web)
+    const payload = await getAuthPayloadFromRequest(request);
 
     // Kirim kembali payload yang berisi data pengguna/operator
-    return NextResponse.json(payload);
+    return jsonWithCors(payload);
     
   } catch (error) {
-    return NextResponse.json({ message: 'Token tidak valid atau kedaluwarsa.' }, { status: 401 });
+    return jsonWithCors({ message: 'Token tidak valid atau kedaluwarsa.' }, { status: 401 });
   }
 }

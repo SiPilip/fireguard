@@ -32,6 +32,7 @@ const UserReportDetailModal = dynamic(() => import('@/components/UserReportDetai
 
 // Import NotificationBell
 import NotificationBell from '@/components/NotificationBell';
+import { getPostLogoutRedirectPath } from '@/lib/app-mode';
 
 interface Report {
   id: number;
@@ -224,13 +225,15 @@ export default function DashboardPage() {
   };
 
   const handleLogout = async () => {
+    const redirectTarget = getPostLogoutRedirectPath();
+
     try {
       await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
       // Force full page reload to clear all cached state
-      window.location.href = '/';
+      window.location.href = redirectTarget;
     } catch (error) {
       console.error('Logout error:', error);
-      window.location.href = '/';
+      window.location.href = redirectTarget;
     }
   };
 
