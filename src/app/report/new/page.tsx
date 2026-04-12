@@ -20,6 +20,7 @@ import {
   FaUser,
   FaCheckCircle,
   FaCrosshairs,
+  FaSpinner,
 } from "react-icons/fa";
 
 const MapWithNoSSR = dynamic(() => import("@/components/ReportMap"), {
@@ -54,19 +55,28 @@ function MapInstructions() {
           <FaExclamationTriangle className="text-blue-600 text-sm" />
         </div>
         <div>
-          <h3 className="text-sm font-semibold text-gray-900 mb-1">Panduan Peta</h3>
+          <h3 className="text-sm font-semibold text-gray-900 mb-1">
+            Panduan Peta
+          </h3>
           <ul className="space-y-1.5">
             <li className="flex items-start gap-2 text-xs text-gray-600">
               <span className="mt-0.5 w-1.5 h-1.5 bg-red-500 rounded-full flex-shrink-0"></span>
-              <span><strong>Klik</strong> pada peta untuk menandai titik api.</span>
+              <span>
+                <strong>Klik</strong> pada peta untuk menandai titik api.
+              </span>
             </li>
             <li className="flex items-start gap-2 text-xs text-gray-600">
               <span className="mt-0.5 w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0"></span>
-              <span><strong>Seret</strong> marker 🔥 untuk menyesuaikan posisi.</span>
+              <span>
+                <strong>Seret</strong> marker 🔥 untuk menyesuaikan posisi.
+              </span>
             </li>
             <li className="flex items-start gap-2 text-xs text-gray-600">
               <span className="mt-0.5 w-1.5 h-1.5 bg-green-500 rounded-full flex-shrink-0"></span>
-              <span>Gunakan tombol <strong>Set Lokasi Saya</strong> untuk akurasi tinggi.</span>
+              <span>
+                Gunakan tombol <strong>Set Lokasi Saya</strong> untuk akurasi
+                tinggi.
+              </span>
             </li>
           </ul>
         </div>
@@ -85,7 +95,9 @@ function NearestStationInfoBox({ info }: { info: NearestStationInfo }) {
         <div className="p-2 bg-orange-100 rounded-lg">
           <FaFireExtinguisher className="text-orange-600 text-base" />
         </div>
-        <h3 className="text-sm font-semibold text-gray-800">Pos Damkar Terdekat</h3>
+        <h3 className="text-sm font-semibold text-gray-800">
+          Pos Damkar Terdekat
+        </h3>
       </div>
       <div className="space-y-3">
         <div className="flex items-start gap-3 pb-3 border-b border-orange-200/50">
@@ -102,7 +114,9 @@ function NearestStationInfoBox({ info }: { info: NearestStationInfo }) {
             </div>
             <div>
               <p className="text-xs text-gray-500">Jarak</p>
-              <p className="text-base font-semibold text-gray-900">{distanceInKm} km</p>
+              <p className="text-base font-semibold text-gray-900">
+                {distanceInKm} km
+              </p>
             </div>
           </div>
           <div className="flex items-start gap-2.5">
@@ -111,7 +125,9 @@ function NearestStationInfoBox({ info }: { info: NearestStationInfo }) {
             </div>
             <div>
               <p className="text-xs text-gray-500">Estimasi</p>
-              <p className="text-base font-semibold text-gray-900">~{timeInMinutes} min</p>
+              <p className="text-base font-semibold text-gray-900">
+                ~{timeInMinutes} min
+              </p>
             </div>
           </div>
         </div>
@@ -125,8 +141,12 @@ export default function NewReportPage() {
   const { modal, success, error: showError } = useModal();
   const { toast, error: errorToast, hideToast } = useToast();
 
-  const [firePosition, setFirePosition] = useState<[number, number] | null>(null);
-  const [reporterPosition, setReporterPosition] = useState<[number, number] | null>(null);
+  const [firePosition, setFirePosition] = useState<[number, number] | null>(
+    null,
+  );
+  const [reporterPosition, setReporterPosition] = useState<
+    [number, number] | null
+  >(null);
   const [file, setFile] = useState<File | null>(null);
   const [description, setDescription] = useState("");
   const [address, setAddress] = useState("");
@@ -141,6 +161,8 @@ export default function NewReportPage() {
   const [nearestStation, setNearestStation] =
     useState<NearestStationInfo | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(true);
+  const [isGettingFireLocation, setIsGettingFireLocation] = useState(false);
+  const [isGettingMyLocation, setIsGettingMyLocation] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -162,7 +184,7 @@ export default function NewReportPage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('/api/disaster-categories');
+        const response = await fetch("/api/disaster-categories");
         if (response.ok) {
           const data = await response.json();
           if (data.success) {
@@ -180,15 +202,17 @@ export default function NewReportPage() {
   useEffect(() => {
     const fetchKelurahan = async () => {
       try {
-        const response = await fetch('/api/kelurahan');
+        const response = await fetch("/api/kelurahan");
         if (response.ok) {
           const data = await response.json();
           if (data.success) {
             setKelurahanList(data.data);
             // Set Plaju Darat as default (only on first load)
-            const plajuDarat = data.data.find((kel: any) => kel.name.toLowerCase().includes('plaju darat'));
+            const plajuDarat = data.data.find((kel: any) =>
+              kel.name.toLowerCase().includes("plaju darat"),
+            );
             if (plajuDarat) {
-              setKelurahanId((prev) => prev === null ? plajuDarat.id : prev);
+              setKelurahanId((prev) => (prev === null ? plajuDarat.id : prev));
             }
           }
         }
@@ -205,10 +229,79 @@ export default function NewReportPage() {
     }
   };
 
+  const GEO_OPTIONS: PositionOptions = {
+    enableHighAccuracy: true,
+    timeout: 10000,
+    maximumAge: 0,
+  };
+
+  const handleLocationError = (err: GeolocationPositionError) => {
+    switch (err.code) {
+      case err.PERMISSION_DENIED:
+        errorToast(
+          "Izin lokasi ditolak. Aktifkan izin lokasi di pengaturan browser Anda.",
+        );
+        break;
+      case err.POSITION_UNAVAILABLE:
+        errorToast("Lokasi tidak tersedia. Pastikan GPS aktif pada perangkat.");
+        break;
+      case err.TIMEOUT:
+        errorToast("Waktu habis saat mencari lokasi. Silakan coba lagi.");
+        break;
+      default:
+        errorToast("Gagal mendapatkan lokasi GPS.");
+    }
+  };
+
+  const requestLocation = async (
+    onSuccess: (pos: [number, number]) => void,
+    setLoadingState: (v: boolean) => void,
+  ) => {
+    if (!navigator.geolocation) {
+      errorToast("Perangkat Anda tidak mendukung fitur GPS.");
+      return;
+    }
+
+    setLoadingState(true);
+
+    // Cek status izin terlebih dahulu (jika browser mendukung Permissions API)
+    if ("permissions" in navigator) {
+      try {
+        const perm = await navigator.permissions.query({
+          name: "geolocation" as PermissionName,
+        });
+
+        if (perm.state === "denied") {
+          errorToast(
+            "Izin lokasi ditolak permanen. Buka Pengaturan browser → Izin Situs → Lokasi, lalu aktifkan.",
+          );
+          setLoadingState(false);
+          return;
+        }
+      } catch {
+        // Permissions API tidak didukung, lanjut ke getCurrentPosition
+      }
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        onSuccess([position.coords.latitude, position.coords.longitude]);
+        setLoadingState(false);
+      },
+      (err) => {
+        handleLocationError(err);
+        setLoadingState(false);
+      },
+      GEO_OPTIONS,
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!firePosition) {
-      setError("Lokasi kebakaran belum ditentukan. Mohon tandai lokasi di peta.");
+      setError(
+        "Lokasi kebakaran belum ditentukan. Mohon tandai lokasi di peta.",
+      );
       return;
     }
 
@@ -247,7 +340,7 @@ export default function NewReportPage() {
           showError(
             "Sesi Berakhir",
             "Sesi Anda telah berakhir. Silakan login kembali.",
-            () => router.push("/login")
+            () => router.push("/login"),
           );
           return;
         }
@@ -257,7 +350,7 @@ export default function NewReportPage() {
       success(
         "Laporan Terkirim!",
         "Laporan Anda akan segera ditindaklanjuti oleh petugas.",
-        () => router.push("/dashboard")
+        () => router.push("/dashboard"),
       );
     } catch (err: any) {
       errorToast(err.message);
@@ -271,7 +364,9 @@ export default function NewReportPage() {
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
           <div className="inline-block h-16 w-16 animate-spin rounded-full border-4 border-solid border-red-600 border-r-transparent mb-4"></div>
-          <p className="text-gray-700 font-medium text-lg">Memverifikasi sesi...</p>
+          <p className="text-gray-700 font-medium text-lg">
+            Memverifikasi sesi...
+          </p>
         </div>
       </div>
     );
@@ -293,8 +388,12 @@ export default function NewReportPage() {
               <FaFireExtinguisher className="text-white text-base md:text-lg" />
             </div>
             <div>
-              <h1 className="text-base md:text-lg font-semibold text-gray-900">Laporan Baru</h1>
-              <p className="text-xs text-gray-500 hidden sm:block">Laporkan kejadian kebakaran</p>
+              <h1 className="text-base md:text-lg font-semibold text-gray-900">
+                Laporan Baru
+              </h1>
+              <p className="text-xs text-gray-500 hidden sm:block">
+                Laporkan kejadian kebakaran
+              </p>
             </div>
           </div>
           <div className="w-[72px] sm:w-[88px]"></div>
@@ -302,7 +401,10 @@ export default function NewReportPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-8">
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <form
+          onSubmit={handleSubmit}
+          className="grid grid-cols-1 lg:grid-cols-5 gap-6"
+        >
           {/* Left Column: Map */}
           <div className="lg:col-span-3 space-y-5">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200/60 overflow-hidden">
@@ -310,8 +412,12 @@ export default function NewReportPage() {
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-5 bg-gradient-to-b from-red-500 to-orange-500 rounded-full"></div>
                   <div>
-                    <h2 className="text-base font-semibold text-gray-900">Lokasi Kejadian</h2>
-                    <p className="text-xs text-gray-500 mt-0.5">Klik peta untuk menandai lokasi kebakaran</p>
+                    <h2 className="text-base font-semibold text-gray-900">
+                      Lokasi Kejadian
+                    </h2>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Klik peta untuk menandai lokasi kebakaran
+                    </p>
                   </div>
                 </div>
               </div>
@@ -324,7 +430,9 @@ export default function NewReportPage() {
                     setReporterPosition={setReporterPosition}
                     onNearestStationFound={setNearestStation}
                     categoryId={categoryId}
-                    categoryIcon={categories.find(c => c.id === categoryId)?.icon}
+                    categoryIcon={
+                      categories.find((c) => c.id === categoryId)?.icon
+                    }
                   />
                 </div>
 
@@ -332,45 +440,46 @@ export default function NewReportPage() {
                 <div className="mt-4 flex flex-wrap gap-3">
                   <button
                     type="button"
-                    onClick={() => {
-                      if (navigator.geolocation) {
-                        navigator.geolocation.getCurrentPosition(
-                          (position) => {
-                            const pos: [number, number] = [position.coords.latitude, position.coords.longitude];
-                            setFirePosition(pos);
-                          },
-                          (error) => {
-                            console.error("Error getting location:", error);
-                            alert("Tidak dapat mengakses lokasi GPS Anda");
-                          }
-                        );
-                      }
-                    }}
-                    className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-xl transition-all shadow-sm"
+                    onClick={() =>
+                      requestLocation(setFirePosition, setIsGettingFireLocation)
+                    }
+                    disabled={isGettingFireLocation || isGettingMyLocation}
+                    className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 disabled:bg-red-300 disabled:cursor-not-allowed rounded-xl transition-all shadow-sm"
                   >
-                    <FaFire />
-                    Lokasi Kejadian
+                    {isGettingFireLocation ? (
+                      <>
+                        <FaSpinner className="animate-spin" />
+                        Mencari Lokasi...
+                      </>
+                    ) : (
+                      <>
+                        <FaFire />
+                        Lokasi Kejadian
+                      </>
+                    )}
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      if (navigator.geolocation) {
-                        navigator.geolocation.getCurrentPosition(
-                          (position) => {
-                            const pos: [number, number] = [position.coords.latitude, position.coords.longitude];
-                            setReporterPosition(pos);
-                          },
-                          (error) => {
-                            console.error("Error getting location:", error);
-                            alert("Tidak dapat mengakses lokasi GPS Anda");
-                          }
-                        );
-                      }
-                    }}
-                    className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-xl transition-all shadow-sm"
+                    onClick={() =>
+                      requestLocation(
+                        setReporterPosition,
+                        setIsGettingMyLocation,
+                      )
+                    }
+                    disabled={isGettingMyLocation || isGettingFireLocation}
+                    className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed rounded-xl transition-all shadow-sm"
                   >
-                    <FaUser />
-                    Lokasi Saya
+                    {isGettingMyLocation ? (
+                      <>
+                        <FaSpinner className="animate-spin" />
+                        Mencari Lokasi...
+                      </>
+                    ) : (
+                      <>
+                        <FaUser />
+                        Lokasi Saya
+                      </>
+                    )}
                   </button>
                 </div>
 
@@ -378,19 +487,27 @@ export default function NewReportPage() {
                 {firePosition && (
                   <div className="mt-3 flex items-center gap-2 px-4 py-2.5 bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl">
                     <FaCheckCircle className="text-green-600" />
-                    <span>Lokasi Kejadian: {firePosition[0].toFixed(6)}, {firePosition[1].toFixed(6)}</span>
+                    <span>
+                      Lokasi Kejadian: {firePosition[0].toFixed(6)},{" "}
+                      {firePosition[1].toFixed(6)}
+                    </span>
                   </div>
                 )}
 
                 {reporterPosition && (
                   <div className="mt-2 flex items-center gap-2 px-4 py-2.5 bg-blue-50 border border-blue-200 text-blue-700 text-sm rounded-xl">
                     <FaCheckCircle className="text-blue-600" />
-                    <span>Lokasi Saya: {reporterPosition[0].toFixed(6)}, {reporterPosition[1].toFixed(6)}</span>
+                    <span>
+                      Lokasi Saya: {reporterPosition[0].toFixed(6)},{" "}
+                      {reporterPosition[1].toFixed(6)}
+                    </span>
                   </div>
                 )}
 
                 <MapInstructions />
-                {nearestStation && <NearestStationInfoBox info={nearestStation} />}
+                {nearestStation && (
+                  <NearestStationInfoBox info={nearestStation} />
+                )}
               </div>
             </div>
           </div>
@@ -402,12 +519,17 @@ export default function NewReportPage() {
               <div className="px-6 py-4 border-b border-gray-100">
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-5 bg-gradient-to-b from-red-500 to-orange-500 rounded-full"></div>
-                  <h2 className="text-base font-semibold text-gray-900">Detail Kejadian</h2>
+                  <h2 className="text-base font-semibold text-gray-900">
+                    Detail Kejadian
+                  </h2>
                 </div>
               </div>
               <div className="p-6 space-y-4">
                 <div>
-                  <label htmlFor="category" className="block mb-2 text-xs font-medium text-gray-700">
+                  <label
+                    htmlFor="category"
+                    className="block mb-2 text-xs font-medium text-gray-700"
+                  >
                     Kategori Bencana <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -427,16 +549,25 @@ export default function NewReportPage() {
                       ))
                     )}
                   </select>
-                  <p className="text-xs text-gray-500 mt-1.5">Pilih jenis bencana yang terjadi</p>
+                  <p className="text-xs text-gray-500 mt-1.5">
+                    Pilih jenis bencana yang terjadi
+                  </p>
                 </div>
                 <div>
-                  <label htmlFor="kelurahan" className="block mb-2 text-xs font-medium text-gray-700">
+                  <label
+                    htmlFor="kelurahan"
+                    className="block mb-2 text-xs font-medium text-gray-700"
+                  >
                     Kelurahan <span className="text-red-500">*</span>
                   </label>
                   <select
                     id="kelurahan"
-                    value={kelurahanId || ''}
-                    onChange={(e) => setKelurahanId(e.target.value ? Number(e.target.value) : null)}
+                    value={kelurahanId || ""}
+                    onChange={(e) =>
+                      setKelurahanId(
+                        e.target.value ? Number(e.target.value) : null,
+                      )
+                    }
                     className="w-full px-4 py-2.5 text-sm text-gray-900 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all bg-white"
                     required
                   >
@@ -447,10 +578,15 @@ export default function NewReportPage() {
                       </option>
                     ))}
                   </select>
-                  <p className="text-xs text-gray-500 mt-1.5">Pilih kelurahan lokasi kejadian (Kec. Plaju)</p>
+                  <p className="text-xs text-gray-500 mt-1.5">
+                    Pilih kelurahan lokasi kejadian (Kec. Plaju)
+                  </p>
                 </div>
                 <div>
-                  <label htmlFor="description" className="block mb-2 text-xs font-medium text-gray-700">
+                  <label
+                    htmlFor="description"
+                    className="block mb-2 text-xs font-medium text-gray-700"
+                  >
                     Deskripsi <span className="text-red-500">*</span>
                   </label>
                   <textarea
@@ -464,7 +600,10 @@ export default function NewReportPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="address" className="block mb-2 text-xs font-medium text-gray-700">
+                  <label
+                    htmlFor="address"
+                    className="block mb-2 text-xs font-medium text-gray-700"
+                  >
                     Alamat/Patokan
                   </label>
                   <input
@@ -484,12 +623,18 @@ export default function NewReportPage() {
               <div className="px-6 py-4 border-b border-gray-100">
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-5 bg-gradient-to-b from-red-500 to-orange-500 rounded-full"></div>
-                  <h2 className="text-base font-semibold text-gray-900">Bukti Kejadian</h2>
+                  <h2 className="text-base font-semibold text-gray-900">
+                    Bukti Kejadian
+                  </h2>
                 </div>
               </div>
               <div className="p-6">
-                <label htmlFor="media" className="block mb-2 text-xs font-medium text-gray-700">
-                  Upload Foto/Video <span className="text-gray-400">(Opsional)</span>
+                <label
+                  htmlFor="media"
+                  className="block mb-2 text-xs font-medium text-gray-700"
+                >
+                  Upload Foto/Video{" "}
+                  <span className="text-gray-400">(Opsional)</span>
                 </label>
                 <div className="relative">
                   <input
@@ -502,7 +647,9 @@ export default function NewReportPage() {
                 </div>
                 {file && (
                   <div className="mt-3 px-3 py-2 bg-green-50 border border-green-200 rounded-lg">
-                    <p className="text-xs text-green-700 font-medium">✓ {file.name}</p>
+                    <p className="text-xs text-green-700 font-medium">
+                      ✓ {file.name}
+                    </p>
                   </div>
                 )}
               </div>
@@ -513,12 +660,17 @@ export default function NewReportPage() {
               <div className="px-6 py-4 border-b border-gray-100">
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-5 bg-gradient-to-b from-red-500 to-orange-500 rounded-full"></div>
-                  <h2 className="text-base font-semibold text-gray-900">Info Tambahan</h2>
+                  <h2 className="text-base font-semibold text-gray-900">
+                    Info Tambahan
+                  </h2>
                 </div>
               </div>
               <div className="p-6 space-y-4">
                 <div>
-                  <label htmlFor="notes" className="block mb-2 text-xs font-medium text-gray-700">
+                  <label
+                    htmlFor="notes"
+                    className="block mb-2 text-xs font-medium text-gray-700"
+                  >
                     Catatan Penting
                   </label>
                   <textarea
@@ -531,7 +683,10 @@ export default function NewReportPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="contact" className="block mb-2 text-xs font-medium text-gray-700">
+                  <label
+                    htmlFor="contact"
+                    className="block mb-2 text-xs font-medium text-gray-700"
+                  >
                     Nomor Kontak (Opsional)
                   </label>
                   <input
@@ -592,11 +747,7 @@ export default function NewReportPage() {
       )}
 
       {toast.show && (
-        <Toast
-          type={toast.type}
-          message={toast.message}
-          onClose={hideToast}
-        />
+        <Toast type={toast.type} message={toast.message} onClose={hideToast} />
       )}
     </div>
   );
