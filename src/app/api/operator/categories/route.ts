@@ -1,35 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { execute, executeAndGetLastInsertId, queryRow, queryRows } from "@/lib/db";
-import { cookies } from "next/headers";
-
-// Middleware untuk check operator authentication
-async function checkOperatorAuth() {
-  const cookieStore = await cookies();
-  const operatorToken = cookieStore.get("operator_token");
-
-  if (!operatorToken) {
-    return null;
-  }
-
-  const operator = await queryRow(
-    "SELECT * FROM operators WHERE phone_number = ?",
-    [operatorToken.value]
-  );
-
-  return operator;
-}
+import { requireOperator } from "@/lib/api-security";
 
 // GET: Fetch all disaster categories (including inactive for admin)
 export async function GET(request: NextRequest) {
   try {
-    const operator = await checkOperatorAuth();
-    
-    if (!operator) {
-      return NextResponse.json(
-        { success: false, message: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    const auth = await requireOperator(request);
+    if ("response" in auth) return auth.response;
 
     const categories = await queryRows(
       'SELECT * FROM disaster_categories ORDER BY name ASC'
@@ -50,14 +27,8 @@ export async function GET(request: NextRequest) {
 // POST: Create new disaster category
 export async function POST(request: NextRequest) {
   try {
-    const operator = await checkOperatorAuth();
-    
-    if (!operator) {
-      return NextResponse.json(
-        { success: false, message: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    const auth = await requireOperator(request);
+    if ("response" in auth) return auth.response;
 
     const body = await request.json();
     const { name, icon, color, description } = body;
@@ -106,14 +77,8 @@ export async function POST(request: NextRequest) {
 // PUT: Update disaster category
 export async function PUT(request: NextRequest) {
   try {
-    const operator = await checkOperatorAuth();
-    
-    if (!operator) {
-      return NextResponse.json(
-        { success: false, message: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    const auth = await requireOperator(request);
+    if ("response" in auth) return auth.response;
 
     const body = await request.json();
     const { id, name, icon, color, description, is_active } = body;
@@ -202,14 +167,8 @@ export async function PUT(request: NextRequest) {
 // DELETE: Soft delete disaster category
 export async function DELETE(request: NextRequest) {
   try {
-    const operator = await checkOperatorAuth();
-    
-    if (!operator) {
-      return NextResponse.json(
-        { success: false, message: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    const auth = await requireOperator(request);
+    if ("response" in auth) return auth.response;
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

@@ -1,22 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import * as jose from "jose";
 import { execute, queryRow } from "@/lib/db";
 import { hashPassword } from "@/lib/auth";
-import { COOKIE_NAME } from "@/lib/session";
-import { getJwtSecretKey } from "@/lib/secrets";
+import { requireAuth } from "@/lib/api-security";
 
 export async function POST(request: NextRequest) {
     try {
-        const token = request.cookies.get(COOKIE_NAME)?.value;
-        if (!token) {
-            return NextResponse.json(
-                { message: "Token tidak ditemukan." },
-                { status: 401 }
-            );
-        }
-
-        const secret = getJwtSecretKey();
-        const { payload } = await jose.jwtVerify(token, secret);
+        const auth = await requireAuth(request);
+        if ("response" in auth) return auth.response;
+        const payload = auth.payload;
 
         if (!payload.id || payload.isOperator === true) {
             return NextResponse.json(

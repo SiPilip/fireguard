@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
+import { toSafeExternalUrl } from "@/lib/url-safety";
 
 const AdminMap = dynamic(() => import("./AdminMap"), {
   ssr: false,
@@ -166,6 +167,7 @@ export default function ReportDetailModal({
   };
 
   const statusDisplay = getStatusDisplay(report.status);
+  const safeMediaUrl = toSafeExternalUrl(report.media_url);
 
   return (
     <div
@@ -451,7 +453,7 @@ export default function ReportDetailModal({
           </div>
 
           {/* Media */}
-          {report.media_url && (
+          {safeMediaUrl && (
             <div className="bg-white rounded-xl p-5 border border-gray-200/60 shadow-sm">
               <div className="flex items-start gap-3">
                 <div className="p-2 bg-purple-100 rounded-lg">
@@ -461,14 +463,14 @@ export default function ReportDetailModal({
                   <p className="text-xs text-gray-500 mb-3">Media Lampiran</p>
                   <div className="relative w-full h-64 rounded-xl overflow-hidden border border-gray-200">
                     <Image
-                      src={report.media_url}
+                      src={safeMediaUrl}
                       alt="Bukti laporan"
                       fill
                       className="object-cover"
                     />
                   </div>
                   <a
-                    href={report.media_url}
+                    href={safeMediaUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-700 text-xs font-medium mt-3 inline-flex items-center gap-1 hover:underline"

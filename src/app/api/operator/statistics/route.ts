@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { queryRows } from '@/lib/db';
+import { requireOperator } from '@/lib/api-security';
 
 interface YearlyStats {
     year: number;
@@ -37,6 +38,9 @@ interface HotspotData {
 
 export async function GET(request: NextRequest) {
     try {
+        const auth = await requireOperator(request);
+        if ("response" in auth) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const year = searchParams.get('year') || new Date().getFullYear().toString();
 

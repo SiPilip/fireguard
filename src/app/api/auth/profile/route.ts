@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import * as jose from 'jose';
 import { pool } from '@/lib/db';
 import { RowDataPacket } from 'mysql2';
+import { randomUUID } from 'crypto';
 import { COOKIE_NAME, USER_JWT_EXPIRATION, USER_SESSION_MAX_AGE } from '@/lib/session';
 import { getJwtSecretKey } from '@/lib/secrets';
 import { getAuthPayloadFromRequest, handleCorsOptions, jsonWithCors, getTokenFromRequest } from '@/lib/cors';
+import { getJwtClaimConfig } from '@/lib/api-security';
 
 // OPTIONS: CORS preflight
 export async function OPTIONS() {
@@ -94,15 +96,17 @@ export async function PUT(request: NextRequest) {
         })
             .setProtectedHeader({ alg: 'HS256' })
             .setIssuedAt()
+            .setIssuer(getJwtClaimConfig().issuer)
+            .setAudience(getJwtClaimConfig().audience)
+            .setJti(randomUUID())
             .setExpirationTime(USER_JWT_EXPIRATION)
             .sign(secret);
 
         // Create response with updated cookie (web) + token in body (Flutter)
         const response = jsonWithCors({
             message: 'Profil berhasil diperbarui.',
-            token: newToken,
             user: rows[0],
-        });
+        }, { request });
 
         response.cookies.set(COOKIE_NAME, newToken, {
             httpOnly: true,

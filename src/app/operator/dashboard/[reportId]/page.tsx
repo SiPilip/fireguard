@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { toSafeExternalUrl } from '@/lib/url-safety';
 
 interface Report {
   id: number;
@@ -23,6 +24,7 @@ export default function ReportDetailPage() {
   const [report, setReport] = useState<Report | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const safeMediaUrl = toSafeExternalUrl(report?.media_url);
 
   useEffect(() => {
     if (reportId) {
@@ -85,7 +87,7 @@ export default function ReportDetailPage() {
                     <p><strong>Koordinat:</strong> {report.latitude}, {report.longitude}</p>
                     {report.notes && <p><strong>Catatan:</strong> {report.notes}</p>}
                     {report.contact && <p><strong>Kontak Pelapor:</strong> {report.contact}</p>}
-                    {report.media_url && <a href={report.media_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Lihat Media</a>}
+                    {safeMediaUrl && <a href={safeMediaUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Lihat Media</a>}
                 </div>
                 <div className="p-6 border-t border-gray-700 flex flex-wrap gap-4 justify-end">
                     <button onClick={() => handleUpdateStatus('verified')} className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg">Verifikasi</button>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { queryRow, execute } from '@/lib/db';
+import { requireOperator } from '@/lib/api-security';
 
 interface Params {
     params: { id: string };
@@ -8,6 +9,9 @@ interface Params {
 // PUT: Update kategori
 export async function PUT(request: NextRequest, { params }: Params) {
     try {
+        const auth = await requireOperator(request);
+        if ("response" in auth) return auth.response;
+
         const id = parseInt(params.id);
         const { name, icon, color, description } = await request.json();
 
@@ -33,6 +37,9 @@ export async function PUT(request: NextRequest, { params }: Params) {
 // DELETE: Hapus kategori
 export async function DELETE(request: NextRequest, { params }: Params) {
     try {
+        const auth = await requireOperator(request);
+        if ("response" in auth) return auth.response;
+
         const id = parseInt(params.id);
 
         // Cek apakah ada laporan yang menggunakan kategori ini

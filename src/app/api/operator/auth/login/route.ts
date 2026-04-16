@@ -3,11 +3,22 @@ import { queryRow } from '@/lib/db';
 import { verifyPassword } from '@/lib/auth';
 import * as jose from 'jose';
 import { serialize } from 'cookie';
+import { randomUUID } from 'crypto';
 import { COOKIE_NAME, OPERATOR_JWT_EXPIRATION, OPERATOR_SESSION_MAX_AGE } from '@/lib/session';
 import { getJwtSecretKey } from '@/lib/secrets';
+import { getJwtClaimConfig } from '@/lib/api-security';
+import { enforceRateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   try {
+    const limit = enforceRateLimit(request, "operator-login", 10, 60_000);
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { message: "Terlalu banyak percobaan login operator. Coba lagi nanti." },
+        { status: 429, headers: { "Retry-After": String(limit.retryAfter) } }
+      );
+    }
+
     const { username, password } = await request.json();
     if (!username || !password) {
       return NextResponse.json({ message: 'Username dan password diperlukan.' }, { status: 400 });
@@ -25,6 +36,9 @@ export async function POST(request: NextRequest) {
     const token = await new jose.SignJWT({ id: operator.id, username: operator.username, isOperator: true })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
+      .setIssuer(getJwtClaimConfig().issuer)
+      .setAudience(getJwtClaimConfig().audience)
+      .setJti(randomUUID())
       .setExpirationTime(OPERATOR_JWT_EXPIRATION)
       .sign(secret);
 

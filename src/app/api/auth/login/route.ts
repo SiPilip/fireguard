@@ -3,6 +3,7 @@ import { queryRow } from "@/lib/db";
 import { verifyPassword } from "@/lib/auth";
 import * as jose from "jose";
 import { serialize } from "cookie";
+import { randomUUID } from "crypto";
 import {
   COOKIE_NAME,
   USER_JWT_EXPIRATION,
@@ -10,6 +11,8 @@ import {
 } from "@/lib/session";
 import { getJwtSecretKey } from "@/lib/secrets";
 import { corsHeaders, handleCorsOptions, jsonWithCors } from "@/lib/cors";
+import { getJwtClaimConfig } from "@/lib/api-security";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 // OPTIONS: CORS preflight
 export async function OPTIONS() {
@@ -19,6 +22,18 @@ export async function OPTIONS() {
 // POST: Login dengan password
 export async function POST(request: NextRequest) {
   try {
+    const limit = enforceRateLimit(request, "auth-login", 10, 60_000);
+    if (!limit.allowed) {
+      return jsonWithCors(
+        { message: "Terlalu banyak percobaan login. Coba lagi nanti." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(limit.retryAfter) },
+          request,
+        },
+      );
+    }
+
     const { email, password } = await request.json();
 
     // Validasi input
@@ -87,6 +102,9 @@ export async function POST(request: NextRequest) {
       })
         .setProtectedHeader({ alg: "HS256" })
         .setIssuedAt()
+        .setIssuer(getJwtClaimConfig().issuer)
+        .setAudience(getJwtClaimConfig().audience)
+        .setJti(randomUUID())
         .setExpirationTime(USER_JWT_EXPIRATION)
         .sign(secret);
 
@@ -98,11 +116,10 @@ export async function POST(request: NextRequest) {
         maxAge: USER_SESSION_MAX_AGE,
       });
 
-      // Return token in body (for Flutter Bearer auth) + cookie (for web)
+      // Return cookie-based auth for web. Token body is omitted to reduce exposure.
       return new NextResponse(
         JSON.stringify({
           message: "Login berhasil!",
-          token: token,
           user: { id: user.id, name: user.name, email: user.email },
         }),
         {
@@ -110,7 +127,7 @@ export async function POST(request: NextRequest) {
           headers: {
             "Content-Type": "application/json",
             "Set-Cookie": serializedCookie,
-            ...corsHeaders(),
+            ...corsHeaders(request),
           },
         },
       );

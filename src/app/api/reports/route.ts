@@ -7,6 +7,7 @@ import { writeFile, mkdir } from "fs/promises";
 import { COOKIE_NAME } from "@/lib/session";
 import { getJwtSecretKey } from "@/lib/secrets";
 import { getAuthPayloadFromRequest, handleCorsOptions, jsonWithCors } from "@/lib/cors";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 // OPTIONS: CORS preflight
 export async function OPTIONS() {
@@ -19,6 +20,14 @@ async function getAuthPayload(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const limit = enforceRateLimit(request, "reports-submit", 20, 60_000);
+    if (!limit.allowed) {
+      return jsonWithCors(
+        { message: "Terlalu banyak laporan dalam waktu singkat. Coba lagi sebentar." },
+        { status: 429, headers: { "Retry-After": String(limit.retryAfter) }, request }
+      );
+    }
+
     const user = await getAuthPayload(request);
 
     // Verify user exists in database
@@ -48,11 +57,51 @@ export async function POST(request: NextRequest) {
     const categoryId = (formData.get("category_id") ?? formData.get("categoryId")) as string | null;
     const kelurahanId = (formData.get("kelurahan_id") ?? formData.get("kelurahanId")) as string | null;
 
+    const fireLatNumber = Number(fireLatitude);
+    const fireLngNumber = Number(fireLongitude);
+    const reporterLatNumber = reporterLatitude ? Number(reporterLatitude) : null;
+    const reporterLngNumber = reporterLongitude ? Number(reporterLongitude) : null;
+    const parsedCategoryId = categoryId ? Number(categoryId) : 1;
+    const parsedKelurahanId = kelurahanId ? Number(kelurahanId) : null;
+
     if (!fireLatitude || !fireLongitude) {
       return jsonWithCors(
         { message: "Data laporan tidak lengkap (lokasi kejadian wajib)." },
         { status: 400 }
       );
+    }
+
+    if (
+      Number.isNaN(fireLatNumber) ||
+      Number.isNaN(fireLngNumber) ||
+      fireLatNumber < -90 ||
+      fireLatNumber > 90 ||
+      fireLngNumber < -180 ||
+      fireLngNumber > 180
+    ) {
+      return jsonWithCors({ message: "Koordinat lokasi kejadian tidak valid." }, { status: 400, request });
+    }
+
+    if (
+      reporterLatNumber !== null &&
+      (Number.isNaN(reporterLatNumber) || reporterLatNumber < -90 || reporterLatNumber > 90)
+    ) {
+      return jsonWithCors({ message: "Koordinat pelapor (latitude) tidak valid." }, { status: 400, request });
+    }
+
+    if (
+      reporterLngNumber !== null &&
+      (Number.isNaN(reporterLngNumber) || reporterLngNumber < -180 || reporterLngNumber > 180)
+    ) {
+      return jsonWithCors({ message: "Koordinat pelapor (longitude) tidak valid." }, { status: 400, request });
+    }
+
+    if (!Number.isInteger(parsedCategoryId) || parsedCategoryId <= 0) {
+      return jsonWithCors({ message: "Kategori tidak valid." }, { status: 400, request });
+    }
+
+    if (parsedKelurahanId !== null && (!Number.isInteger(parsedKelurahanId) || parsedKelurahanId <= 0)) {
+      return jsonWithCors({ message: "Kelurahan tidak valid." }, { status: 400, request });
     }
 
     // Upload dan kompresi file jika ada (opsional)
@@ -104,17 +153,17 @@ export async function POST(request: NextRequest) {
         "INSERT INTO reports (user_id, fire_latitude, fire_longitude, reporter_latitude, reporter_longitude, description, address, media_url, notes, contact, category_id, kelurahan_id, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
           userId,
-          parseFloat(fireLatitude),
-          parseFloat(fireLongitude),
-          reporterLatitude ? parseFloat(reporterLatitude) : null,
-          reporterLongitude ? parseFloat(reporterLongitude) : null,
+          fireLatNumber,
+          fireLngNumber,
+          reporterLatNumber,
+          reporterLngNumber,
           description,
           address,
           mediaUrl,
           notes,
           contact,
-          categoryId ? parseInt(categoryId) : 1,
-          kelurahanId ? parseInt(kelurahanId) : null,
+          parsedCategoryId,
+          parsedKelurahanId,
           'pending',
           currentTimestamp
         ]
@@ -126,10 +175,10 @@ export async function POST(request: NextRequest) {
           "INSERT INTO reports (user_id, fire_latitude, fire_longitude, reporter_latitude, reporter_longitude, description, address, media_url, notes, contact, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
           [
             userId,
-            parseFloat(fireLatitude),
-            parseFloat(fireLongitude),
-            reporterLatitude ? parseFloat(reporterLatitude) : null,
-            reporterLongitude ? parseFloat(reporterLongitude) : null,
+            fireLatNumber,
+            fireLngNumber,
+            reporterLatNumber,
+            reporterLngNumber,
             description,
             address,
             mediaUrl,
@@ -147,10 +196,10 @@ export async function POST(request: NextRequest) {
     if (global.wss) {
       const newReport = {
         id: reportId,
-        fire_latitude: parseFloat(fireLatitude),
-        fire_longitude: parseFloat(fireLongitude),
-        reporter_latitude: reporterLatitude ? parseFloat(reporterLatitude) : null,
-        reporter_longitude: reporterLongitude ? parseFloat(reporterLongitude) : null,
+        fire_latitude: fireLatNumber,
+        fire_longitude: fireLngNumber,
+        reporter_latitude: reporterLatNumber,
+        reporter_longitude: reporterLngNumber,
         media_url: mediaUrl,
         status: "pending",
         created_at: currentTimestamp,

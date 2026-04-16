@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { queryRows, execute, executeAndGetLastInsertId } from '@/lib/db';
+import { requireOperator } from '@/lib/api-security';
 
 interface Kelurahan {
     id: number;
@@ -9,8 +10,11 @@ interface Kelurahan {
 }
 
 // GET: Ambil semua kelurahan
-export async function GET() {
+export async function GET(request: NextRequest) {
     try {
+        const auth = await requireOperator(request);
+        if ("response" in auth) return auth.response;
+
         const kelurahan = await queryRows<Kelurahan>(
             'SELECT id, name, kecamatan, kota FROM kelurahan ORDER BY name ASC'
         );
@@ -24,6 +28,9 @@ export async function GET() {
 // POST: Tambah kelurahan baru
 export async function POST(request: NextRequest) {
     try {
+        const auth = await requireOperator(request);
+        if ("response" in auth) return auth.response;
+
         const { name, kecamatan, kota } = await request.json();
 
         if (!name) {

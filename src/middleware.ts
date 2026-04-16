@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import * as jose from "jose";
 import { COOKIE_NAME } from "@/lib/session";
-import { getJwtSecretKey } from "@/lib/secrets";
+import { verifyAuthToken } from "@/lib/api-security";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get(COOKIE_NAME)?.value;
-  const secret = getJwtSecretKey();
 
   const publicPaths = ["/", "/onboarding"];
   const authPaths = ["/login", "/register", "/operator/login", "/onboarding"];
@@ -25,7 +23,7 @@ export async function middleware(request: NextRequest) {
   // Jika user sudah login, jangan izinkan kembali ke halaman auth.
   if (authPaths.includes(pathname) && token) {
     try {
-      const { payload } = await jose.jwtVerify(token, secret);
+      const payload = await verifyAuthToken(token);
       const isOperator = payload.isOperator === true;
       return NextResponse.redirect(new URL(isOperator ? "/operator/dashboard" : "/dashboard", request.url));
     } catch {
@@ -51,7 +49,7 @@ export async function middleware(request: NextRequest) {
 
   // Jika ada token, verifikasi
   try {
-    const { payload } = await jose.jwtVerify(token, secret);
+    const payload = await verifyAuthToken(token);
     const isOperator = payload.isOperator === true;
 
     // Jika mencoba mengakses rute operator

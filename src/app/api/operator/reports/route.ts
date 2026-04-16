@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { queryRows, execute } from '@/lib/db';
 import { unlink } from 'fs/promises';
 import path from 'path';
+import { requireOperator } from '@/lib/api-security';
 
 export async function GET(request: NextRequest) {
   try {
+    const auth = await requireOperator(request);
+    if ("response" in auth) return auth.response;
+
     const reports = await queryRows(
       `SELECT r.id, r.fire_latitude, r.fire_longitude, r.reporter_latitude, r.reporter_longitude, 
               r.status, r.created_at, r.media_url, r.notes, r.contact, r.description,
@@ -25,6 +29,9 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const auth = await requireOperator(request);
+    if ("response" in auth) return auth.response;
+
     const mediaUrls = await queryRows<{ media_url: string }>('SELECT media_url FROM reports');
     for (const item of mediaUrls) {
       if (item.media_url) {

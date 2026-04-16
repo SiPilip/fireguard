@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { queryRows, execute, executeAndGetLastInsertId } from '@/lib/db';
+import { requireOperator } from '@/lib/api-security';
 
 interface Category {
     id: number;
@@ -10,8 +11,11 @@ interface Category {
 }
 
 // GET: Ambil semua kategori
-export async function GET() {
+export async function GET(request: NextRequest) {
     try {
+        const auth = await requireOperator(request);
+        if ("response" in auth) return auth.response;
+
         const categories = await queryRows<Category>(
             'SELECT id, name, icon, color, description FROM disaster_categories ORDER BY id ASC'
         );
@@ -25,6 +29,9 @@ export async function GET() {
 // POST: Tambah kategori baru
 export async function POST(request: NextRequest) {
     try {
+        const auth = await requireOperator(request);
+        if ("response" in auth) return auth.response;
+
         const { name, icon, color, description } = await request.json();
 
         if (!name || !icon) {

@@ -3,6 +3,7 @@ import { execute, queryRow, formatDateForMySQL } from "@/lib/db";
 import { hashOtp } from "@/lib/auth";
 import { sendEmailOTP } from "@/lib/email";
 import { handleCorsOptions, jsonWithCors } from "@/lib/cors";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 function generateOtp(): string {
     return Math.floor(100000 + Math.random() * 900000).toString();
@@ -15,6 +16,14 @@ export async function OPTIONS() {
 // POST: Kirim OTP untuk registrasi
 export async function POST(request: NextRequest) {
     try {
+        const limit = enforceRateLimit(request, "auth-register-send", 10, 60_000);
+        if (!limit.allowed) {
+            return jsonWithCors(
+                { message: "Terlalu banyak permintaan OTP registrasi. Coba lagi nanti." },
+                { status: 429, headers: { "Retry-After": String(limit.retryAfter) }, request }
+            );
+        }
+
         const { name, email, phoneNumber, password } = await request.json();
 
         // Validasi input

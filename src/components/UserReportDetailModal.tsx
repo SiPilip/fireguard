@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Image from "next/image";
+import { toSafeExternalUrl } from "@/lib/url-safety";
 import {
     FaTimes,
     FaMapMarkerAlt,
@@ -80,6 +81,7 @@ export default function UserReportDetailModal({
     };
 
     const statusDisplay = getStatusDisplay(report.status);
+    const safeMediaUrl = toSafeExternalUrl(report.media_url);
 
     // Generate Google Maps link
     const googleMapsUrl = `https://www.google.com/maps?q=${report.fire_latitude},${report.fire_longitude}`;
@@ -266,7 +268,7 @@ export default function UserReportDetailModal({
                     )}
 
                     {/* Media */}
-                    {report.media_url && (
+                    {safeMediaUrl && (
                         <div className="bg-white rounded-xl p-5 border border-gray-200/60 shadow-sm">
                             <div className="flex items-start gap-3">
                                 <div className="p-2 bg-purple-100 rounded-lg">
@@ -276,14 +278,14 @@ export default function UserReportDetailModal({
                                     <p className="text-xs text-gray-500 mb-3">Foto Kejadian</p>
                                     <div className="relative w-full h-64 rounded-xl overflow-hidden border border-gray-200">
                                         <Image
-                                            src={report.media_url}
+                                            src={safeMediaUrl}
                                             alt="Bukti laporan"
                                             fill
                                             className="object-cover"
                                         />
                                     </div>
                                     <a
-                                        href={report.media_url}
+                                        href={safeMediaUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-blue-600 hover:text-blue-700 text-xs font-medium mt-3 inline-flex items-center gap-1 hover:underline"

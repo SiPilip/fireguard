@@ -1,39 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { queryRows, queryRow } from "@/lib/db";
-import * as jose from "jose";
-import { COOKIE_NAME } from "@/lib/session";
-import { getJwtSecretKey } from "@/lib/secrets";
-
-// Middleware untuk check operator authentication
-async function checkOperatorAuth(request: NextRequest) {
-    const token = request.cookies.get(COOKIE_NAME)?.value;
-    if (!token) return null;
-
-    try {
-        const secret = getJwtSecretKey();
-        const { payload } = await jose.jwtVerify(token, secret);
-
-        // Cek apakah ini operator
-        if (payload.isOperator) {
-            return payload;
-        }
-        return null;
-    } catch {
-        return null;
-    }
-}
+import { requireOperator } from "@/lib/api-security";
 
 // GET: Ambil semua user (untuk admin)
 export async function GET(request: NextRequest) {
     try {
-        const operator = await checkOperatorAuth(request);
-
-        if (!operator) {
-            return NextResponse.json(
-                { success: false, message: "Unauthorized" },
-                { status: 401 }
-            );
-        }
+        const auth = await requireOperator(request);
+        if ("response" in auth) return auth.response;
 
         const { searchParams } = new URL(request.url);
         const search = searchParams.get("search") || "";

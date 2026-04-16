@@ -2,10 +2,25 @@ import { NextRequest, NextResponse } from "next/server";
 import { queryRow, execute } from "@/lib/db";
 import { calculateETA, getAddressFromCoordinates } from "@/lib/geo";
 import { sendStatusUpdateEmail } from "@/lib/email";
+import { requireOperator } from "@/lib/api-security";
 
 // --- Konfigurasi Fonnte (Opsional) ---
 const FONNTE_TOKEN = process.env.FONNTE_TOKEN || "";
 const ENABLE_WHATSAPP = process.env.ENABLE_WHATSAPP === "true";
+const ALLOWED_REPORT_STATUS = new Set([
+  "pending",
+  "submitted",
+  "verified",
+  "diproses",
+  "dispatched",
+  "dikirim",
+  "arrived",
+  "ditangani",
+  "completed",
+  "selesai",
+  "dibatalkan",
+  "false",
+]);
 
 /**
  * Fungsi untuk mengirim pesan WhatsApp melalui Fonnte (Opsional)
@@ -34,7 +49,14 @@ export async function GET(
   { params }: { params: Promise<{ reportId: string }> }
 ) {
   try {
+    const auth = await requireOperator(request);
+    if ("response" in auth) return auth.response;
+
     const { reportId } = await params;
+    const parsedReportId = Number(reportId);
+    if (!Number.isInteger(parsedReportId) || parsedReportId <= 0) {
+      return NextResponse.json({ message: "ID laporan tidak valid." }, { status: 400 });
+    }
     const report = await queryRow(
       `SELECT r.id, r.fire_latitude, r.fire_longitude, r.status, r.created_at, r.media_url, 
               r.description, r.admin_notes,
@@ -42,7 +64,7 @@ export async function GET(
        FROM reports r 
        JOIN users u ON r.user_id = u.id
        WHERE r.id = ?`,
-      [reportId]
+      [parsedReportId]
     );
     if (!report) {
       return NextResponse.json(
@@ -64,8 +86,39 @@ export async function PATCH(
   { params }: { params: Promise<{ reportId: string }> }
 ) {
   try {
+    const auth = await requireOperator(request);
+    if ("response" in auth) return auth.response;
+
     const { reportId } = await params;
+    const parsedReportId = Number(reportId);
+    if (!Number.isInteger(parsedReportId) || parsedReportId <= 0) {
+      return NextResponse.json({ message: "ID laporan tidak valid." }, { status: 400 });
+    }
     const { status: newStatus, adminNotes, kelurahanId, categoryId } = await request.json();
+    const parsedKelurahanId = kelurahanId === undefined ? undefined : Number(kelurahanId);
+    const parsedCategoryId = categoryId === undefined ? undefined : Number(categoryId);
+
+    if (newStatus !== undefined && !ALLOWED_REPORT_STATUS.has(String(newStatus))) {
+      return NextResponse.json({ message: "Status laporan tidak valid." }, { status: 400 });
+    }
+
+    if (adminNotes !== undefined && (typeof adminNotes !== "string" || adminNotes.length > 1000)) {
+      return NextResponse.json({ message: "Catatan petugas tidak valid." }, { status: 400 });
+    }
+
+    if (
+      parsedKelurahanId !== undefined &&
+      (!Number.isInteger(parsedKelurahanId) || parsedKelurahanId <= 0)
+    ) {
+      return NextResponse.json({ message: "Kelurahan tidak valid." }, { status: 400 });
+    }
+
+    if (
+      parsedCategoryId !== undefined &&
+      (!Number.isInteger(parsedCategoryId) || parsedCategoryId <= 0)
+    ) {
+      return NextResponse.json({ message: "Kategori tidak valid." }, { status: 400 });
+    }
 
     // Build dynamic SQL update
     const updates: string[] = [];
@@ -83,12 +136,12 @@ export async function PATCH(
 
     if (kelurahanId !== undefined) {
       updates.push('kelurahan_id = ?');
-      args.push(kelurahanId);
+      args.push(parsedKelurahanId);
     }
 
     if (categoryId !== undefined) {
       updates.push('category_id = ?');
-      args.push(categoryId);
+      args.push(parsedCategoryId);
     }
 
     if (updates.length === 0) {
@@ -99,7 +152,7 @@ export async function PATCH(
     }
 
     const sql = `UPDATE reports SET ${updates.join(', ')} WHERE id = ?`;
-    args.push(reportId);
+    args.push(parsedReportId);
 
     const rowsAffected = await execute(sql, args);
 
@@ -117,7 +170,7 @@ export async function PATCH(
       fire_longitude: number;
     }>(
       'SELECT user_id, fire_latitude, fire_longitude FROM reports WHERE id = ?',
-      [reportId]
+      [parsedReportId]
     );
 
     if (report && newStatus) {
@@ -158,7 +211,7 @@ export async function PATCH(
         await executeAndGetLastInsertId(
           `INSERT INTO notifications (user_id, title, message, type, report_id, is_read, created_at) 
            VALUES (?, ?, ?, ?, ?, FALSE, ?)`,
-          [report.user_id, notifTitle, notifMessage, 'status_update', parseInt(reportId), currentTimestamp]
+          [report.user_id, notifTitle, notifMessage, 'status_update', parsedReportId, currentTimestamp]
         );
       } catch (notifError) {
         console.error('Error creating notification:', notifError);
@@ -170,7 +223,7 @@ export async function PATCH(
         sendStatusUpdateEmail(
           user.email,
           user.name,
-          parseInt(reportId),
+          parsedReportId,
           newStatus,
           adminNotes
         );
@@ -197,7 +250,7 @@ export async function PATCH(
       global.wss.broadcast(
         JSON.stringify({
           type: "STATUS_UPDATE",
-          payload: { reportId: parseInt(reportId), newStatus },
+          payload: { reportId: parsedReportId, newStatus },
         })
       );
     }
