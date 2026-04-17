@@ -3,15 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import {
-  FaEnvelope,
-  FaFire,
-  FaLock,
-  FaShieldAlt,
-  FaSpinner,
-} from "react-icons/fa";
+import { FaFire, FaSpinner, FaArrowLeft } from "react-icons/fa";
 import { isStandaloneApp } from "@/lib/app-mode";
 import { hasCompletedOnboarding } from "@/lib/onboarding";
+import { motion } from "framer-motion";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -78,116 +73,119 @@ export default function LoginPage() {
 
   if (isVerifying) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-50">
-        <div className="text-center">
-          <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-red-500 border-r-transparent mb-4"></div>
-          <p className="text-gray-700 font-medium">Memverifikasi sesi...</p>
-        </div>
+      <main className="flex min-h-screen items-center justify-center bg-white">
+        <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1.5 }}>
+          <FaFire className="text-4xl text-red-500" />
+        </motion.div>
       </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-red-500 to-orange-600 rounded-2xl shadow-lg mb-4">
-            <FaFire className="text-white text-3xl" />
+    <main className="min-h-screen flex bg-white text-gray-900 font-sans selection:bg-red-500/30">
+      {/* Left: Form Area */}
+      <div className="w-full md:w-[45%] lg:w-[40%] flex flex-col px-8 sm:px-16 md:px-20 py-12 relative z-10 justify-center">
+        <Link href="/" className="absolute top-8 left-8 sm:left-16 md:left-20 flex items-center gap-3 text-gray-400 hover:text-gray-900 transition-colors">
+          <FaArrowLeft className="text-sm" /> 
+        </Link>
+        
+        <Link href="/" className="inline-flex items-center gap-3 mb-16 group w-fit mt-10 md:mt-0">
+          <div className="p-2.5 bg-red-500 rounded-xl shadow-[0_0_15px_rgba(239,68,68,0.4)] group-hover:scale-105 transition-transform">
+            <FaFire className="text-xl text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Login FireGuard</h1>
-          <p className="text-gray-500 mt-1">Masuk dengan email dan password</p>
+          <span className="text-2xl font-bold tracking-tight">FireGuard</span>
+        </Link>
+
+        <div className="mb-10">
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tighter mb-4 text-gray-900">
+            Selamat Datang.
+          </h1>
+          <p className="text-gray-500 text-lg leading-relaxed font-light">
+            Masuk untuk mengakses portal darurat dan manajemen laporan kebakaran Anda.
+          </p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-          <form onSubmit={handlePasswordLogin} className="p-6 space-y-4">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="p-2 rounded-lg bg-red-100">
-                <FaShieldAlt className="text-red-600" />
-              </div>
-              <div>
-                <h2 className="font-semibold text-gray-900">
-                  Login dengan Password
-                </h2>
-                <p className="text-xs text-gray-500">
-                  Masukkan email dan password akun Anda.
-                </p>
-              </div>
+        <form onSubmit={handlePasswordLogin} className="space-y-6">
+          <div className="space-y-1 group">
+            <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest pl-1 group-focus-within:text-red-500 transition-colors">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full bg-gray-50/50 border border-gray-200 text-gray-900 px-5 py-4 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-medium placeholder:text-gray-300 placeholder:font-normal"
+              placeholder="nama@email.com"
+              required
+            />
+          </div>
+
+          <div className="space-y-1 group">
+            <div className="flex justify-between items-center pl-1">
+              <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest group-focus-within:text-red-500 transition-colors">Password</label>
+              <a href="#" className="text-xs font-medium text-gray-400 hover:text-gray-900 transition-colors">Lupa?</a>
             </div>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full bg-gray-50/50 border border-gray-200 text-gray-900 px-5 py-4 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-medium placeholder:text-gray-300 placeholder:font-normal tracking-[0.2em]"
+              placeholder="••••••••"
+              required
+            />
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
-              <div className="relative">
-                <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all bg-white text-gray-900 placeholder:text-gray-400"
-                  placeholder="contoh@email.com"
-                  required
-                />
-              </div>
-            </div>
+          {error && (
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-red-50 text-red-600 px-5 py-4 rounded-2xl text-sm font-medium border border-red-100">
+              {error}
+            </motion.div>
+          )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all bg-white text-gray-900 placeholder:text-gray-400"
-                  placeholder="Masukkan password"
-                  required
-                />
-              </div>
-            </div>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-[#111] hover:bg-[#e63946] text-white py-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-3 shadow-lg shadow-black/5 hover:shadow-red-500/25 active:scale-[0.98] disabled:opacity-50 mt-4"
+          >
+            {isLoading ? (
+              <span className="flex items-center gap-2"><FaSpinner className="animate-spin" /> Memproses...</span>
+            ) : "Masuk ke Akun"}
+          </button>
+        </form>
 
-            {error && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-3 text-white font-semibold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700"
-            >
-              {isLoading ? (
-                <>
-                  <FaSpinner className="animate-spin" />
-                  Memproses...
-                </>
-              ) : (
-                <>
-                  <FaLock />
-                  Login
-                </>
-              )}
-            </button>
-
-            <p className="text-center text-sm text-gray-500">
-              Belum punya akun?{" "}
-              <Link
-                href="/register"
-                className="text-red-600 font-medium hover:underline"
-              >
-                Daftar di sini
-              </Link>
-            </p>
-          </form>
-        </div>
-
-        <p className="text-center text-xs text-gray-400 mt-6">
-          (c) 2026 FireGuard - Kec. Plaju, Palembang
+        <p className="mt-12 text-gray-500 font-medium">
+          Belum bergabung? <Link href="/register" className="text-[#e63946] hover:underline decoration-2 underline-offset-4">Daftar sekarang</Link>
         </p>
       </div>
-    </div>
+
+      {/* Right: Dark Cinematic Area */}
+      <div className="hidden md:flex flex-1 bg-[#050505] relative overflow-hidden flex-col items-center justify-center p-20">
+        {/* Ambient Lights */}
+        <div className="absolute top-[-10%] right-[-10%] w-[40rem] h-[40rem] bg-red-600/20 rounded-full blur-[100px] pointer-events-none mix-blend-screen" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[30rem] h-[30rem] bg-orange-500/10 rounded-full blur-[80px] pointer-events-none mix-blend-screen" />
+        
+        {/* Photographic / Abstract Pattern */}
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none mix-blend-overlay"></div>
+        
+        <div className="relative z-10 w-full max-w-lg border border-white/10 bg-white/5 backdrop-blur-3xl p-12 rounded-[2rem] shadow-2xl">
+          <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-8 border border-white/10">
+             <FaFire className="text-white text-xl" />
+          </div>
+          <h2 className="text-3xl font-bold text-white mb-4 leading-tight tracking-tight">Satu Laporan, Menyelamatkan Semua.</h2>
+          <p className="text-gray-400 text-lg font-light leading-relaxed">
+            Terintegrasi langsung dengan unit pemadam kebakaran di lapangan, memastikan lokasi terdeteksi tanpa delay respon.
+          </p>
+          
+          <div className="mt-10 flex gap-4">
+             <div className="flex flex-col">
+                <span className="text-4xl font-extrabold text-white">4m</span>
+                <span className="text-xs text-gray-500 uppercase tracking-widest mt-1">Estimasi Respon</span>
+             </div>
+             <div className="w-px bg-white/10 mx-4"></div>
+             <div className="flex flex-col">
+                <span className="text-4xl font-extrabold text-white">24/7</span>
+                <span className="text-xs text-gray-500 uppercase tracking-widest mt-1">Siaga Total</span>
+             </div>
+          </div>
+        </div>
+      </div>
+    </main>
   );
 }

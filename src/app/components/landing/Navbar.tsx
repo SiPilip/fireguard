@@ -71,129 +71,103 @@ const Navbar = () => {
   };
 
   return (
-    <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-md shadow-sm' : 'bg-black/10 backdrop-blur-sm'}`}>
-      <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className={`p-2 rounded-xl transition-all ${scrolled ? 'bg-gradient-to-br from-red-500 to-orange-600' : 'bg-white/20'}`}>
-            <FaFire className={`text-xl ${scrolled ? 'text-white' : 'text-white'}`} />
-          </div>
-          <span className={`text-xl font-semibold ${scrolled ? 'text-gray-900' : 'text-white'}`}>FireGuard</span>
-        </Link>
-        <div className="hidden md:flex items-center gap-8 text-sm">
-          <Link href="#features" className={`${scrolled ? 'text-gray-700 hover:text-gray-900' : 'text-white/90 hover:text-white'} font-medium transition-colors`}>Fitur</Link>
-          <Link href="#stations" className={`${scrolled ? 'text-gray-700 hover:text-gray-900' : 'text-white/90 hover:text-white'} font-medium transition-colors`}>Lokasi Pos</Link>
-          <Link href="#contact" className={`${scrolled ? 'text-gray-700 hover:text-gray-900' : 'text-white/90 hover:text-white'} font-medium transition-colors`}>Kontak</Link>
-        </div>
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 rounded-xl transition-colors hover:bg-white/10"
-        >
-          {mobileMenuOpen ? (
-            <FaTimes className={`text-xl ${scrolled ? 'text-gray-900' : 'text-white'}`} />
-          ) : (
-            <FaBars className={`text-xl ${scrolled ? 'text-gray-900' : 'text-white'}`} />
-          )}
-        </button>
-
-        {/* Desktop Menu */}
-        <div className="hidden md:flex items-center gap-3">
-          {isLoggedIn ? (
-            <div className="relative" ref={dropdownRef}>
-              <button onClick={() => setDropdownOpen(!dropdownOpen)} className="flex items-center gap-2 transition-colors">
-                <div className="w-9 h-9 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl flex items-center justify-center text-white shadow-sm">
-                  <FaUser size={16} />
-                </div>
-                <FaChevronDown size={12} className={`transition-transform ${dropdownOpen ? 'rotate-180' : ''} ${scrolled ? 'text-gray-600' : 'text-white'}`} />
-              </button>
-              {dropdownOpen && (
-                <div className="absolute right-0 mt-3 w-52 bg-white rounded-xl shadow-xl border border-gray-200/60 py-2 z-50">
-                  <div className="px-4 py-2.5 border-b border-gray-100">
-                    <p className="text-sm font-semibold text-gray-900">{user?.name || user?.email || 'User'}</p>
-                  </div>
-                  <button onClick={() => { setDropdownOpen(false); router.push('/dashboard'); }} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5 transition-colors">
-                    <FaUser size={14} />
-                    <span>Dashboard</span>
-                  </button>
-                  <hr className="my-1 border-gray-100" />
-                  <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2.5 transition-colors">
-                    <FaSignOutAlt size={14} />
-                    <span>Logout</span>
-                  </button>
-                </div>
-              )}
+    <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ease-out ${scrolled ? 'pt-4' : 'pt-6'}`}>
+      <div className="mx-auto max-w-7xl px-4 md:px-6">
+        <div className={`flex justify-between items-center px-5 py-3 md:px-6 md:py-3.5 mx-auto transition-all duration-500 ${scrolled ? 'bg-[#0A0A0A]/80 shadow-[0_8px_30px_rgb(0,0,0,0.5)] backdrop-blur-xl border border-white/10 rounded-[2rem]' : 'bg-transparent border border-transparent'}`}>
+          
+          <Link href="/" className="flex items-center gap-3 group z-50">
+            <div className={`p-2.5 rounded-[1rem] transition-all duration-500 ${scrolled ? 'bg-gradient-to-br from-red-500 to-orange-600 shadow-md shadow-red-500/20' : 'bg-white/10 backdrop-blur-md'}`}>
+              <FaFire className="text-xl text-white" />
             </div>
-          ) : (
-            <button onClick={() => router.push('/login')} className={`text-sm font-medium px-4 py-2 rounded-xl transition-all ${scrolled ? 'text-gray-700 hover:bg-gray-100' : 'text-white hover:bg-white/10'}`}>
-              Login
+            <span className="text-xl font-bold text-white tracking-tight">FireGuard</span>
+          </Link>
+
+          {/* Desktop Menu */}
+          <div className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
+            <Link href="#features" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Fitur</Link>
+            <Link href="#stations" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Lokasi Pos</Link>
+            <Link href="#contact" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Kontak</Link>
+          </div>
+
+          <div className="hidden md:flex items-center gap-4 z-50">
+            {isLoggedIn ? (
+              <div className="relative" ref={dropdownRef}>
+                <button onClick={() => setDropdownOpen(!dropdownOpen)} className="flex items-center gap-2.5 transition-all hover:opacity-80">
+                  <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-600 rounded-full flex items-center justify-center text-white shadow-lg shadow-red-500/20">
+                    <FaUser size={14} />
+                  </div>
+                  <FaChevronDown size={10} className={`transition-transform duration-300 text-white ${dropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {/* Dropdown Menu Desktop */}
+                <div className={`absolute right-0 mt-4 w-56 bg-[#111] backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] py-2 transition-all duration-300 origin-top-right ${dropdownOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
+                  <div className="px-5 py-3 border-b border-white/5">
+                    <p className="text-sm font-medium text-white line-clamp-1">{user?.name || user?.email || 'User'}</p>
+                  </div>
+                  <div className="p-2 space-y-1">
+                    <button onClick={() => { setDropdownOpen(false); router.push('/dashboard'); }} className="w-full text-left px-3 py-2.5 rounded-xl text-sm text-gray-300 hover:bg-white/5 hover:text-white flex items-center gap-3 transition-colors">
+                      <FaUser size={14} className="text-gray-400" /> Dashboard
+                    </button>
+                    <button onClick={handleLogout} className="w-full text-left px-3 py-2.5 rounded-xl text-sm text-red-500 hover:bg-red-500/10 flex items-center gap-3 transition-colors">
+                      <FaSignOutAlt size={14} /> Logout
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <button onClick={() => router.push('/login')} className="text-sm font-semibold text-white px-5 py-2.5 rounded-full hover:bg-white/10 transition-all">
+                Masuk
+              </button>
+            )}
+            <button onClick={() => router.push('/report/new')} className="bg-white text-black px-6 py-2.5 rounded-full font-bold text-sm transition-all hover:bg-gray-200 hover:scale-105 active:scale-95">
+              Lapor Darurat
             </button>
-          )}
-          <button onClick={() => router.push('/report/new')} className="bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-lg shadow-red-500/25 hover:shadow-xl hover:shadow-red-500/30">
-            Lapor Darurat
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden relative z-50 p-2 -mr-2 rounded-full bg-white/5 border border-white/10 text-white transition-all active:scale-90"
+            aria-label="Toggle Menu"
+          >
+            {mobileMenuOpen ? <FaTimes className="text-lg" /> : <FaBars className="text-lg" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-t border-gray-200/60 shadow-lg">
-          <div className="px-6 py-4 space-y-3">
-            <Link
-              href="#features"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
-            >
-              Fitur
+      {/* Mobile Menu Fullscreen Overlay */}
+      <div className={`fixed inset-0 bg-[#050505]/95 backdrop-blur-2xl z-40 transition-all duration-500 md:hidden ${mobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}>
+        <div className="flex flex-col justify-center h-full px-8 py-20 space-y-8">
+          <div className="flex flex-col space-y-6 text-center">
+            <Link href="#features" onClick={() => setMobileMenuOpen(false)} className="text-3xl font-bold text-gray-400 hover:text-white transition-colors">Fitur
             </Link>
-            <Link
-              href="#stations"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
-            >
-              Lokasi Pos
+            <Link href="#stations" onClick={() => setMobileMenuOpen(false)} className="text-3xl font-bold text-gray-400 hover:text-white transition-colors">Lokasi Pos
             </Link>
-            <Link
-              href="#contact"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
-            >
-              Kontak
+            <Link href="#contact" onClick={() => setMobileMenuOpen(false)} className="text-3xl font-bold text-gray-400 hover:text-white transition-colors">Kontak
             </Link>
-            <hr className="border-gray-200" />
+          </div>
+          
+          <div className="pt-8 border-t border-white/10 flex flex-col gap-4">
             {isLoggedIn ? (
               <>
-                <button
-                  onClick={() => { setMobileMenuOpen(false); router.push('/dashboard'); }}
-                  className="w-full text-left py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors flex items-center gap-2"
-                >
-                  <FaUser size={14} />
-                  <span>Dashboard ({user?.name || user?.email})</span>
+                <button onClick={() => { setMobileMenuOpen(false); router.push('/dashboard'); }} className="w-full bg-white/5 text-white py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3">
+                  <FaUser className="text-gray-400" /> Dashboard
                 </button>
-                <button
-                  onClick={() => { setMobileMenuOpen(false); handleLogout(); }}
-                  className="w-full text-left py-2 text-sm font-medium text-red-600 hover:text-red-700 transition-colors flex items-center gap-2"
-                >
-                  <FaSignOutAlt size={14} />
-                  <span>Logout</span>
+                <button onClick={() => { setMobileMenuOpen(false); handleLogout(); }} className="w-full bg-red-500/10 text-red-500 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3">
+                  <FaSignOutAlt /> Keluar Akun
                 </button>
               </>
             ) : (
-              <button
-                onClick={() => { setMobileMenuOpen(false); router.push('/login'); }}
-                className="w-full text-left py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
-              >
-                Login
+              <button onClick={() => { setMobileMenuOpen(false); router.push('/login'); }} className="w-full bg-white/5 text-white py-4 rounded-2xl font-bold text-lg border border-white/10">
+                Masuk / Login
               </button>
             )}
-            <button
-              onClick={() => { setMobileMenuOpen(false); router.push('/report/new'); }}
-              className="w-full bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white px-5 py-3 rounded-xl font-semibold text-sm transition-all shadow-lg shadow-red-500/25"
-            >
-              Lapor Darurat
+            <button onClick={() => { setMobileMenuOpen(false); router.push('/report/new'); }} className="w-full bg-[#e63946] text-white py-4 rounded-2xl font-bold text-lg shadow-[0_0_30px_rgba(230,57,70,0.3)]">
+              Lapor Darurat Sekarang
             </button>
           </div>
         </div>
-      )}
+      </div>
     </nav>
   );
 };

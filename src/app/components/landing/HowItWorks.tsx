@@ -5,68 +5,101 @@ import { motion } from 'framer-motion';
 
 const steps = [
     {
-        icon: <FaMobileAlt className="w-8 h-8" />,
-        title: "1. Buka & Lapor",
-        description: "Buka aplikasi FireGuard dan tekan tombol darurat merah yang tersedia di halaman utama.",
-        color: "bg-red-500",
-        lineColor: "from-red-500"
+        icon: <FaMobileAlt className="w-7 h-7 text-red-600" />,
+        title: "Buka & Lapor",
+        description: "Buka aplikasi FireGuard dan tekan tombol darurat merah. Laporan langsung terkirim tanpa proses rumit.",
+        bgColor: "bg-red-50",
+        ringColor: "ring-red-100",
+        num: "1",
+        accent: "from-red-500 to-red-600"
     },
     {
-        icon: <FaMapMarkedAlt className="w-8 h-8" />,
-        title: "2. Deteksi Lokasi",
-        description: "Sistem otomatis mendeteksi lokasi presisi Anda dan mengirimkan data tersebut ke pos terdekat.",
-        color: "bg-orange-500",
-        lineColor: "from-orange-500"
+        icon: <FaMapMarkedAlt className="w-7 h-7 text-orange-600" />,
+        title: "Deteksi Lokasi",
+        description: "Sistem otomatis melacak koordinat presisi Anda menggunakan GPS dan mengirimkan ke pos terdekat.",
+        bgColor: "bg-orange-50",
+        ringColor: "ring-orange-100",
+        num: "2",
+        accent: "from-orange-500 to-orange-600"
     },
     {
-        icon: <FaTruck className="w-8 h-8" />,
-        title: "3. Bantuan Tiba",
-        description: "Tim pemadam kebakaran segera meluncur ke lokasi Anda berdasarkan rute tercepat.",
-        color: "bg-green-600",
-        lineColor: "from-green-600"
+        icon: <FaTruck className="w-7 h-7 text-emerald-600" />,
+        title: "Bantuan Tiba",
+        description: "Armada pemadam kebakaran segera meluncur dengan rute optimal real-time ke lokasi Anda.",
+        bgColor: "bg-emerald-50",
+        ringColor: "ring-emerald-100",
+        num: "3",
+        accent: "from-emerald-500 to-emerald-600"
     }
 ];
 
 const HowItWorks = () => {
     return (
-        <section id="how-it-works" className="py-24 bg-white relative overflow-hidden">
+        <section id="how-it-works" className="py-24 lg:py-32 bg-[#FAFAFA] relative overflow-hidden">
+            {/* Minimalist Background Gradients */}
+            <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-white to-transparent pointer-events-none" />
+            <div className="absolute -top-40 -right-40 w-96 h-96 bg-red-100 rounded-full blur-[100px] opacity-50 pointer-events-none" />
+            <div className="absolute -bottom-40 -left-40 w-[30rem] h-[30rem] bg-orange-50 rounded-full blur-[120px] opacity-70 pointer-events-none" />
+
             <div className="max-w-7xl mx-auto px-6 relative z-10">
-                <div className="text-center mb-20">
+                <div className="text-center mb-20 md:mb-24">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
+                        className="flex flex-col items-center"
                     >
-                        <span className="text-sm font-bold text-red-600 uppercase tracking-widest mb-2 block">Alur Pelaporan</span>
-                        <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-6">Lapor Cepat dalam <span className="text-red-600">3 Langkah</span></h2>
-                        <p className="text-gray-600 max-w-2xl mx-auto text-lg">
-                            Kami menyederhanakan proses pelaporan agar Anda bisa mendapatkan bantuan secepat mungkin disaat genting.
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm mb-8">
+                            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                            <span className="text-xs font-bold text-gray-800 tracking-widest uppercase">Alur Pelaporan</span>
+                        </div>
+                        
+                        <h2 className="text-4xl md:text-6xl font-extrabold text-gray-900 mb-8 tracking-tight max-w-3xl">
+                            Lapor Cepat dalam <br className="hidden md:block" /> 
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-500">3 Langkah Mudah</span>
+                        </h2>
+                        
+                        <p className="text-gray-500 max-w-2xl mx-auto text-lg leading-relaxed">
+                            Di saat krisis, setiap detik sangat berharga. Kami menyederhanakan proses pelaporan agar Anda mendapatkan bantuan maksimal tanpa hambatan.
                         </p>
                     </motion.div>
                 </div>
 
-                <div className="relative grid grid-cols-1 md:grid-cols-3 gap-12">
-                    {/* Connector Line (Desktop Only) */}
-                    <div className="hidden md:block absolute top-12 left-[16%] right-[16%] h-1 bg-gray-100 rounded-full overflow-hidden">
-                        <div className="w-full h-full bg-gradient-to-r from-red-500 via-orange-500 to-green-500 opacity-20"></div>
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 relative">
+                    {/* Connecting Dashed Line (Desktop) */}
+                    <div className="hidden md:block absolute top-[4rem] left-[15%] right-[15%] border-t-2 border-dashed border-gray-200 z-0" />
 
                     {steps.map((step, idx) => (
                         <motion.div
                             key={idx}
                             initial={{ opacity: 0, y: 30 }}
                             whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.3 }}
-                            className="relative flex flex-col items-center text-center"
+                            viewport={{ once: true, margin: "-100px" }}
+                            transition={{ duration: 0.5, delay: idx * 0.15 }}
+                            className="relative group h-full"
                         >
-                            <div className={`w-24 h-24 ${step.color} rounded-3xl rotate-3 flex items-center justify-center text-white shadow-xl mb-8 z-10 transition-transform hover:rotate-6 duration-300`}>
-                                <div className="-rotate-3">
-                                    {step.icon}
+                            {/* Card Body */}
+                            <div className="h-full relative z-10 bg-white p-8 lg:p-10 rounded-[2.5rem] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden transition-all duration-500 hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:-translate-y-2 flex flex-col">
+                                
+                                {/* Large Watermark Number */}
+                                <div className="absolute -top-12 -right-6 text-[10rem] md:text-[12rem] font-black text-gray-50/80 group-hover:text-gray-100/50 transition-colors duration-500 pointer-events-none leading-none select-none">
+                                    {step.num}
                                 </div>
+
+                                <div className="relative z-10 flex-1 flex flex-col">
+                                    <div className={`w-16 h-16 rounded-2xl ${step.bgColor} ring-4 ${step.ringColor} flex items-center justify-center mb-10 transition-transform duration-500 group-hover:scale-110`}>
+                                        {step.icon}
+                                    </div>
+                                    
+                                    <h3 className="text-2xl font-bold text-gray-900 mb-4 tracking-tight mt-auto">{step.title}</h3>
+                                    <p className="text-gray-500 leading-relaxed font-medium">
+                                        {step.description}
+                                    </p>
+                                </div>
+
+                                {/* Hover Accent Line at the bottom */}
+                                <div className={`absolute bottom-0 left-0 w-full h-1.5 bg-gradient-to-r ${step.accent} transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-500`} />
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-3">{step.title}</h3>
-                            <p className="text-gray-600 leading-relaxed max-w-xs">{step.description}</p>
                         </motion.div>
                     ))}
                 </div>

@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import dynamic from 'next/dynamic';
+import { useEffect, useState, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import dynamic from "next/dynamic";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FaChartBar,
   FaFileAlt,
   FaPlus,
-  FaUserCircle,
   FaCog,
   FaSignOutAlt,
   FaHome,
@@ -23,16 +23,15 @@ import {
   FaEdit,
   FaChevronDown,
   FaFire,
-} from 'react-icons/fa';
+  FaUserCircle,
+} from "react-icons/fa";
 
-// Import UserReportDetailModal dynamically to avoid SSR issues if it uses map
-const UserReportDetailModal = dynamic(() => import('@/components/UserReportDetailModal'), {
+import NotificationBell from "@/components/NotificationBell";
+import { getPostLogoutRedirectPath } from "@/lib/app-mode";
+
+const UserReportDetailModal = dynamic(() => import("@/components/UserReportDetailModal"), {
   ssr: false,
 });
-
-// Import NotificationBell
-import NotificationBell from '@/components/NotificationBell';
-import { getPostLogoutRedirectPath } from '@/lib/app-mode';
 
 interface Report {
   id: number;
@@ -41,15 +40,15 @@ interface Report {
   reporter_latitude?: number;
   reporter_longitude?: number;
   description: string;
-  status: 'submitted' | 'verified' | 'dispatched' | 'arrived' | 'completed' | 'false';
+  status: "submitted" | "verified" | "dispatched" | "arrived" | "completed" | "false";
   created_at: string;
   updated_at: string;
   admin_notes?: string;
   location_name?: string;
-  phone_number: string; // Added to match ReportDetailModal requirements
-  media_url: string;   // Added to match ReportDetailModal requirements
-  notes?: string;      // Added to match ReportDetailModal requirements
-  contact?: string;    // Added to match ReportDetailModal requirements
+  phone_number: string;
+  media_url: string;
+  notes?: string;
+  contact?: string;
 }
 
 interface User {
@@ -59,136 +58,82 @@ interface User {
   phone?: string;
 }
 
-type StatusType = 'pending' | 'submitted' | 'verified' | 'dispatched' | 'arrived' | 'completed' | 'diproses' | 'dikirim' | 'ditangani' | 'selesai' | 'dibatalkan' | 'false';
+type StatusType = "pending" | "submitted" | "verified" | "dispatched" | "arrived" | "completed" | "diproses" | "dikirim" | "ditangani" | "selesai" | "dibatalkan" | "false";
 
-const statusConfig: Record<StatusType, { label: string; color: string; textColor: string; icon: any }> = {
-  pending: {
-    label: 'Menunggu Verifikasi',
-    color: 'bg-yellow-500',
-    textColor: 'text-yellow-700',
-    icon: FaClock,
-  },
-  submitted: {
-    label: 'Menunggu Verifikasi',
-    color: 'bg-yellow-500',
-    textColor: 'text-yellow-700',
-    icon: FaClock,
-  },
-  verified: {
-    label: 'Terverifikasi',
-    color: 'bg-blue-500',
-    textColor: 'text-blue-700',
-    icon: FaCheckCircle,
-  },
-  diproses: {
-    label: 'Sedang Diproses',
-    color: 'bg-blue-500',
-    textColor: 'text-blue-700',
-    icon: FaCheckCircle,
-  },
-  dispatched: {
-    label: 'Unit Dalam Perjalanan',
-    color: 'bg-purple-500',
-    textColor: 'text-purple-700',
-    icon: FaTruck,
-  },
-  dikirim: {
-    label: 'Tim Dikirim',
-    color: 'bg-purple-500',
-    textColor: 'text-purple-700',
-    icon: FaTruck,
-  },
-  arrived: {
-    label: 'Unit Telah Tiba',
-    color: 'bg-indigo-500',
-    textColor: 'text-indigo-700',
-    icon: FaCheckCircle,
-  },
-  ditangani: {
-    label: 'Sedang Ditangani',
-    color: 'bg-cyan-500',
-    textColor: 'text-cyan-700',
-    icon: FaCheckCircle,
-  },
-  completed: {
-    label: 'Selesai',
-    color: 'bg-green-500',
-    textColor: 'text-green-700',
-    icon: FaCheckCircle,
-  },
-  selesai: {
-    label: 'Selesai',
-    color: 'bg-green-500',
-    textColor: 'text-green-700',
-    icon: FaCheckCircle,
-  },
-  dibatalkan: {
-    label: 'Dibatalkan',
-    color: 'bg-red-500',
-    textColor: 'text-red-700',
-    icon: FaTimesCircle,
-  },
-  false: {
-    label: 'Laporan Palsu',
-    color: 'bg-red-500',
-    textColor: 'text-red-700',
-    icon: FaTimesCircle,
-  },
+const statusConfig: Record<StatusType, { label: string; color: string; bgColor: string; icon: any }> = {
+  pending: { label: "Menunggu", color: "text-amber-600", bgColor: "bg-amber-50", icon: FaClock },
+  submitted: { label: "Menunggu", color: "text-amber-600", bgColor: "bg-amber-50", icon: FaClock },
+  verified: { label: "Terverifikasi", color: "text-blue-600", bgColor: "bg-blue-50", icon: FaCheckCircle },
+  diproses: { label: "Diproses", color: "text-blue-600", bgColor: "bg-blue-50", icon: FaCheckCircle },
+  dispatched: { label: "Meluncur", color: "text-indigo-600", bgColor: "bg-indigo-50", icon: FaTruck },
+  dikirim: { label: "Dikirim", color: "text-indigo-600", bgColor: "bg-indigo-50", icon: FaTruck },
+  arrived: { label: "Tiba", color: "text-cyan-600", bgColor: "bg-cyan-50", icon: FaCheckCircle },
+  ditangani: { label: "Ditangani", color: "text-cyan-600", bgColor: "bg-cyan-50", icon: FaCheckCircle },
+  completed: { label: "Selesai", color: "text-emerald-600", bgColor: "bg-emerald-50", icon: FaCheckCircle },
+  selesai: { label: "Selesai", color: "text-emerald-600", bgColor: "bg-emerald-50", icon: FaCheckCircle },
+  dibatalkan: { label: "Dibatalkan", color: "text-red-600", bgColor: "bg-red-50", icon: FaTimesCircle },
+  false: { label: "Palsu", color: "text-red-600", bgColor: "bg-red-50", icon: FaTimesCircle },
 };
 
-// Default status config for unknown statuses
 const defaultStatusConfig = {
-  label: 'Status Tidak Diketahui',
-  color: 'bg-gray-500',
-  textColor: 'text-gray-700',
+  label: "Unknown",
+  color: "text-gray-600",
+  bgColor: "bg-gray-50",
   icon: FaExclamationCircle,
 };
 
-const StatCard = ({ title, value, icon: Icon, gradient }: { title: string; value: number; icon: any; gradient: string }) => (
-  <div className="bg-white p-4 md:p-5 rounded-xl border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col md:flex-row items-center md:gap-4 gap-2">
-    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center ${gradient} shadow-sm`}>
-      <Icon className="w-4 h-4 md:w-5 md:h-5 text-white" />
-    </div>
-    <div className="text-center md:text-left">
-      <p className="text-xs text-gray-500 font-medium mb-0.5">{title}</p>
-      <p className="text-xl md:text-2xl font-semibold text-gray-900">{value}</p>
-    </div>
-  </div>
-);
+const StatCard = ({ title, value, icon: Icon, theme }: any) => {
+  return (
+    <motion.div 
+      whileHover={{ y: -2 }}
+      className="bg-white p-5 md:p-6 rounded-2xl border border-gray-100 flex flex-col justify-between relative group shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
+    >
+      <div className={`absolute -right-4 -top-4 w-24 h-24 ${theme.blur} opacity-[0.08] bg-current rounded-full blur-2xl pointer-events-none group-hover:scale-150 group-hover:opacity-[0.12] transition-all duration-500`} />
+      
+      <div className="flex items-start justify-between mb-4 z-10 relative">
+        <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center ${theme.iconBg}`}>
+          <Icon className={`text-base md:text-lg ${theme.iconColor}`} />
+        </div>
+        <p className="text-3xl md:text-4xl font-bold tracking-tight text-gray-800">{value}</p>
+      </div>
+      
+      <p className="text-[11px] md:text-xs font-semibold text-gray-500 uppercase tracking-wider relative z-10">{title}</p>
+    </motion.div>
+  );
+};
 
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [reports, setReports] = useState<Report[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
         setProfileDropdownOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const checkAuth = useCallback(async () => {
     try {
-      const response = await fetch('/api/auth/me');
+      const response = await fetch("/api/auth/me");
       if (!response.ok) {
-        router.push('/login');
+        router.push("/login");
         return;
       }
       const userData = await response.json();
       setUser(userData);
     } catch {
-      router.push('/login');
+      router.push("/login");
     }
   }, [router]);
 
@@ -200,10 +145,8 @@ export default function DashboardPage() {
   const fetchReports = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/reports/my-reports');
-      if (!response.ok) {
-        throw new Error('Gagal mengambil data laporan');
-      }
+      const response = await fetch("/api/reports/my-reports");
+      if (!response.ok) throw new Error("Gagal mengambil data laporan");
       const data = await response.json();
       setReports(data.reports || []);
     } catch (err: any) {
@@ -215,315 +158,258 @@ export default function DashboardPage() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return date.toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const handleLogout = async () => {
     const redirectTarget = getPostLogoutRedirectPath();
-
     try {
-      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-      // Force full page reload to clear all cached state
+      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
       window.location.href = redirectTarget;
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
       window.location.href = redirectTarget;
     }
   };
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-      {/* Detail Modal */}
-      {selectedReport && (
-        <UserReportDetailModal
-          report={selectedReport}
-          onClose={() => setSelectedReport(null)}
-        />
-      )}
+    <div className="flex min-h-screen bg-[#F8F9FA] font-sans text-gray-900 selection:bg-red-500/30">
+      <AnimatePresence>
+        {selectedReport && (
+          <UserReportDetailModal report={selectedReport} onClose={() => setSelectedReport(null)} />
+        )}
+      </AnimatePresence>
 
-      {/* Mobile Overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200/60 flex flex-col transform transition-transform duration-300 lg:transform-none ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}>
-        <div className="flex items-center justify-between gap-2.5 px-6 h-16 md:h-20 border-b border-gray-200/60">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl shadow-sm">
-              <FaFire className="text-white text-lg md:text-xl" />
-            </div>
-            <span className="text-lg md:text-xl font-semibold text-gray-900">FireGuard</span>
-          </div>
-          <button
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-gray-900/20 backdrop-blur-sm z-40 lg:hidden"
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <FaTimes className="text-gray-600 text-lg" />
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Sidebar - Proportions scaled down */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-100 flex flex-col transform transition-transform duration-300 ease-out lg:translate-x-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="h-20 flex items-center justify-between px-6 border-b border-transparent">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="p-2 bg-red-500 rounded-xl shadow-sm">
+              <FaFire className="text-white text-base" />
+            </div>
+            <span className="text-lg font-bold tracking-tight text-gray-900">FireGuard</span>
+          </Link>
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-2 text-gray-400 hover:text-gray-900 transition-colors">
+            <FaTimes />
           </button>
         </div>
-        <nav className="flex-1 px-4 py-6 space-y-1.5">
-          <Link href="/" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
-            <FaHome className="text-base" />
+
+        <nav className="flex-1 px-4 mt-4 space-y-1">
+          <Link href="/" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-xl transition-all">
+            <FaHome className="text-base text-gray-400" />
             <span>Beranda</span>
           </Link>
-          <Link href="/dashboard" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-900 bg-red-50 rounded-xl font-medium">
-            <FaChartBar className="text-base text-red-600" />
-            <span>Dashboard</span>
-          </Link>
-          <Link href="/report/new" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
-            <FaPlus className="text-base" />
+          
+          <div className="flex items-center gap-3 px-3 py-2.5 relative bg-red-50/50 rounded-xl">
+            <FaChartBar className="text-base text-red-500 relative z-10" />
+            <span className="text-sm font-semibold text-red-600 relative z-10">Dashboard</span>
+            <div className="absolute inset-0 border border-red-100 rounded-xl pointer-events-none" />
+          </div>
+
+          <Link href="/report/new" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-xl transition-all">
+            <FaPlus className="text-base text-gray-400" />
             <span>Lapor Baru</span>
           </Link>
-          <hr className="my-3 border-gray-200/60" />
-          <Link href="/dashboard/profile" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
-            <FaUser className="text-base" />
+
+          <div className="pt-6 pb-2">
+            <p className="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Akun</p>
+          </div>
+
+          <Link href="/dashboard/profile" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-xl transition-all">
+            <FaUser className="text-base text-gray-400" />
             <span>Edit Profil</span>
           </Link>
-          <Link href="/dashboard/settings" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
-            <FaCog className="text-base" />
+          <Link href="/dashboard/settings" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-xl transition-all">
+            <FaCog className="text-base text-gray-400" />
             <span>Pengaturan</span>
           </Link>
         </nav>
-        <div className="px-4 py-6 border-t border-gray-200/60">
-          <button onClick={handleLogout} className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-600 hover:bg-red-50 hover:text-red-600 rounded-xl transition-colors">
+
+        <div className="p-4 border-t border-gray-50">
+          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
             <FaSignOutAlt className="text-base" />
-            <span>Logout</span>
+            <span>Keluar</span>
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/60 h-16 md:h-20 flex items-center justify-between px-4 md:px-8">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 hover:bg-gray-100 rounded-xl transition-colors"
-            >
-              <FaBars className="text-gray-600 text-lg" />
+      <div className="flex-1 lg:pl-64 flex flex-col min-w-0">
+        
+        {/* Header - scaled down */}
+        <header className="h-20 px-6 md:px-8 flex items-center justify-between sticky top-0 z-30 bg-[#F8F9FA]/80 backdrop-blur-xl border-b border-gray-100/50">
+          <div className="flex items-center gap-4">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2.5 bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">
+              <FaBars className="text-sm" />
             </button>
             <div>
-              <h1 className="text-base md:text-xl font-semibold text-gray-900">Dashboard Saya</h1>
-              <p className="text-xs text-gray-500 mt-0.5 hidden sm:block">Selamat datang, {user?.name || user?.email || 'Pengguna'}</p>
+              <h1 className="text-xl md:text-2xl font-bold tracking-tight text-gray-900 leading-none">Beranda.</h1>
+              <p className="text-xs font-medium text-gray-500 mt-1 tracking-wide">Tinjauan area pelaporan darurat</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 md:gap-3">
-            {/* Notification Bell */}
-            <NotificationBell
-              onViewReport={(reportId) => {
-                const report = reports.find(r => r.id === reportId);
-                if (report) setSelectedReport(report);
-              }}
-            />
+          
+          <div className="flex items-center gap-3">
+            <NotificationBell onViewReport={(reportId) => {
+              const rep = reports.find((r) => r.id === reportId);
+              if (rep) setSelectedReport(rep);
+            }} />
 
-            {/* Profile Dropdown */}
             <div className="relative" ref={profileDropdownRef}>
-              <button
-                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                className="flex items-center gap-2 p-1.5 hover:bg-gray-100 rounded-xl transition-colors"
-              >
-                <div className="w-8 h-8 md:w-9 md:h-9 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl flex items-center justify-center">
-                  <FaUserCircle className="text-white text-base md:text-lg" />
+              <button onClick={() => setProfileDropdownOpen(!profileDropdownOpen)} className="flex items-center gap-2.5 p-1.5 pr-4 bg-white border border-gray-200/80 rounded-full hover:shadow-sm hover:border-gray-300 transition-all">
+                <div className="w-9 h-9 bg-gray-900 rounded-full flex items-center justify-center text-white font-medium text-sm">
+                  {user?.name?.[0]?.toUpperCase() || <FaUserCircle />}
                 </div>
-                <FaChevronDown className={`hidden sm:block text-gray-400 text-xs transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} />
+                <div className="hidden sm:flex flex-col text-left justify-center">
+                  <p className="text-sm font-semibold text-gray-900 leading-tight max-w-[100px] truncate">{user?.name || "Pengguna"}</p>
+                </div>
+                <FaChevronDown className={`hidden sm:block text-gray-400 text-[10px] ml-1 transition-transform ${profileDropdownOpen ? "rotate-180" : ""}`} />
               </button>
 
-              {/* Dropdown Menu */}
-              {profileDropdownOpen && (
-                <>
-                  {/* Desktop Dropdown */}
-                  <div className="hidden sm:block absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-xl border border-gray-200/60 z-50 overflow-hidden">
-                    {/* Profile Info */}
-                    <div className="px-5 py-4 border-b border-gray-100 bg-gradient-to-br from-red-50 to-orange-50">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl flex items-center justify-center shadow-sm">
-                          <FaUser className="text-white text-lg" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-gray-900 truncate">{user?.name || 'Pengguna'}</p>
-                          <p className="text-xs text-gray-500 truncate">{user?.email || '-'}</p>
-                        </div>
-                      </div>
+              <AnimatePresence>
+                {profileDropdownOpen && (
+                  <motion.div initial={{ opacity: 0, y: 10, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 5, scale: 0.98 }} transition={{ duration: 0.15 }} className="absolute right-0 top-full mt-3 w-64 bg-white rounded-2xl shadow-lg shadow-black/[0.05] border border-gray-100 overflow-hidden z-50">
+                    <div className="px-5 py-4 bg-gray-50/50 border-b border-gray-100">
+                      <p className="font-semibold text-gray-900 text-sm truncate">{user?.name || "Pengguna"}</p>
+                      <p className="text-xs text-gray-500 truncate mt-0.5">{user?.email || "-"}</p>
                     </div>
-
-                    {/* Menu Items */}
-                    <div className="py-2">
-                      <button
-                        onClick={() => {
-                          setProfileDropdownOpen(false);
-                          router.push('/dashboard/profile');
-                        }}
-                        className="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        <FaEdit className="text-gray-400" />
-                        <span>Edit Profil</span>
+                    <div className="p-2">
+                      <button onClick={() => { setProfileDropdownOpen(false); router.push('/dashboard/profile'); }} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-xl transition-colors">
+                        <FaEdit className="text-gray-400" /> Edit Profil
                       </button>
-
-                      <button
-                        onClick={() => {
-                          setProfileDropdownOpen(false);
-                          router.push('/dashboard/settings');
-                        }}
-                        className="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        <FaCog className="text-gray-400" />
-                        <span>Pengaturan</span>
+                      <button onClick={() => { setProfileDropdownOpen(false); router.push('/dashboard/settings'); }} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-xl transition-colors">
+                        <FaCog className="text-gray-400" /> Pengaturan
                       </button>
-
-                      <hr className="my-2 border-gray-100" />
-
-                      <button
-                        onClick={() => {
-                          setProfileDropdownOpen(false);
-                          handleLogout();
-                        }}
-                        className="w-full flex items-center gap-3 px-5 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                      >
-                        <FaSignOutAlt className="text-red-500" />
-                        <span>Logout</span>
+                      <div className="h-px bg-gray-100 my-1 mx-2" />
+                      <button onClick={() => { setProfileDropdownOpen(false); handleLogout(); }} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-colors">
+                        <FaSignOutAlt className="text-red-400" /> Keluar
                       </button>
                     </div>
-                  </div>
-
-                  {/* Mobile Dropdown */}
-                  <div className="sm:hidden absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-200/60 z-50 overflow-hidden">
-                    {/* Profile Info */}
-                    <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-br from-red-50 to-orange-50">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl flex items-center justify-center shadow-sm">
-                          <FaUser className="text-white text-base" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-gray-900 text-sm truncate">{user?.name || 'Pengguna'}</p>
-                          <p className="text-xs text-gray-500 truncate">{user?.email || '-'}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Menu Items */}
-                    <div className="py-2">
-                      <button
-                        onClick={() => {
-                          setProfileDropdownOpen(false);
-                          router.push('/dashboard/profile');
-                        }}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
-                      >
-                        <FaEdit className="text-gray-400" />
-                        <span>Edit Profil</span>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setProfileDropdownOpen(false);
-                          router.push('/dashboard/settings');
-                        }}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
-                      >
-                        <FaCog className="text-gray-400" />
-                        <span>Pengaturan</span>
-                      </button>
-
-                      <hr className="my-2 border-gray-100" />
-
-                      <button
-                        onClick={() => {
-                          setProfileDropdownOpen(false);
-                          handleLogout();
-                        }}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 active:bg-red-100 transition-colors"
-                      >
-                        <FaSignOutAlt className="text-red-500" />
-                        <span>Logout</span>
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </header>
 
-        {/* Content Area */}
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
-          {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 mb-4 md:mb-6">
-            <StatCard title="Total Laporan" value={reports.length} icon={FaFileAlt} gradient="bg-gradient-to-br from-blue-500 to-cyan-600" />
-            <StatCard title="Menunggu" value={reports.filter((r) => ['submitted', 'pending'].includes(r.status)).length} icon={FaClock} gradient="bg-gradient-to-br from-yellow-500 to-amber-600" />
-            <StatCard title="Dalam Proses" value={reports.filter((r) => ['verified', 'dispatched', 'arrived', 'diproses', 'dikirim', 'ditangani'].includes(r.status)).length} icon={FaTruck} gradient="bg-gradient-to-br from-purple-500 to-indigo-600" />
-            <StatCard title="Selesai" value={reports.filter((r) => ['completed', 'selesai'].includes(r.status)).length} icon={FaCheckCircle} gradient="bg-gradient-to-br from-green-500 to-emerald-600" />
+        <main className="flex-1 px-6 md:px-8 py-8 mx-auto w-full max-w-6xl">
+          
+          {/* Stats Grid - Standard proportions */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 mb-10">
+            <StatCard 
+              title="Semua Lap." value={reports.length} icon={FaFileAlt} 
+              theme={{ blur: "text-blue-500", iconBg: "bg-blue-50/50 text-blue-600", iconColor: "text-blue-600" }} 
+            />
+            <StatCard 
+              title="Menunggu" value={reports.filter((r) => ["submitted", "pending"].includes(r.status)).length} icon={FaClock} 
+              theme={{ blur: "text-amber-500", iconBg: "bg-amber-50/50 text-amber-600", iconColor: "text-amber-500" }} 
+            />
+            <StatCard 
+              title="Dlm Proses" value={reports.filter((r) => ["verified", "dispatched", "arrived", "diproses", "dikirim", "ditangani"].includes(r.status)).length} icon={FaTruck} 
+              theme={{ blur: "text-indigo-500", iconBg: "bg-indigo-50/50 text-indigo-600", iconColor: "text-indigo-500" }} 
+            />
+            <StatCard 
+              title="Selesai" value={reports.filter((r) => ["completed", "selesai"].includes(r.status)).length} icon={FaCheckCircle} 
+              theme={{ blur: "text-emerald-500", iconBg: "bg-emerald-50/50 text-emerald-600", iconColor: "text-emerald-500" }} 
+            />
           </div>
 
-          {/* Reports List */}
-          <div className="bg-white rounded-xl md:rounded-2xl border border-gray-200/60 shadow-sm p-4 md:p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <div className="w-1 h-6 bg-gradient-to-b from-red-500 to-orange-500 rounded-full"></div>
-              <h2 className="text-base font-semibold text-gray-900">Riwayat Laporan Anda</h2>
+          <div className="flex flex-col">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+              <div>
+                <h2 className="text-lg md:text-xl font-bold tracking-tight text-gray-900">Riwayat Laporan</h2>
+                <p className="text-sm text-gray-500 mt-0.5">Daftar insiden yang Anda laporkan</p>
+              </div>
+              <Link href="/report/new" className="inline-flex items-center gap-2 bg-gray-900 hover:bg-black text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all shadow-sm active:scale-95 shrink-0">
+                <FaPlus className="text-xs" /> Lapor Baru
+              </Link>
             </div>
-            {isLoading ? (
-              <div className="text-center py-12">
-                <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-red-500 border-r-transparent mb-3"></div>
-                <p className="text-sm text-gray-600">Memuat laporan...</p>
-              </div>
-            ) : error ? (
-              <div className="text-center py-12">
-                <FaExclamationCircle className="mx-auto text-red-500 mb-3 h-10 w-10" />
-                <p className="text-sm text-red-600 font-medium">{error}</p>
-              </div>
-            ) : reports.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-red-500/20 to-orange-500/20 rounded-2xl mb-3">
-                  <FaFire className="text-red-400 text-2xl" />
-                </div>
-                <p className="text-base text-gray-900 font-semibold">Belum Ada Laporan</p>
-                <p className="text-xs text-gray-500 mt-1">Laporan yang Anda buat akan muncul di sini</p>
-                <Link href="/report/new" className="inline-flex items-center gap-2 mt-6 bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white px-6 py-3 rounded-xl font-semibold text-sm transition-all shadow-lg shadow-red-500/25 hover:shadow-xl hover:shadow-red-500/30">
-                  <FaPlus />
-                  <span>Buat Laporan Pertama</span>
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {reports.map((report) => {
-                  const statusInfo = statusConfig[report.status as StatusType] || defaultStatusConfig;
-                  const StatusIcon = statusInfo.icon;
 
-                  return (
-                    <div
-                      key={report.id}
-                      className="bg-white hover:bg-gray-50 rounded-xl p-3 md:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 hover:shadow-sm transition-all cursor-pointer border border-gray-200/60"
-                      onClick={() => setSelectedReport(report)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${statusInfo.color} flex-shrink-0`}>
-                          <StatusIcon className="text-white text-sm" />
+            <div className="space-y-3">
+              {isLoading ? (
+                <div className="py-16 flex flex-col items-center justify-center">
+                  <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4 animate-pulse">
+                    <FaFire className="text-red-400 text-xl" />
+                  </div>
+                  <p className="text-gray-400 font-medium text-sm">Memuat data...</p>
+                </div>
+              ) : error ? (
+                <div className="bg-white border border-red-100 p-8 rounded-2xl text-center shadow-sm">
+                  <FaExclamationCircle className="mx-auto text-red-500 text-2xl mb-3" />
+                  <p className="text-gray-900 font-semibold text-base mb-1">Gagal Memuat</p>
+                  <p className="text-sm text-gray-500">{error}</p>
+                </div>
+              ) : reports.length === 0 ? (
+                <div className="bg-white border border-gray-100 p-12 md:p-16 rounded-2xl text-center shadow-sm">
+                  <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-50 rounded-full border border-gray-100 mb-5">
+                    <FaChartBar className="text-gray-400 text-2xl" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 tracking-tight mb-2">Belum Ada Laporan</h3>
+                  <p className="text-gray-500 text-sm max-w-sm mx-auto leading-relaxed">Anda belum memiliki riwayat pelaporan. Laporan yang Anda buat akan muncul di sini.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3">
+                  {reports.map((report) => {
+                    const statusInfo = statusConfig[report.status as StatusType] || defaultStatusConfig;
+                    const StatusIcon = statusInfo.icon;
+
+                    return (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        key={report.id}
+                        onClick={() => setSelectedReport(report)}
+                        className="group bg-white p-4 md:p-5 rounded-2xl border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer hover:shadow-sm hover:border-gray-200 transition-all duration-200"
+                      >
+                        <div className="flex items-center gap-4 min-w-0">
+                          <div className={`w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-xl flex items-center justify-center ${statusInfo.bgColor} transition-colors`}>
+                            <StatusIcon className={`text-base md:text-lg ${statusInfo.color}`} />
+                          </div>
+                          <div className="min-w-0 pr-4">
+                            <h3 className="text-base font-semibold text-gray-900 truncate mb-1">
+                              Laporan #{report.id}
+                            </h3>
+                            <p className="text-gray-500 text-xs md:text-sm truncate">
+                              {report.description || "Tanpa deskripsi"}
+                            </p>
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm text-gray-900">Laporan #{report.id}</p>
-                          <p className="text-xs text-gray-500 truncate mt-0.5">{report.description}</p>
+                        
+                        <div className="flex sm:flex-col items-center sm:items-end justify-between shrink-0 ml-14 sm:ml-0">
+                          <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${statusInfo.bgColor} ${statusInfo.color} mb-0 sm:mb-1.5`}>
+                            {statusInfo.label}
+                          </span>
+                          <span className="text-gray-400 text-[11px] font-medium">
+                            {formatDate(report.updated_at)}
+                          </span>
                         </div>
-                      </div>
-                      <div className="text-left sm:text-right pl-13 sm:pl-0">
-                        <p className={`text-xs font-medium ${statusInfo.textColor}`}>{statusInfo.label}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{formatDate(report.updated_at)}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </main>
       </div>

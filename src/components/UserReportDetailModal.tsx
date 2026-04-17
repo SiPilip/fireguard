@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
 import { toSafeExternalUrl } from "@/lib/url-safety";
 import {
     FaTimes,
@@ -26,16 +27,8 @@ interface Report {
     contact?: string;
     description?: string;
     address?: string;
-    category?: {
-        id: number;
-        name: string;
-        icon: string;
-    };
-    kelurahan?: {
-        id: number;
-        name: string;
-        kecamatan?: string;
-    };
+    category?: { id: number; name: string; icon: string; };
+    kelurahan?: { id: number; name: string; kecamatan?: string; };
     category_name?: string;
     category_icon?: string;
     kelurahan_name?: string;
@@ -47,118 +40,108 @@ interface UserReportDetailModalProps {
     onClose: () => void;
 }
 
-export default function UserReportDetailModal({
-    report,
-    onClose,
-}: UserReportDetailModalProps) {
-    // Handle ESC key to close modal
+export default function UserReportDetailModal({ report, onClose }: UserReportDetailModalProps) {
     useEffect(() => {
-        const handleEsc = (e: KeyboardEvent) => {
-            if (e.key === "Escape") onClose();
-        };
+        const handleEsc = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
         window.addEventListener("keydown", handleEsc);
         return () => window.removeEventListener("keydown", handleEsc);
     }, [onClose]);
 
     const getStatusDisplay = (status: string) => {
         const statusMap: { [key: string]: { text: string; color: string; bgColor: string } } = {
-            pending: { text: "Menunggu Verifikasi", color: "text-yellow-700", bgColor: "bg-yellow-50 border-yellow-200" },
-            submitted: { text: "Menunggu Verifikasi", color: "text-yellow-700", bgColor: "bg-yellow-50 border-yellow-200" },
-            verified: { text: "Terverifikasi", color: "text-blue-700", bgColor: "bg-blue-50 border-blue-200" },
-            diproses: { text: "Sedang Diproses", color: "text-blue-700", bgColor: "bg-blue-50 border-blue-200" },
-            dispatched: { text: "Unit Dalam Perjalanan", color: "text-purple-700", bgColor: "bg-purple-50 border-purple-200" },
-            dikirim: { text: "Tim Dikirim", color: "text-purple-700", bgColor: "bg-purple-50 border-purple-200" },
-            arrived: { text: "Unit Tiba di Lokasi", color: "text-indigo-700", bgColor: "bg-indigo-50 border-indigo-200" },
-            ditangani: { text: "Sedang Ditangani", color: "text-cyan-700", bgColor: "bg-cyan-50 border-cyan-200" },
-            completed: { text: "Selesai", color: "text-green-700", bgColor: "bg-green-50 border-green-200" },
-            selesai: { text: "Selesai", color: "text-green-700", bgColor: "bg-green-50 border-green-200" },
-            dibatalkan: { text: "Dibatalkan", color: "text-red-700", bgColor: "bg-red-50 border-red-200" },
-            false: { text: "Laporan Ditolak/Palsu", color: "text-red-700", bgColor: "bg-red-50 border-red-200" },
+            pending: { text: "Menunggu Verifikasi", color: "text-amber-600", bgColor: "bg-amber-50" },
+            submitted: { text: "Menunggu Verifikasi", color: "text-amber-600", bgColor: "bg-amber-50" },
+            verified: { text: "Terverifikasi", color: "text-blue-600", bgColor: "bg-blue-50" },
+            diproses: { text: "Sedang Diproses", color: "text-blue-600", bgColor: "bg-blue-50" },
+            dispatched: { text: "Unit Meluncur", color: "text-indigo-600", bgColor: "bg-indigo-50" },
+            dikirim: { text: "Tim Dikirim", color: "text-indigo-600", bgColor: "bg-indigo-50" },
+            arrived: { text: "Unit Tiba", color: "text-cyan-600", bgColor: "bg-cyan-50" },
+            ditangani: { text: "Sedang Ditangani", color: "text-cyan-600", bgColor: "bg-cyan-50" },
+            completed: { text: "Selesai", color: "text-emerald-600", bgColor: "bg-emerald-50" },
+            selesai: { text: "Selesai", color: "text-emerald-600", bgColor: "bg-emerald-50" },
+            dibatalkan: { text: "Dibatalkan", color: "text-red-600", bgColor: "bg-red-50" },
+            false: { text: "Laporan Palsu", color: "text-red-600", bgColor: "bg-red-50" },
         };
-        return (
-            statusMap[status] || { text: status, color: "text-gray-700", bgColor: "bg-gray-50 border-gray-200" }
-        );
+        return statusMap[status] || { text: status, color: "text-gray-600", bgColor: "bg-gray-50" };
     };
 
     const statusDisplay = getStatusDisplay(report.status);
     const safeMediaUrl = toSafeExternalUrl(report.media_url);
-
-    // Generate Google Maps link
     const googleMapsUrl = `https://www.google.com/maps?q=${report.fire_latitude},${report.fire_longitude}`;
 
     return (
-        <div
-            className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+        <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            className="fixed inset-0 z-[9998] flex items-center justify-center bg-gray-900/30 backdrop-blur-sm p-4 sm:p-6" 
             onClick={onClose}
         >
-            <div
-                className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+            <motion.div 
+                initial={{ scale: 0.98, y: 15, opacity: 0 }} 
+                animate={{ scale: 1, y: 0, opacity: 1 }} 
+                exit={{ scale: 0.98, y: 15, opacity: 0 }} 
+                transition={{ type: "spring", stiffness: 350, damping: 25 }}
+                className="bg-white rounded-2xl md:rounded-3xl shadow-xl max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col border border-gray-100" 
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="sticky top-0 bg-white border-b border-gray-200/60 px-6 py-5 flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl">
-                            <FaFileAlt className="text-white text-base" />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-semibold text-gray-900">Detail Laporan Saya #{report.id}</h2>
-                            <p className="text-xs text-gray-500 mt-0.5">Pantau status laporan Anda</p>
-                        </div>
+                <div className="sticky top-0 bg-white/90 backdrop-blur-xl z-20 px-6 py-5 flex justify-between items-center border-b border-gray-100">
+                    <div>
+                        <h2 className="text-xl font-bold tracking-tight text-gray-900">Detail Laporan</h2>
+                        <p className="text-xs font-semibold text-gray-400 mt-0.5 uppercase tracking-wide">ID: #{report.id}</p>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all p-2 rounded-xl"
-                        aria-label="Close modal"
-                    >
-                        <FaTimes size={20} />
+                    <button onClick={onClose} className="p-2.5 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-xl transition-colors shrink-0">
+                        <FaTimes className="text-base" />
                     </button>
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-5 bg-gray-50/30">
-                    {/* Status */}
-                    <div className={`rounded-xl p-5 border ${statusDisplay.bgColor}`}>
-                        <div className="flex items-center gap-3">
-                            <div className="flex-1">
-                                <p className="text-xs text-gray-500 mb-1">Status Terkini</p>
-                                <p className={`text-xl font-semibold ${statusDisplay.color}`}>
-                                    {statusDisplay.text}
-                                </p>
-                            </div>
+                <div className="flex-1 overflow-y-auto p-5 md:p-6 space-y-4 bg-gray-50/50">
+                    
+                    {/* Status Banner */}
+                    <div className={`rounded-2xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-3 border border-white ${statusDisplay.bgColor}`}>
+                        <div>
+                            <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 mb-1 opacity-70">Status Laporan</p>
+                            <p className={`text-xl md:text-2xl font-bold tracking-tight ${statusDisplay.color}`}>
+                                {statusDisplay.text}
+                            </p>
+                        </div>
+                        <div className="flex flex-col items-start md:items-end">
+                            <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 mb-1 opacity-70">Waktu Lap.</p>
+                            <p className="text-sm font-medium text-gray-700">
+                                {new Date(report.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })} &middot; {new Date(report.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+                            </p>
                         </div>
                     </div>
 
-                    {/* Kategori dan Kelurahan */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Kategori Bencana */}
-                        <div className="bg-white rounded-xl p-5 border border-gray-200/60 shadow-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
                             <div className="flex items-start gap-3">
-                                <div className="p-2 bg-red-100 rounded-lg">
-                                    <span className="text-lg">{report.category?.icon || report.category_icon || '🔥'}</span>
+                                <div className="p-2.5 bg-red-50 text-red-500 rounded-lg text-base shrink-0">
+                                    {report.category?.icon || report.category_icon || '??'}
                                 </div>
-                                <div className="flex-1">
-                                    <p className="text-xs text-gray-500 mb-1.5">Kategori Bencana</p>
-                                    <p className="text-sm font-semibold text-gray-900">
-                                        {report.category?.name || report.category_name || 'Kebakaran'}
+                                <div>
+                                    <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-0.5">Kategori</p>
+                                    <p className="text-base font-semibold text-gray-900 tracking-tight">
+                                        {report.category?.name || report.category_name || 'Darurat'}
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Kelurahan */}
-                        <div className="bg-white rounded-xl p-5 border border-gray-200/60 shadow-sm">
+                        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
                             <div className="flex items-start gap-3">
-                                <div className="p-2 bg-teal-100 rounded-lg">
-                                    <FaMapMarkerAlt className="text-teal-600 text-sm" />
+                                <div className="p-2.5 bg-teal-50 text-teal-600 rounded-lg text-base shrink-0">
+                                    <FaMapMarkerAlt />
                                 </div>
-                                <div className="flex-1">
-                                    <p className="text-xs text-gray-500 mb-1.5">Kelurahan</p>
-                                    <p className="text-sm font-semibold text-gray-900">
-                                        {report.kelurahan?.name || report.kelurahan_name || 'Tidak tersedia'}
+                                <div className="min-w-0">
+                                    <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-0.5">Wilayah</p>
+                                    <p className="text-base font-semibold text-gray-900 tracking-tight leading-tight truncate">
+                                        {report.kelurahan?.name || report.kelurahan_name || 'Area'}
                                     </p>
                                     {(report.kelurahan?.kecamatan || report.kecamatan) && (
-                                        <p className="text-xs text-gray-500 mt-0.5">
+                                        <p className="text-[11px] text-gray-500 mt-0.5 truncate">
                                             Kec. {report.kelurahan?.kecamatan || report.kecamatan}
                                         </p>
                                     )}
@@ -167,162 +150,62 @@ export default function UserReportDetailModal({
                         </div>
                     </div>
 
-                    {/* Alamat/Patokan */}
-                    {report.address && (
-                        <div className="bg-white rounded-xl p-5 border border-gray-200/60 shadow-sm">
-                            <div className="flex items-start gap-3">
-                                <div className="p-2 bg-orange-100 rounded-lg">
-                                    <FaMapMarkerAlt className="text-orange-600 text-sm" />
+                    {(report.address || report.description) && (
+                        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-4">
+                            {report.address && (
+                                <div>
+                                    <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-2 flex items-center gap-1.5"><FaMapMarkerAlt/> Alamat & Patokan</p>
+                                    <p className="text-sm text-gray-700 leading-relaxed bg-gray-50/50 border border-gray-100 p-3 rounded-xl">{report.address}</p>
                                 </div>
-                                <div className="flex-1">
-                                    <p className="text-xs text-gray-500 mb-1.5">Alamat/Patokan</p>
-                                    <p className="text-sm text-gray-900">{report.address}</p>
+                            )}
+                            {report.description && (
+                                <div>
+                                    <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-2 flex items-center gap-1.5"><FaFileAlt/> Rincian Kejadian</p>
+                                    <p className="text-sm text-gray-700 leading-relaxed bg-gray-50/50 border border-gray-100 p-3 rounded-xl">{report.description}</p>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     )}
 
-                    {/* Info Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Waktu */}
-                        <div className="bg-white rounded-xl p-5 border border-gray-200/60 shadow-sm">
-                            <div className="flex items-start gap-3">
-                                <div className="p-2 bg-yellow-100 rounded-lg">
-                                    <FaClock className="text-yellow-600 text-sm" />
-                                </div>
-                                <div className="flex-1">
-                                    <p className="text-xs text-gray-500 mb-1.5">Waktu Laporan</p>
-                                    <p className="text-sm font-semibold text-gray-900">
-                                        {new Date(report.created_at).toLocaleDateString("id-ID", {
-                                            day: "numeric",
-                                            month: "long",
-                                            year: "numeric",
-                                            timeZone: "Asia/Jakarta",
-                                        })}
-                                    </p>
-                                    <p className="text-sm text-gray-600 mt-0.5">
-                                        {new Date(report.created_at).toLocaleTimeString("id-ID", {
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                            second: "2-digit",
-                                            timeZone: "Asia/Jakarta",
-                                        })} WIB
-                                    </p>
-                                </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                         <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex flex-col justify-between">
+                            <div>
+                                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Koordinat</p>
+                                <p className="text-sm font-medium text-gray-900 font-mono tracking-tight mb-3">
+                                    {Number(report.fire_latitude).toFixed(5)}, {Number(report.fire_longitude).toFixed(5)}
+                                </p>
                             </div>
+                            <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 w-full py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-xs font-semibold rounded-lg transition-colors shadow-sm focus:ring-2 focus:ring-gray-900/20">
+                                Buka di Maps
+                            </a>
                         </div>
-
-                        {/* Kontak */}
-                        <div className="bg-white rounded-xl p-5 border border-gray-200/60 shadow-sm">
-                            <div className="flex items-start gap-3">
-                                <div className="p-2 bg-green-100 rounded-lg">
-                                    <FaPhone className="text-green-600 text-sm" />
-                                </div>
-                                <div className="flex-1">
-                                    <p className="text-xs text-gray-500 mb-1.5">Nomor Telepon Pelapor</p>
-                                    <p className="text-sm font-semibold text-gray-900 font-mono">
-                                        {report.phone_number || 'Tidak tersedia'}
-                                    </p>
-                                </div>
+                        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex flex-col justify-between">
+                            <div>
+                                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Kontak Tersimpan</p>
+                                <p className="text-base font-semibold text-gray-900 font-mono mb-3">{report.phone_number || '-'}</p>
+                            </div>
+                            <div className="inline-flex items-center justify-center gap-2 w-full py-2.5 bg-gray-50 border border-gray-100 text-gray-500 text-xs font-semibold rounded-lg">
+                                <FaPhone className="text-gray-400"/> Data Kontak
                             </div>
                         </div>
                     </div>
 
-                    {/* Lokasi Kebakaran */}
-                    <div className="bg-white rounded-xl p-5 border border-gray-200/60 shadow-sm">
-                        <div className="flex items-start gap-3 mb-3">
-                            <div className="p-2 bg-orange-100 rounded-lg">
-                                <FaMapMarkerAlt className="text-orange-600 text-sm" />
+                    {safeMediaUrl && (
+                        <div className="bg-gray-900 rounded-2xl p-5 overflow-hidden relative">
+                            <div className="absolute top-[-20%] right-[-10%] w-32 h-32 bg-red-500/20 blur-[40px] pointer-events-none mix-blend-screen" />
+                            <p className="text-[10px] font-semibold uppercase tracking-wider text-white/50 mb-3 relative z-10 flex items-center gap-1.5"><FaImage/> Dokumentasi TKP</p>
+                            <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-white/10 group bg-black/50">
+                                <Image src={safeMediaUrl} alt="Bukti laporan" fill className="object-contain transition-transform duration-700" />
                             </div>
-                            <div className="flex-1">
-                                <p className="text-xs text-gray-500 mb-1">Lokasi Kejadian</p>
-                                <p className="text-sm font-semibold text-gray-900 mb-2">
-                                    Koordinat: {Number(report.fire_latitude).toFixed(6)}, {Number(report.fire_longitude).toFixed(6)}
-                                </p>
-                                <a
-                                    href={googleMapsUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors"
-                                >
-                                    <FaMapMarkerAlt />
-                                    Buka di Google Maps
+                            <div className="mt-3 text-center">
+                                <a href={safeMediaUrl} target="_blank" rel="noopener noreferrer" className="text-[11px] text-gray-400 font-medium hover:text-white transition-colors underline underline-offset-2 decoration-gray-600 hover:decoration-white">
+                                    Lihat Ukuran Penuh
                                 </a>
                             </div>
                         </div>
-                    </div>
-
-                    {/* Deskripsi */}
-                    {report.description && (
-                        <div className="bg-white rounded-xl p-5 border border-gray-200/60 shadow-sm">
-                            <div className="flex items-start gap-3">
-                                <div className="p-2 bg-blue-100 rounded-lg">
-                                    <FaFileAlt className="text-blue-600 text-sm" />
-                                </div>
-                                <div className="flex-1">
-                                    <p className="text-xs text-gray-500 mb-2">Deskripsi Kejadian</p>
-                                    <p className="text-sm text-gray-900 leading-relaxed">{report.description}</p>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Media */}
-                    {safeMediaUrl && (
-                        <div className="bg-white rounded-xl p-5 border border-gray-200/60 shadow-sm">
-                            <div className="flex items-start gap-3">
-                                <div className="p-2 bg-purple-100 rounded-lg">
-                                    <FaImage className="text-purple-600 text-sm" />
-                                </div>
-                                <div className="flex-1">
-                                    <p className="text-xs text-gray-500 mb-3">Foto Kejadian</p>
-                                    <div className="relative w-full h-64 rounded-xl overflow-hidden border border-gray-200">
-                                        <Image
-                                            src={safeMediaUrl}
-                                            alt="Bukti laporan"
-                                            fill
-                                            className="object-cover"
-                                        />
-                                    </div>
-                                    <a
-                                        href={safeMediaUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-blue-600 hover:text-blue-700 text-xs font-medium mt-3 inline-flex items-center gap-1 hover:underline"
-                                    >
-                                        Lihat Ukuran Penuh →
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Catatan */}
-                    {report.notes && (
-                        <div className="bg-white rounded-xl p-5 border border-gray-200/60 shadow-sm">
-                            <div className="flex items-start gap-3">
-                                <div className="p-2 bg-blue-100 rounded-lg">
-                                    <FaFileAlt className="text-blue-600 text-sm" />
-                                </div>
-                                <div className="flex-1">
-                                    <p className="text-xs text-gray-500 mb-2">Catatan Tambahan</p>
-                                    <p className="text-sm text-gray-900 leading-relaxed">{report.notes}</p>
-                                </div>
-                            </div>
-                        </div>
                     )}
                 </div>
-
-                {/* Footer - No Action Buttons for User */}
-                <div className="sticky bottom-0 bg-white border-t border-gray-200/60 px-6 py-4 flex justify-end">
-                    <button
-                        onClick={onClose}
-                        className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors text-sm"
-                    >
-                        Tutup
-                    </button>
-                </div>
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     );
 }

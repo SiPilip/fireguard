@@ -2,82 +2,126 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaPlus, FaMinus } from 'react-icons/fa';
+import { FaPlus } from 'react-icons/fa';
 
 const faqs = [
     {
         question: "Apakah layanan FireGuard ini gratis?",
-        answer: "Ya, layanan FireGuard sepenuhnya GRATIS 100% untuk seluruh masyarakat Plaju, Palembang. Pelayanan pemadam kebakaran adalah hak publik yang ditanggung oleh pemerintah kota."
+        answer: "Ya, FireGuard adalah inisiatif swadaya untuk publik dan sepenuhnya GRATIS 100% tanpa biaya tersembunyi bagi seluruh masyarakat Plaju, Palembang."
     },
     {
-        question: "Apakah bisa melapor tanpa koneksi internet?",
-        answer: "Aplikasi FireGuard membutuhkan koneksi internet untuk mengirimkan titik lokasi GPS yang akurat dan foto kejadian. Namun jika Anda sedang offline, tekan tombol 'Hubungi 113' di aplikasi untuk panggilan seluler biasa."
+        question: "Apakah bisa melapor tanpa koneksi internet yang stabil?",
+        answer: "Aplikasi ini didesain sangat ringan (PWA). Namun jika koneksi Anda benar-benar terputus, sistem akan mengarahkan Anda ke tombol Darurat Seluler (113) yang akan menelepon pos pemadam secara langsung menggunakan jaringan seluler biasa."
     },
     {
-        question: "Wilayah mana saja yang dicakup layanan ini?",
-        answer: "Saat ini FireGuard berfokus melayani seluruh wilayah administratif Kecamatan Plaju, Palembang. Laporan di luar wilayah ini akan diarahkan ke unit pemadam kebakaran kecamatan tetangga yang relevan."
+        question: "Wilayah mana saja yang dicakup oleh aplikasi ini?",
+        answer: "Saat ini jangkauan koordinat deteksi otomatis kami berfokus melayani seluruh wilayah administratif Kecamatan Plaju, Palembang. Jika laporan terdeteksi di luar zona, sistem akan meneruskan notifikasi pembantu ke unit kecamatan tetangga terkait."
     },
     {
-        question: "Apakah identitas pelapor dirahasiakan?",
-        answer: "Identitas Anda aman bersama kami. Kami hanya menggunakan data Anda untuk verifikasi keaslian laporan guna menghindari laporan palsu (prank) yang dapat merugikan."
+        question: "Bagaimana sistem melindungi keamanan data privasi pelapor?",
+        answer: "Identitas Anda dienkripsi end-to-end dan hanya dibuka oleh petugas operator resmi untuk keperluan validasi. Hal ini kami lakukan murni guna mencegah laporan palsu (prank call) yang merugikan publik dan membahayakan nyawa."
     }
 ];
 
 const FAQ = () => {
-    const [activeIndex, setActiveIndex] = useState<number | null>(null);
+    const [activeIndex, setActiveIndex] = useState<number | null>(0);
 
     const toggleAccordion = (index: number) => {
         setActiveIndex(activeIndex === index ? null : index);
     };
 
     return (
-        <section id="faq" className="py-24 bg-gray-50">
-            <div className="max-w-4xl mx-auto px-6">
-                <div className="text-center mb-16">
-                    <span className="text-sm font-bold text-red-600 uppercase tracking-widest mb-2 block">Pertanyaan Umum</span>
-                    <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Sering Ditanyakan</h2>
-                </div>
+        <section id="faq" className="py-24 lg:py-32 bg-white relative overflow-hidden border-t border-gray-100">
+            {/* Subtle Gradient Backdrop */}
+            <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-gradient-to-bl from-gray-50 to-transparent rounded-full opacity-60 pointer-events-none -translate-y-1/2 translate-x-1/3" />
 
-                <div className="space-y-4">
-                    {faqs.map((faq, idx) => (
+            <div className="max-w-7xl mx-auto px-6 relative z-10">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24 items-start">
+                    
+                    {/* Typography & Header - Sticky on Desktop */}
+                    <div className="lg:col-span-5 lg:sticky lg:top-32">
                         <motion.div
-                            key={idx}
-                            initial={{ opacity: 0, y: 10 }}
-                            whileInView={{ opacity: 1, y: 0 }}
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
                             viewport={{ once: true }}
-                            transition={{ duration: 0.3 }}
-                            className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300"
+                            transition={{ duration: 0.5 }}
                         >
-                            <button
-                                onClick={() => toggleAccordion(idx)}
-                                className="w-full flex items-center justify-between p-6 text-left focus:outline-none"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <span className={`text-lg font-semibold ${activeIndex === idx ? 'text-red-600' : 'text-gray-900'} transition-colors`}>
-                                        {faq.question}
-                                    </span>
-                                </div>
-                                <div className={`p-2 rounded-full ${activeIndex === idx ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-400'}`}>
-                                    {activeIndex === idx ? <FaMinus size={14} /> : <FaPlus size={14} />}
-                                </div>
-                            </button>
+                            <div className="inline-flex items-center gap-3 mb-6">
+                                <span className="w-8 h-px bg-red-500"></span>
+                                <span className="text-xs font-bold text-red-500 uppercase tracking-[0.2em]">Pertanyaan Umum</span>
+                            </div>
+                            
+                            <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight leading-[1.1] mb-6">
+                                Sering <br className="hidden lg:block"/> Miskomunikasi? <br />
+                                <span className="text-gray-400 font-light">Kami Jelaskan.</span>
+                            </h2>
+                            
+                            <p className="text-gray-500 leading-relaxed font-light text-lg max-w-md">
+                                Jawaban transparan seputar privasi, jangkauan, dan teknis operasional aplikasi perlindungan kebakaran Anda.
+                            </p>
 
-                            <AnimatePresence>
-                                {activeIndex === idx && (
-                                    <motion.div
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: "auto", opacity: 1 }}
-                                        exit={{ height: 0, opacity: 0 }}
-                                        transition={{ duration: 0.3, ease: "easeInOut" }}
-                                    >
-                                        <div className="px-6 pb-6 pt-0 text-gray-600 leading-relaxed border-t border-gray-50 mt-2">
-                                            <div className="pt-4">{faq.answer}</div>
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
+                            <div className="mt-10 p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                                <p className="text-sm text-gray-600 font-medium mb-1">Masih punya pertanyaan spesifik?</p>
+                                <a href="#contact" className="text-red-600 font-bold text-sm tracking-wide hover:underline underline-offset-4 decoration-red-200 transition-all">
+                                    Hubungi Tim Dukungan &rarr;
+                                </a>
+                            </div>
                         </motion.div>
-                    ))}
+                    </div>
+
+                    {/* Accordion List */}
+                    <div className="lg:col-span-7">
+                        <div className="border-t border-gray-200">
+                            {faqs.map((faq, idx) => {
+                                const isActive = activeIndex === idx;
+                                return (
+                                    <motion.div
+                                        key={idx}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        whileInView={{ opacity: 1, y: 0 }}
+                                        viewport={{ once: true }}
+                                        transition={{ duration: 0.5, delay: idx * 0.1 }}
+                                        className="border-b border-gray-200 group"
+                                    >
+                                        <button
+                                            onClick={() => toggleAccordion(idx)}
+                                            className="w-full flex items-center justify-between py-6 md:py-8 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-red-100 rounded-lg"
+                                        >
+                                            <span className={`text-lg md:text-xl lg:text-2xl font-semibold tracking-tight transition-colors duration-300 pr-8 ${isActive ? 'text-red-600' : 'text-gray-900 group-hover:text-red-500'}`}>
+                                                {faq.question}
+                                            </span>
+                                            
+                                            <div className="shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-50 group-hover:bg-red-50 transition-colors duration-300">
+                                                <motion.div
+                                                    animate={{ rotate: isActive ? 45 : 0 }}
+                                                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                                                    className={`${isActive ? 'text-red-600' : 'text-gray-400 group-hover:text-red-500'}`}
+                                                >
+                                                    <FaPlus className="text-sm" />
+                                                </motion.div>
+                                            </div>
+                                        </button>
+
+                                        <AnimatePresence initial={false}>
+                                            {isActive && (
+                                                <motion.div
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: "auto", opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }}
+                                                    transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }} /* Custom spring ease */
+                                                    className="overflow-hidden"
+                                                >
+                                                    <div className="pb-8 pr-12 text-gray-500 font-light leading-relaxed text-lg">
+                                                        {faq.answer}
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </motion.div>
+                                );
+                            })}
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>

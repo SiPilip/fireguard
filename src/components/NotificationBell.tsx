@@ -1,224 +1,215 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { FaBell, FaTimes, FaCheck, FaExclamationCircle, FaInfoCircle, FaCheckCircle } from 'react-icons/fa';
+import { useState, useEffect, useRef, useCallback } from "react";
+import { FaBell, FaCheck, FaExclamationCircle, FaInfoCircle, FaCheckCircle } from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Notification {
-    id: number;
-    user_id: number;
-    title: string;
-    message: string;
-    type: string;
-    report_id?: number;
-    is_read: boolean;
-    created_at: string;
+  id: number;
+  user_id: number;
+  title: string;
+  message: string;
+  type: string;
+  report_id?: number;
+  is_read: boolean;
+  created_at: string;
 }
 
 interface NotificationBellProps {
-    onViewReport?: (reportId: number) => void;
+  onViewReport?: (reportId: number) => void;
 }
 
 export default function NotificationBell({ onViewReport }: NotificationBellProps) {
-    const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [unreadCount, setUnreadCount] = useState(0);
-    const [isOpen, setIsOpen] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
-    const dropdownRef = useRef<HTMLDivElement>(null);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-    const fetchNotifications = useCallback(async () => {
-        try {
-            const res = await fetch('/api/notifications');
-            const data = await res.json();
-            if (data.success) {
-                setNotifications(data.data);
-                setUnreadCount(data.unreadCount);
-            }
-        } catch (error) {
-            console.error('Error fetching notifications:', error);
-        }
-    }, []);
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const res = await fetch("/api/notifications");
+      const data = await res.json();
+      if (data.success) {
+        setNotifications(data.data);
+        setUnreadCount(data.unreadCount);
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    }
+  }, []);
 
-    useEffect(() => {
-        fetchNotifications();
-        // Polling setiap 30 detik
-        const interval = setInterval(fetchNotifications, 30000);
-        return () => clearInterval(interval);
-    }, [fetchNotifications]);
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
 
-    // Close dropdown when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    const markAsRead = async (notificationId: number) => {
-        try {
-            await fetch('/api/notifications', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'mark_read', notificationId }),
-            });
-            fetchNotifications();
-        } catch (error) {
-            console.error('Error marking notification as read:', error);
-        }
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
     };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-    const markAllAsRead = async () => {
-        setIsLoading(true);
-        try {
-            await fetch('/api/notifications', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'mark_all_read' }),
-            });
-            fetchNotifications();
-        } catch (error) {
-            console.error('Error marking all as read:', error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+  const markAsRead = async (notificationId: number) => {
+    try {
+      await fetch("/api/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "mark_read", notificationId }),
+      });
+      fetchNotifications();
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
+  };
 
-    const handleNotificationClick = (notification: Notification) => {
-        if (!notification.is_read) {
-            markAsRead(notification.id);
-        }
-        if (notification.report_id && onViewReport) {
-            onViewReport(notification.report_id);
-            setIsOpen(false);
-        }
-    };
+  const markAllAsRead = async () => {
+    setIsLoading(true);
+    try {
+      await fetch("/api/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "mark_all_read" }),
+      });
+      fetchNotifications();
+    } catch (error) {
+      console.error("Error marking all as read:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    const getNotificationIcon = (type: string) => {
-        switch (type) {
-            case 'status_update':
-                return <FaExclamationCircle className="text-blue-500" />;
-            case 'success':
-                return <FaCheckCircle className="text-green-500" />;
-            case 'warning':
-                return <FaExclamationCircle className="text-yellow-500" />;
-            case 'error':
-                return <FaExclamationCircle className="text-red-500" />;
-            default:
-                return <FaInfoCircle className="text-gray-500" />;
-        }
-    };
+  const handleNotificationClick = (notification: Notification) => {
+    if (!notification.is_read) {
+      markAsRead(notification.id);
+    }
+    if (notification.report_id && onViewReport) {
+      onViewReport(notification.report_id);
+      setIsOpen(false);
+    }
+  };
 
-    const formatTime = (dateString: string) => {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diff = now.getTime() - date.getTime();
-        const minutes = Math.floor(diff / 60000);
-        const hours = Math.floor(minutes / 60);
-        const days = Math.floor(hours / 24);
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case "status_update":
+        return <FaExclamationCircle className="text-blue-500 text-lg" />;
+      case "success":
+        return <FaCheckCircle className="text-green-500 text-lg" />;
+      case "warning":
+        return <FaExclamationCircle className="text-amber-500 text-lg" />;
+      case "error":
+        return <FaExclamationCircle className="text-red-500 text-lg" />;
+      default:
+        return <FaInfoCircle className="text-gray-400 text-lg" />;
+    }
+  };
 
-        if (minutes < 1) return 'Baru saja';
-        if (minutes < 60) return `${minutes} menit lalu`;
-        if (hours < 24) return `${hours} jam lalu`;
-        if (days < 7) return `${days} hari lalu`;
-        return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-    };
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
 
-    return (
-        <div className="relative" ref={dropdownRef}>
-            {/* Bell Button */}
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="relative p-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
-                aria-label="Notifications"
-            >
-                <FaBell className={`text-lg ${unreadCount > 0 ? 'text-orange-500' : 'text-gray-600'}`} />
-                {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full px-1.5 animate-pulse">
-                        {unreadCount > 9 ? '9+' : unreadCount}
-                    </span>
-                )}
-            </button>
+    if (minutes < 1) return "Baru saja";
+    if (minutes < 60) return `${minutes}mnt`;
+    if (hours < 24) return `${hours}j`;
+    if (days < 7) return `${days}hr`;
+    return date.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+  };
 
-            {/* Dropdown */}
-            {isOpen && (
-                <div className="absolute right-0 mt-2 w-80 md:w-96 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
-                    {/* Header */}
-                    <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-red-500 to-orange-500">
-                        <div className="flex items-center gap-2">
-                            <FaBell className="text-white" />
-                            <h3 className="font-semibold text-white">Notifikasi</h3>
-                            {unreadCount > 0 && (
-                                <span className="px-2 py-0.5 bg-white/20 text-white text-xs rounded-full">
-                                    {unreadCount} baru
-                                </span>
-                            )}
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="relative p-2 w-10 h-10 flex items-center justify-center bg-white border border-gray-200/80 hover:border-gray-300 rounded-full transition-all shadow-sm"
+        aria-label="Notifications"
+      >
+        <FaBell className={`text-sm ${unreadCount > 0 ? "text-gray-900" : "text-gray-400"}`} />
+        {unreadCount > 0 && (
+          <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 border-2 border-white rounded-full"></span>
+        )}
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 5, scale: 0.98 }}
+            transition={{ duration: 0.15 }}
+            className="absolute -right-4 sm:right-0 mt-4 w-[calc(100vw-32px)] sm:w-80 md:w-[380px] bg-white rounded-3xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-gray-100 z-50 overflow-hidden origin-top-right"
+            style={{ maxWidth: "380px" }}
+          >
+            {/* Perhatikan logic right khusus untuk layar hp di atas, kita geser sedikit agar rapi secara visual */}
+            <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between bg-white/90 backdrop-blur-xl">
+              <div>
+                <h3 className="font-bold text-gray-900 tracking-tight">Notifikasi</h3>
+                <p className="text-[10px] uppercase tracking-widest font-bold text-gray-400 mt-0.5">
+                  {unreadCount} Pesan Baru
+                </p>
+              </div>
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllAsRead}
+                  disabled={isLoading}
+                  className="text-[10px] font-bold uppercase tracking-wider text-gray-500 hover:text-gray-900 transition-colors flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-lg active:scale-95"
+                >
+                  <FaCheck /> Tandai Dibaca
+                </button>
+              )}
+            </div>
+
+            <div className="max-h-[350px] overflow-y-auto no-scrollbar pb-2">
+              {notifications.length > 0 ? (
+                notifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    onClick={() => handleNotificationClick(notification)}
+                    className="px-5 py-4 hover:bg-gray-50 cursor-pointer transition-colors relative group"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className={`mt-0.5 shrink-0 ${!notification.is_read ? 'opacity-100' : 'opacity-50'}`}>
+                        {getNotificationIcon(notification.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <p className={`text-sm font-bold leading-tight ${!notification.is_read ? "text-gray-900" : "text-gray-500"}`}>
+                            {notification.title}
+                          </p>
+                          <p className="text-[10px] font-bold text-gray-400 shrink-0 pt-0.5">
+                            {formatTime(notification.created_at)}
+                          </p>
                         </div>
-                        {unreadCount > 0 && (
-                            <button
-                                onClick={markAllAsRead}
-                                disabled={isLoading}
-                                className="text-xs text-white/80 hover:text-white transition-colors flex items-center gap-1"
-                            >
-                                <FaCheck />
-                                Tandai semua
-                            </button>
-                        )}
+                        <p className={`text-xs leading-relaxed ${!notification.is_read ? "text-gray-600 font-medium" : "text-gray-400"}`}>
+                          {notification.message}
+                        </p>
+                      </div>
+                      {!notification.is_read && (
+                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full shrink-0 mt-1.5"></div>
+                      )}
                     </div>
-
-                    {/* Notification List */}
-                    <div className="max-h-[400px] overflow-y-auto">
-                        {notifications.length > 0 ? (
-                            notifications.map((notification) => (
-                                <div
-                                    key={notification.id}
-                                    onClick={() => handleNotificationClick(notification)}
-                                    className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition-colors ${!notification.is_read ? 'bg-blue-50/50' : ''
-                                        }`}
-                                >
-                                    <div className="flex items-start gap-3">
-                                        <div className="mt-0.5">
-                                            {getNotificationIcon(notification.type)}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <p className={`text-sm font-medium ${!notification.is_read ? 'text-gray-900' : 'text-gray-700'}`}>
-                                                    {notification.title}
-                                                </p>
-                                                {!notification.is_read && (
-                                                    <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></span>
-                                                )}
-                                            </div>
-                                            <p className="text-xs text-gray-500 line-clamp-2">
-                                                {notification.message}
-                                            </p>
-                                            <p className="text-[10px] text-gray-400 mt-1">
-                                                {formatTime(notification.created_at)}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="px-4 py-8 text-center">
-                                <FaBell className="text-4xl text-gray-300 mx-auto mb-2" />
-                                <p className="text-sm text-gray-500">Belum ada notifikasi</p>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Footer */}
-                    {notifications.length > 5 && (
-                        <div className="px-4 py-2 border-t border-gray-100 bg-gray-50/50">
-                            <p className="text-xs text-center text-gray-500">
-                                Menampilkan {notifications.length} notifikasi terakhir
-                            </p>
-                        </div>
-                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="px-5 py-10 flex flex-col items-center justify-center text-center">
+                  <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mb-3">
+                    <FaBell className="text-gray-300 text-xl" />
+                  </div>
+                  <p className="text-sm font-bold text-gray-900">Belum Ada Notifikasi</p>
+                  <p className="text-xs text-gray-500 mt-1 max-w-[200px]">Semua pemberitahuan insiden akan muncul di sini.</p>
                 </div>
-            )}
-        </div>
-    );
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 }
