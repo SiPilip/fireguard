@@ -144,8 +144,7 @@ export default function NotificationBell({ onViewReport }: NotificationBellProps
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 5, scale: 0.98 }}
             transition={{ duration: 0.15 }}
-            className="absolute -right-4 sm:right-0 mt-4 w-[calc(100vw-32px)] sm:w-80 md:w-[380px] bg-white rounded-3xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-gray-100 z-50 overflow-hidden origin-top-right"
-            style={{ maxWidth: "380px" }}
+            className="fixed left-4 right-4 top-[84px] sm:absolute sm:left-auto sm:-right-2 sm:top-full sm:mt-4 sm:w-[380px] bg-white rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-gray-100 z-[9999] overflow-hidden sm:origin-top-right"
           >
             {/* Perhatikan logic right khusus untuk layar hp di atas, kita geser sedikit agar rapi secara visual */}
             <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between bg-white/90 backdrop-blur-xl">

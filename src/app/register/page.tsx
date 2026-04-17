@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { FaArrowLeft, FaFire, FaSpinner } from "react-icons/fa";
+import { FaArrowLeft, FaFire, FaSpinner, FaEye, FaEyeSlash } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 
 type Step = "form" | "otp";
@@ -16,6 +16,8 @@ export default function RegisterPage() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isVerifying, setIsVerifying] = useState(true);
@@ -161,12 +163,46 @@ export default function RegisterPage() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1 group">
-                        <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest pl-1 group-focus-within:text-red-500 transition-colors">Password *</label>
-                        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} placeholder="Minimal 8 char" className="w-full bg-gray-50/50 border border-gray-200 text-gray-900 px-5 py-3.5 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-medium placeholder:text-gray-300 placeholder:font-normal tracking-wider" />
+                        <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest pl-1 mb-2 block group-focus-within:text-red-500 transition-colors">Password *</label>
+                        <div className="relative">
+                          <input 
+                            type={showPassword ? "text" : "password"} 
+                            value={password} 
+                            onChange={(e) => setPassword(e.target.value)} 
+                            required 
+                            minLength={8} 
+                            placeholder={showPassword ? "Minimal 8 char" : "••••••••"}
+                            className={`w-full bg-gray-50/50 border border-gray-200 text-gray-900 pl-5 pr-10 py-3.5 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-medium placeholder:text-gray-300 placeholder:font-normal ${!showPassword ? 'tracking-wider' : ''}`} 
+                          />
+                          <button 
+                            type="button" 
+                            onClick={() => setShowPassword(!showPassword)} 
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-900 transition-colors"
+                          >
+                            {showPassword ? <FaEyeSlash /> : <FaEye />}
+                          </button>
+                        </div>
                       </div>
                       <div className="space-y-1 group">
-                        <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest pl-1 group-focus-within:text-red-500 transition-colors">Konfirmasi *</label>
-                        <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={8} placeholder="Ulangi" className="w-full bg-gray-50/50 border border-gray-200 text-gray-900 px-5 py-3.5 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-medium placeholder:text-gray-300 placeholder:font-normal tracking-wider" />
+                        <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest pl-1 mb-2 block group-focus-within:text-red-500 transition-colors">Konfirmasi *</label>
+                        <div className="relative">
+                          <input 
+                            type={showConfirmPassword ? "text" : "password"} 
+                            value={confirmPassword} 
+                            onChange={(e) => setConfirmPassword(e.target.value)} 
+                            required 
+                            minLength={8}
+                            placeholder={showConfirmPassword ? "Ulangi kata sandi" : "••••••••"} 
+                            className={`w-full bg-gray-50/50 border border-gray-200 text-gray-900 pl-5 pr-10 py-3.5 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-medium placeholder:text-gray-300 placeholder:font-normal ${!showConfirmPassword ? 'tracking-wider' : ''}`} 
+                          />
+                          <button 
+                            type="button" 
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)} 
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-900 transition-colors"
+                          >
+                            {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                          </button>
+                        </div>
                       </div>
                     </div>
 

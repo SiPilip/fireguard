@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import type { NearestStationInfo } from "@/components/ReportMap";
@@ -105,7 +105,7 @@ function NearestStationInfoBox({ info }: { info: NearestStationInfo }) {
 
 export default function NewReportPage() {
   const router = useRouter();
-  const { modal, success, error: showError } = useModal();
+  const { modal, error: showError } = useModal();
   const { toast, error: errorToast, hideToast } = useToast();
 
   const [firePosition, setFirePosition] = useState<[number, number] | null>(null);
@@ -125,6 +125,7 @@ export default function NewReportPage() {
   const [isAuthenticating, setIsAuthenticating] = useState(true);
   const [isGettingFireLocation, setIsGettingFireLocation] = useState(false);
   const [isGettingMyLocation, setIsGettingMyLocation] = useState(false);
+  const [geoPermissionState, setGeoPermissionState] = useState<PermissionState | "unknown" | "unsupported">("unknown");
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -176,9 +177,61 @@ export default function NewReportPage() {
 
   const GEO_OPTIONS: PositionOptions = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
 
+  const getGeoPermissionState = useCallback(async (): Promise<PermissionState | "unknown" | "unsupported"> => {
+    if (!navigator.geolocation) return "unsupported";
+    if (!("permissions" in navigator) || typeof navigator.permissions?.query !== "function") return "unknown";
+    try {
+      const permission = await navigator.permissions.query({ name: "geolocation" as PermissionName });
+      return permission.state;
+    } catch {
+      return "unknown";
+    }
+  }, []);
+
+  useEffect(() => {
+    let permissionStatus: PermissionStatus | null = null;
+
+    const syncPermissionState = async () => {
+      const state = await getGeoPermissionState();
+      setGeoPermissionState(state);
+
+      if (state === "unsupported" || !("permissions" in navigator)) return;
+
+      try {
+        permissionStatus = await navigator.permissions.query({ name: "geolocation" as PermissionName });
+        setGeoPermissionState(permissionStatus.state);
+        permissionStatus.onchange = () => {
+          setGeoPermissionState(permissionStatus?.state ?? "unknown");
+        };
+      } catch {
+        // Browser tertentu membatasi query permission sampai ada interaksi user.
+      }
+    };
+
+    syncPermissionState();
+
+    return () => {
+      if (permissionStatus) {
+        permissionStatus.onchange = null;
+      }
+    };
+  }, [getGeoPermissionState]);
+
+  const getCurrentPosition = useCallback(
+    () =>
+      new Promise<[number, number]>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          (position) => resolve([position.coords.latitude, position.coords.longitude]),
+          (err) => reject(err),
+          GEO_OPTIONS
+        );
+      }),
+    []
+  );
+
   const handleLocationError = (err: GeolocationPositionError) => {
     switch (err.code) {
-      case err.PERMISSION_DENIED: errorToast("Izin lokasi ditolak. Aktifkan di pengaturan browser Anda."); break;
+      case err.PERMISSION_DENIED: errorToast("Izin lokasi ditolak. Klik ikon kunci di address bar browser, lalu ubah Location menjadi Allow."); break;
       case err.POSITION_UNAVAILABLE: errorToast("Lokasi tidak tersedia. Pastikan GPS aktif."); break;
       case err.TIMEOUT: errorToast("Waktu habis saat mencari lokasi."); break;
       default: errorToast("Gagal mendapatkan lokasi GPS.");
@@ -186,23 +239,33 @@ export default function NewReportPage() {
   };
 
   const requestLocation = async (onSuccess: (pos: [number, number]) => void, setLoadingState: (v: boolean) => void) => {
-    if (!navigator.geolocation) return errorToast("Perangkat Anda tidak mendukung fitur GPS.");
-    setLoadingState(true);
-    if ("permissions" in navigator) {
-      try {
-        const perm = await navigator.permissions.query({ name: "geolocation" as PermissionName });
-        if (perm.state === "denied") {
-          errorToast("Izin lokasi ditolak permanen. Aktifkan di Izin Situs browser.");
-          setLoadingState(false);
-          return;
-        }
-      } catch {}
+    if (!navigator.geolocation) {
+      setGeoPermissionState("unsupported");
+      errorToast("Perangkat Anda tidak mendukung fitur GPS.");
+      return;
     }
-    navigator.geolocation.getCurrentPosition(
-      (position) => { onSuccess([position.coords.latitude, position.coords.longitude]); setLoadingState(false); },
-      (err) => { handleLocationError(err); setLoadingState(false); },
-      GEO_OPTIONS
-    );
+
+    setLoadingState(true);
+
+    try {
+      const coords = await getCurrentPosition();
+      const latestPermissionState = await getGeoPermissionState();
+      setGeoPermissionState(latestPermissionState === "unknown" ? "granted" : latestPermissionState);
+
+      onSuccess(coords);
+    } catch (err) {
+      if (err && typeof err === "object" && "code" in err) {
+        const geoErr = err as GeolocationPositionError;
+        if (geoErr.code === geoErr.PERMISSION_DENIED) {
+          setGeoPermissionState("denied");
+        }
+        handleLocationError(err as GeolocationPositionError);
+      } else {
+        errorToast("Gagal mendapatkan lokasi GPS.");
+      }
+    } finally {
+      setLoadingState(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -236,7 +299,9 @@ export default function NewReportPage() {
         }
         throw new Error(data.message || "Gagal mengirim laporan.");
       }
-      success("Laporan Darurat Diterima", "Tim operasional akan segera merespons.", () => router.push("/dashboard"));
+      
+      // Langsung dialihkan (redirect) ke dashboard
+      router.push("/dashboard");
     } catch (err: any) {
       errorToast(err.message);
     } finally {
@@ -311,6 +376,16 @@ export default function NewReportPage() {
                   {isGettingMyLocation ? <FaSpinner className="animate-spin text-lg" /> : <><FaUser className="text-lg text-gray-400" /> Posisi Saya</>}
                 </button>
             </div>
+
+            <p className="text-xs font-semibold text-gray-500">
+              Klik tombol lokasi, lalu pilih <span className="text-gray-900">Izinkan</span> saat popup izin lokasi browser muncul.
+            </p>
+
+            {geoPermissionState === "denied" && (
+              <div className="px-4 py-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold">
+                Izin lokasi browser sedang ditolak. Klik ikon kunci di address bar, ubah Location ke Allow, lalu klik tombol lokasi lagi.
+              </div>
+            )}
 
             {/* Koordinat Indicators */}
             <div className="flex flex-col gap-2">

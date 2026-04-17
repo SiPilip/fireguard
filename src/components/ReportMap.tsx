@@ -389,6 +389,7 @@ export default function ReportMap({ firePosition, setFirePosition, reporterPosit
   const [routeSummary, setRouteSummary] = useState<any>(null);
   const [nearestStation, setNearestStation] = useState<FireStation | null>(null);
   const [isCalculatingNearest, setIsCalculatingNearest] = useState(false);
+  const [isRoutingLoading, setIsRoutingLoading] = useState(false);
   const onNearestStationFoundRef = useRef(onNearestStationFound);
 
   // Update ref when callback changes
@@ -425,6 +426,7 @@ export default function ReportMap({ firePosition, setFirePosition, reporterPosit
     if (!firePosition) {
       setNearestStation(null);
       setRouteSummary(null);
+      setIsRoutingLoading(false);
       if (onNearestStationFoundRef.current) {
         onNearestStationFoundRef.current(null);
       }
@@ -488,6 +490,12 @@ export default function ReportMap({ firePosition, setFirePosition, reporterPosit
         <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[1001] bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
           <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
           <span className="text-sm font-medium">Mencari pos damkar terdekat...</span>
+        </div>
+      )}
+      {isRoutingLoading && (
+        <div className="absolute top-28 left-1/2 -translate-x-1/2 z-[1001] bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
+          <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+          <span className="text-sm font-medium">Menyusun rute tercepat...</span>
         </div>
       )}
       <MapContainer center={firePosition || reporterPosition || defaultPosition} zoom={13} style={{ height: '100%', width: '100%' }}>
@@ -564,6 +572,7 @@ export default function ReportMap({ firePosition, setFirePosition, reporterPosit
             start={[nearestStation.latitude, nearestStation.longitude]}
             end={firePosition}
             onRouteFound={setRouteSummary}
+            onLoadingChange={setIsRoutingLoading}
           />
         )}
       </MapContainer>

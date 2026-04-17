@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { FaFire, FaSpinner, FaArrowLeft } from "react-icons/fa";
+import { FaFire, FaSpinner, FaArrowLeft, FaEye, FaEyeSlash } from "react-icons/fa";
 import { isStandaloneApp } from "@/lib/app-mode";
 import { hasCompletedOnboarding } from "@/lib/onboarding";
 import { motion } from "framer-motion";
@@ -13,6 +13,7 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isVerifying, setIsVerifying] = useState(true);
   const [error, setError] = useState("");
@@ -119,18 +120,27 @@ export default function LoginPage() {
           </div>
 
           <div className="space-y-1 group">
-            <div className="flex justify-between items-center pl-1">
+            <div className="flex justify-between items-end pl-1 mb-2">
               <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest group-focus-within:text-red-500 transition-colors">Password</label>
-              <a href="#" className="text-xs font-medium text-gray-400 hover:text-gray-900 transition-colors">Lupa?</a>
+              <a href="#" className="text-[11px] font-bold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-widest">Lupa?</a>
             </div>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-gray-50/50 border border-gray-200 text-gray-900 px-5 py-4 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-medium placeholder:text-gray-300 placeholder:font-normal tracking-[0.2em]"
-              placeholder="••••••••"
-              required
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={`w-full bg-gray-50/50 border border-gray-200 text-gray-900 pl-5 pr-12 py-4 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-medium placeholder:text-gray-300 placeholder:font-normal ${!showPassword ? 'tracking-[0.2em]' : ''}`}
+                placeholder={showPassword ? "Masukkan password" : "••••••••"}
+                required
+              />
+              <button 
+                type="button" 
+                onClick={() => setShowPassword(!showPassword)} 
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-900 p-1"
+              >
+                {showPassword ? <FaEyeSlash className="text-lg" /> : <FaEye className="text-lg" />}
+              </button>
+            </div>
           </div>
 
           {error && (
