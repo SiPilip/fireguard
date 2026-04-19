@@ -62,16 +62,12 @@ app.prepare().then(() => {
     const { pathname } = parse(request.url, true);
 
     // Only handle upgrades to our WebSocket endpoint '/ws'
-    if (pathname !== '/ws') {
-      // For other paths, we can destroy the socket if we are not handling them.
-      // This prevents the connection from hanging.
-      socket.destroy();
-      return;
+    if (pathname === '/ws') {
+      wss.handleUpgrade(request, socket, head, (ws) => {
+        wss.emit('connection', ws, request);
+      });
     }
-
-    wss.handleUpgrade(request, socket, head, (ws) => {
-      wss.emit('connection', ws, request);
-    });
+    // Don't call socket.destroy() here, so Next.js HMR can handle its own upgrade requests
   });
 
   // Definisikan listener di instance wss tunggal

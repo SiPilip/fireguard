@@ -34,8 +34,8 @@ const features = [
   },
   {
     icon: <FaMobileAlt className="w-6 h-6 text-emerald-500" />,
-    title: "Akses Universal",
-    description: "Sistem PWA (Progressive Web App) yang ringan dan instan, dapat diakses dari perangkat apapun tanpa perlu mengunduh aplikasi besar.",
+    title: "Aplikasi Mobile",
+    description: "Nikmati pengalaman penuh dengan aplikasi native di Play Store & App Store. Lebih stabil, lebih cepat, dan dilengkapi push notification untuk info darurat.",
     glowColor: "rgba(16, 185, 129, 0.15)",
     iconBg: "bg-emerald-500/10",
     iconBorder: "border-emerald-500/20",

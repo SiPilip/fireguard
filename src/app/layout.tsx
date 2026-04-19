@@ -18,7 +18,7 @@ const roboto = Roboto({
 
 export const metadata: Metadata = {
   title: 'FireGuard Plaju Darat, Palembang',
-  description: 'Sistem Cepat Tanggap Kebakaran Plaju Darat, Palembang - Laporkan dan pantau insiden kebakaran secara real-time',
+  description: 'Sistem Cepat Tanggap Kebakaran Plaju Darat, Palembang - Laporkan dan  pantau insiden kebakaran secara real-time',
   manifest: '/manifest.json',
   icons: {
     icon: '/favicon.png',

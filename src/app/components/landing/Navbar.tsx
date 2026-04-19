@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { FaFire, FaUser, FaChevronDown, FaSignOutAlt, FaBars, FaTimes } from 'react-icons/fa';
 import { getPostLogoutRedirectPath } from '@/lib/app-mode';
 
-const Navbar = () => {
+const Navbar = ({ isLight = false }: { isLight?: boolean }) => {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<{ name?: string; email?: string; phone?: string; id?: number } | null>(null);
@@ -73,20 +73,30 @@ const Navbar = () => {
   return (
     <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ease-out ${scrolled ? 'pt-4' : 'pt-6'}`}>
       <div className="mx-auto max-w-7xl px-4 md:px-6">
-        <div className={`flex justify-between items-center px-5 py-3 md:px-6 md:py-3.5 mx-auto transition-all duration-500 ${scrolled ? 'bg-[#0A0A0A]/80 shadow-[0_8px_30px_rgb(0,0,0,0.5)] backdrop-blur-xl border border-white/10 rounded-[2rem]' : 'bg-transparent border border-transparent'}`}>
+        <div className={`flex justify-between items-center px-5 py-3 md:px-6 md:py-3.5 mx-auto transition-all duration-500 ${
+          scrolled 
+            ? isLight 
+              ? 'bg-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl border border-black/5 rounded-[2rem]'
+              : 'bg-[#0A0A0A]/80 shadow-[0_8px_30px_rgb(0,0,0,0.5)] backdrop-blur-xl border border-white/10 rounded-[2rem]' 
+            : 'bg-transparent border border-transparent'
+        }`}>
           
           <Link href="/" className="flex items-center gap-3 group z-50">
-            <div className={`p-2.5 rounded-[1rem] transition-all duration-500 ${scrolled ? 'bg-gradient-to-br from-red-500 to-orange-600 shadow-md shadow-red-500/20' : 'bg-white/10 backdrop-blur-md'}`}>
-              <FaFire className="text-xl text-white" />
+            <div className={`p-2.5 rounded-[1rem] transition-all duration-500 ${
+              scrolled 
+                ? 'bg-gradient-to-br from-red-500 to-orange-600 shadow-md shadow-red-500/20' 
+                : isLight ? 'bg-black/5 backdrop-blur-md' : 'bg-white/10 backdrop-blur-md'
+            }`}>
+              <FaFire className={`text-xl ${scrolled ? 'text-white' : isLight ? 'text-red-500' : 'text-white'}`} />
             </div>
-            <span className="text-xl font-bold text-white tracking-tight">FireGuard</span>
+            <span className={`text-xl font-bold tracking-tight ${isLight && !scrolled ? 'text-gray-900' : scrolled && isLight ? 'text-gray-900' : 'text-white'}`}>FireGuard</span>
           </Link>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
-            <Link href="#features" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Fitur</Link>
-            <Link href="#stations" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Lokasi Pos</Link>
-            <Link href="#contact" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Kontak</Link>
+            <Link href="#features" className={`text-sm font-medium transition-colors ${isLight ? 'text-gray-600 hover:text-black' : 'text-gray-300 hover:text-white'}`}>Fitur</Link>
+            <Link href="#stations" className={`text-sm font-medium transition-colors ${isLight ? 'text-gray-600 hover:text-black' : 'text-gray-300 hover:text-white'}`}>Lokasi Pos</Link>
+            <Link href="#contact" className={`text-sm font-medium transition-colors ${isLight ? 'text-gray-600 hover:text-black' : 'text-gray-300 hover:text-white'}`}>Kontak</Link>
           </div>
 
           <div className="hidden md:flex items-center gap-4 z-50">
@@ -96,16 +106,16 @@ const Navbar = () => {
                   <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-600 rounded-full flex items-center justify-center text-white shadow-lg shadow-red-500/20">
                     <FaUser size={14} />
                   </div>
-                  <FaChevronDown size={10} className={`transition-transform duration-300 text-white ${dropdownOpen ? 'rotate-180' : ''}`} />
+                  <FaChevronDown size={10} className={`transition-transform duration-300 ${isLight ? 'text-gray-900' : 'text-white'} ${dropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
                 
                 {/* Dropdown Menu Desktop */}
-                <div className={`absolute right-0 mt-4 w-56 bg-[#111] backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] py-2 transition-all duration-300 origin-top-right ${dropdownOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
-                  <div className="px-5 py-3 border-b border-white/5">
-                    <p className="text-sm font-medium text-white line-clamp-1">{user?.name || user?.email || 'User'}</p>
+                <div className={`absolute right-0 mt-4 w-56 ${isLight ? 'bg-white border-black/5 shadow-[0_10px_40px_rgba(0,0,0,0.1)]' : 'bg-[#111] border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.8)]'} backdrop-blur-xl border rounded-2xl py-2 transition-all duration-300 origin-top-right ${dropdownOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
+                  <div className={`px-5 py-3 border-b ${isLight ? 'border-black/5' : 'border-white/5'}`}>
+                    <p className={`text-sm font-medium line-clamp-1 ${isLight ? 'text-gray-900' : 'text-white'}`}>{user?.name || user?.email || 'User'}</p>
                   </div>
                   <div className="p-2 space-y-1">
-                    <button onClick={() => { setDropdownOpen(false); router.push('/dashboard'); }} className="w-full text-left px-3 py-2.5 rounded-xl text-sm text-gray-300 hover:bg-white/5 hover:text-white flex items-center gap-3 transition-colors">
+                    <button onClick={() => { setDropdownOpen(false); router.push('/dashboard'); }} className={`w-full text-left px-3 py-2.5 rounded-xl text-sm flex items-center gap-3 transition-colors ${isLight ? 'text-gray-600 hover:bg-black/5 hover:text-black' : 'text-gray-300 hover:bg-white/5 hover:text-white'}`}>
                       <FaUser size={14} className="text-gray-400" /> Dashboard
                     </button>
                     <button onClick={handleLogout} className="w-full text-left px-3 py-2.5 rounded-xl text-sm text-red-500 hover:bg-red-500/10 flex items-center gap-3 transition-colors">
@@ -115,11 +125,11 @@ const Navbar = () => {
                 </div>
               </div>
             ) : (
-              <button onClick={() => router.push('/login')} className="text-sm font-semibold text-white px-5 py-2.5 rounded-full hover:bg-white/10 transition-all">
+              <button onClick={() => router.push('/login')} className={`text-sm font-semibold px-5 py-2.5 rounded-full transition-all ${isLight ? 'text-gray-900 hover:bg-black/5' : 'text-white hover:bg-white/10'}`}>
                 Masuk
               </button>
             )}
-            <button onClick={() => router.push('/report/new')} className="bg-white text-black px-6 py-2.5 rounded-full font-bold text-sm transition-all hover:bg-gray-200 hover:scale-105 active:scale-95">
+            <button onClick={() => router.push('/report/new')} className={`${isLight ? 'bg-black text-white hover:bg-gray-800' : 'bg-white text-black hover:bg-gray-200'} px-6 py-2.5 rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-sm`}>
               Lapor Darurat
             </button>
           </div>
@@ -127,7 +137,7 @@ const Navbar = () => {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden relative z-50 p-2 -mr-2 rounded-full bg-white/5 border border-white/10 text-white transition-all active:scale-90"
+            className={`md:hidden relative z-50 p-2 -mr-2 rounded-full transition-all active:scale-90 ${isLight ? 'bg-black/5 border-black/10 text-black' : 'bg-white/5 border-white/10 text-white'}`}
             aria-label="Toggle Menu"
           >
             {mobileMenuOpen ? <FaTimes className="text-lg" /> : <FaBars className="text-lg" />}
@@ -136,21 +146,21 @@ const Navbar = () => {
       </div>
 
       {/* Mobile Menu Fullscreen Overlay */}
-      <div className={`fixed inset-0 bg-[#050505]/95 backdrop-blur-2xl z-40 transition-all duration-500 md:hidden ${mobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}>
+      <div className={`fixed inset-0 z-40 transition-all duration-500 md:hidden ${isLight ? 'bg-white/95' : 'bg-[#050505]/95'} backdrop-blur-2xl ${mobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}>
         <div className="flex flex-col justify-center h-full px-8 py-20 space-y-8">
           <div className="flex flex-col space-y-6 text-center">
-            <Link href="#features" onClick={() => setMobileMenuOpen(false)} className="text-3xl font-bold text-gray-400 hover:text-white transition-colors">Fitur
+            <Link href="#features" onClick={() => setMobileMenuOpen(false)} className={`text-3xl font-bold transition-colors ${isLight ? 'text-gray-400 hover:text-black' : 'text-gray-400 hover:text-white'}`}>Fitur
             </Link>
-            <Link href="#stations" onClick={() => setMobileMenuOpen(false)} className="text-3xl font-bold text-gray-400 hover:text-white transition-colors">Lokasi Pos
+            <Link href="#stations" onClick={() => setMobileMenuOpen(false)} className={`text-3xl font-bold transition-colors ${isLight ? 'text-gray-400 hover:text-black' : 'text-gray-400 hover:text-white'}`}>Lokasi Pos
             </Link>
-            <Link href="#contact" onClick={() => setMobileMenuOpen(false)} className="text-3xl font-bold text-gray-400 hover:text-white transition-colors">Kontak
+            <Link href="#contact" onClick={() => setMobileMenuOpen(false)} className={`text-3xl font-bold transition-colors ${isLight ? 'text-gray-400 hover:text-black' : 'text-gray-400 hover:text-white'}`}>Kontak
             </Link>
           </div>
           
-          <div className="pt-8 border-t border-white/10 flex flex-col gap-4">
+          <div className={`pt-8 border-t flex flex-col gap-4 ${isLight ? 'border-black/5' : 'border-white/10'}`}>
             {isLoggedIn ? (
               <>
-                <button onClick={() => { setMobileMenuOpen(false); router.push('/dashboard'); }} className="w-full bg-white/5 text-white py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3">
+                <button onClick={() => { setMobileMenuOpen(false); router.push('/dashboard'); }} className={`w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 ${isLight ? 'bg-black/5 text-black' : 'bg-white/5 text-white'}`}>
                   <FaUser className="text-gray-400" /> Dashboard
                 </button>
                 <button onClick={() => { setMobileMenuOpen(false); handleLogout(); }} className="w-full bg-red-500/10 text-red-500 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3">
@@ -158,7 +168,7 @@ const Navbar = () => {
                 </button>
               </>
             ) : (
-              <button onClick={() => { setMobileMenuOpen(false); router.push('/login'); }} className="w-full bg-white/5 text-white py-4 rounded-2xl font-bold text-lg border border-white/10">
+              <button onClick={() => { setMobileMenuOpen(false); router.push('/login'); }} className={`w-full py-4 rounded-2xl font-bold text-lg border ${isLight ? 'bg-black/5 text-black border-black/5' : 'bg-white/5 text-white border-white/10'}`}>
                 Masuk / Login
               </button>
             )}
