@@ -48,8 +48,8 @@ export async function sendEmailOTP(email: string, otp: string, type: 'register' 
 
   // Logo base URL - gunakan URL publik atau base64
   const logoUrl = process.env.NEXT_PUBLIC_BASE_URL
-    ? `${process.env.NEXT_PUBLIC_BASE_URL}/logofireguard.png`
-    : 'https://fireguard-palembang.vercel.app/logofireguard.png';
+    ? `${process.env.NEXT_PUBLIC_BASE_URL}/favicon.png`
+    : 'https://fireguard-palembang.vercel.app/favicon.png';
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -129,8 +129,8 @@ export async function sendStatusUpdateEmail(
 
   // Logo base URL
   const logoUrl = process.env.NEXT_PUBLIC_BASE_URL
-    ? `${process.env.NEXT_PUBLIC_BASE_URL}/logofireguard.png`
-    : 'https://fireguard-palembang.vercel.app/logofireguard.png';
+    ? `${process.env.NEXT_PUBLIC_BASE_URL}/favicon.png`
+    : 'https://fireguard-palembang.vercel.app/favicon.png';
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">

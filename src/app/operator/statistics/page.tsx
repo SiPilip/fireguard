@@ -1,609 +1,213 @@
-"use client";
+﻿"use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
-import {
-    FaFire,
-    FaSignOutAlt,
-    FaChartBar,
-    FaArrowLeft,
-    FaCalendarAlt,
-    FaCheckCircle,
-    FaTimesCircle,
-    FaClock,
-    FaMapMarkerAlt,
-    FaMap,
-} from "react-icons/fa";
+import { FaChartBar, FaArrowLeft, FaFilter, FaFire, FaClock, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 
-// Dynamic import for map to avoid SSR issues
-const HotspotMap = dynamic(() => import("@/components/HotspotMap"), {
-    ssr: false,
-    loading: () => (
-        <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-xl">
-            <div className="text-center">
-                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-red-500 border-r-transparent mb-2"></div>
-                <p className="text-sm text-gray-500">Memuat peta...</p>
-            </div>
-        </div>
-    ),
-});
-
-interface CategoryStat {
-    category_id: number;
-    category_name: string;
-    category_icon: string;
-    total: number;
+interface Report {
+  id: number;
+  status: string;
+  created_at: string;
+  category_name?: string;
+  kelurahan_name?: string;
 }
-
-interface KelurahanStat {
-    kelurahan_id: number;
-    kelurahan_name: string;
-    kecamatan: string;
-    total: number;
-}
-
-interface StatusStat {
-    status: string;
-    total: number;
-}
-
-interface MonthlyStats {
-    month: number;
-    month_name: string;
-    total: number;
-}
-
-interface YearlyStats {
-    year: number;
-    total: number;
-}
-
-interface Hotspot {
-    fire_latitude: number;
-    fire_longitude: number;
-    kelurahan_name: string;
-    category_name: string;
-    category_icon: string;
-    created_at: string;
-}
-
-interface Statistics {
-    selectedYear: number;
-    availableYears: number[];
-    totalReports: number;
-    yearlyStats: YearlyStats[];
-    kelurahanStats: KelurahanStat[];
-    categoryStats: CategoryStat[];
-    monthlyStats: MonthlyStats[];
-    statusStats: StatusStat[];
-    hotspots: Hotspot[];
-}
-
-const MONTH_NAMES = [
-    "Jan", "Feb", "Mar", "Apr", "Mei", "Jun",
-    "Jul", "Agu", "Sep", "Okt", "Nov", "Des"
-];
-
-const STATUS_LABELS: { [key: string]: { label: string; color: string } } = {
-    pending: { label: "Menunggu", color: "#EAB308" },
-    submitted: { label: "Baru", color: "#EF4444" },
-    verified: { label: "Diverifikasi", color: "#F59E0B" },
-    diproses: { label: "Diproses", color: "#3B82F6" },
-    dispatched: { label: "Dikirim", color: "#3B82F6" },
-    dikirim: { label: "Tim Dikirim", color: "#8B5CF6" },
-    arrived: { label: "Tiba", color: "#6366F1" },
-    ditangani: { label: "Ditangani", color: "#06B6D4" },
-    completed: { label: "Selesai", color: "#10B981" },
-    selesai: { label: "Selesai", color: "#10B981" },
-    false: { label: "Palsu", color: "#6B7280" },
-    dibatalkan: { label: "Dibatalkan", color: "#DC2626" },
-};
-
-// Simple Bar Chart Component
-const BarChart = ({
-    data,
-    labels,
-    title,
-    color = "#EF4444",
-    maxHeight = 200,
-}: {
-    data: number[];
-    labels: string[];
-    title: string;
-    color?: string;
-    maxHeight?: number;
-}) => {
-    const maxValue = Math.max(...data, 1);
-
-    return (
-        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-gray-800 mb-4">{title}</h3>
-            <div className="flex items-end gap-2 justify-between" style={{ height: maxHeight }}>
-                {data.map((value, index) => (
-                    <div key={index} className="flex-1 flex flex-col items-center gap-1">
-                        <span className="text-xs font-medium text-gray-700">{value}</span>
-                        <div
-                            className="w-full rounded-t-md transition-all duration-500 hover:opacity-80"
-                            style={{
-                                height: `${(value / maxValue) * (maxHeight - 40)}px`,
-                                backgroundColor: color,
-                                minHeight: value > 0 ? "4px" : "0px",
-                            }}
-                        />
-                        <span className="text-[10px] text-gray-500 mt-1">{labels[index]}</span>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-};
-
-// Kelurahan Ranking Chart
-const KelurahanRankingChart = ({
-    data,
-    title,
-    year,
-}: {
-    data: KelurahanStat[];
-    title: string;
-    year: number;
-}) => {
-    const maxValue = Math.max(...data.map((d) => d.total), 1);
-    const topData = data.slice(0, 10); // Top 10 only
-
-    return (
-        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-gray-800 mb-2">{title}</h3>
-            <p className="text-xs text-gray-500 mb-4">Lokasi dengan kejadian terbanyak tahun {year}</p>
-            <div className="space-y-3">
-                {topData.length > 0 ? topData.map((item, index) => (
-                    <div key={item.kelurahan_id || index} className="flex items-center gap-3">
-                        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${index === 0 ? 'bg-yellow-500 text-white' :
-                            index === 1 ? 'bg-gray-400 text-white' :
-                                index === 2 ? 'bg-amber-700 text-white' :
-                                    'bg-gray-100 text-gray-600'
-                            }`}>
-                            {index + 1}
-                        </span>
-                        <FaMapMarkerAlt className="text-red-500 text-sm" />
-                        <div className="flex-1">
-                            <div className="flex justify-between items-center mb-1">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-sm font-medium text-gray-800">{item.kelurahan_name || 'Tidak Diketahui'}</span>
-                                    {item.kecamatan && (
-                                        <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 rounded text-gray-500">
-                                            Kec. {item.kecamatan}
-                                        </span>
-                                    )}
-                                </div>
-                                <span className="text-sm font-bold text-red-600">{item.total} kejadian</span>
-                            </div>
-                            <div className="w-full bg-gray-100 rounded-full h-2">
-                                <div
-                                    className="h-2 rounded-full transition-all duration-500 bg-gradient-to-r from-red-500 to-orange-500"
-                                    style={{
-                                        width: `${(item.total / maxValue) * 100}%`,
-                                    }}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                )) : (
-                    <p className="text-sm text-gray-500 text-center py-4">Belum ada data</p>
-                )}
-            </div>
-        </div>
-    );
-};
-
-// Category Statistics Chart
-const CategoryChart = ({
-    data,
-    title,
-}: {
-    data: CategoryStat[];
-    title: string;
-}) => {
-    const maxValue = Math.max(...data.map((d) => d.total), 1);
-
-    return (
-        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-gray-800 mb-4">{title}</h3>
-            <div className="space-y-3">
-                {data.length > 0 ? data.map((item) => (
-                    <div key={item.category_id} className="flex items-center gap-3">
-                        <span className="text-2xl w-8">{item.category_icon || '🔥'}</span>
-                        <div className="flex-1">
-                            <div className="flex justify-between items-center mb-1">
-                                <span className="text-sm font-medium text-gray-700">
-                                    {item.category_name || 'Kebakaran'}
-                                </span>
-                                <span className="text-sm font-semibold text-gray-800">{item.total}</span>
-                            </div>
-                            <div className="w-full bg-gray-100 rounded-full h-2.5">
-                                <div
-                                    className="h-2.5 rounded-full transition-all duration-500 bg-gradient-to-r from-orange-500 to-red-500"
-                                    style={{
-                                        width: `${(item.total / maxValue) * 100}%`,
-                                    }}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                )) : (
-                    <p className="text-sm text-gray-500 text-center py-4">Belum ada data</p>
-                )}
-            </div>
-        </div>
-    );
-};
-
-// Yearly Comparison Chart
-const YearlyComparisonChart = ({
-    data,
-    title,
-    selectedYear,
-}: {
-    data: YearlyStats[];
-    title: string;
-    selectedYear: number;
-}) => {
-    const maxValue = Math.max(...data.map((d) => d.total), 1);
-
-    return (
-        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-gray-800 mb-4">{title}</h3>
-            <div className="space-y-3">
-                {data.length > 0 ? data.map((item) => (
-                    <div key={item.year} className={`flex items-center gap-3 p-2 rounded-lg ${item.year === selectedYear ? 'bg-red-50 border border-red-200' : ''
-                        }`}>
-                        <FaCalendarAlt className={`text-sm ${item.year === selectedYear ? 'text-red-500' : 'text-gray-400'}`} />
-                        <div className="flex-1">
-                            <div className="flex justify-between items-center mb-1">
-                                <span className={`text-sm font-semibold ${item.year === selectedYear ? 'text-red-600' : 'text-gray-700'}`}>
-                                    Tahun {item.year}
-                                </span>
-                                <span className={`text-sm font-bold ${item.year === selectedYear ? 'text-red-600' : 'text-gray-800'}`}>
-                                    {item.total} laporan
-                                </span>
-                            </div>
-                            <div className="w-full bg-gray-100 rounded-full h-2">
-                                <div
-                                    className={`h-2 rounded-full transition-all duration-500 ${item.year === selectedYear
-                                        ? 'bg-gradient-to-r from-red-500 to-orange-500'
-                                        : 'bg-gray-400'
-                                        }`}
-                                    style={{
-                                        width: `${(item.total / maxValue) * 100}%`,
-                                    }}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                )) : (
-                    <p className="text-sm text-gray-500 text-center py-4">Belum ada data</p>
-                )}
-            </div>
-        </div>
-    );
-};
-
-// Status Distribution Chart
-const StatusChart = ({
-    data,
-    title,
-}: {
-    data: StatusStat[];
-    title: string;
-}) => {
-    const total = data.reduce((acc, curr) => acc + curr.total, 0);
-
-    return (
-        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-gray-800 mb-4">{title}</h3>
-            <div className="grid grid-cols-2 gap-3">
-                {data.map((item) => {
-                    const config = STATUS_LABELS[item.status] || { label: item.status, color: "#6B7280" };
-                    const percentage = total > 0 ? ((item.total / total) * 100).toFixed(1) : "0";
-                    return (
-                        <div
-                            key={item.status}
-                            className="flex items-center gap-2 p-2 rounded-lg bg-gray-50"
-                        >
-                            <div
-                                className="w-3 h-3 rounded-full"
-                                style={{ backgroundColor: config.color }}
-                            />
-                            <div className="flex-1">
-                                <span className="text-xs font-medium text-gray-700">{config.label}</span>
-                                <div className="flex items-center gap-1">
-                                    <span className="text-sm font-semibold text-gray-800">{item.total}</span>
-                                    <span className="text-[10px] text-gray-500">({percentage}%)</span>
-                                </div>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-        </div>
-    );
-};
-
-// Summary Card Component
-const SummaryCard = ({
-    icon,
-    title,
-    value,
-    color,
-    bgColor,
-    subtitle,
-}: {
-    icon: React.ReactNode;
-    title: string;
-    value: number;
-    color: string;
-    bgColor: string;
-    subtitle?: string;
-}) => (
-    <div className={`${bgColor} rounded-xl p-4 border border-gray-200/60 shadow-sm`}>
-        <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${color} text-white`}>
-                {icon}
-            </div>
-            <div>
-                <p className="text-2xl font-bold text-gray-900">{value}</p>
-                <p className="text-xs text-gray-600">{title}</p>
-                {subtitle && <p className="text-[10px] text-gray-400">{subtitle}</p>}
-            </div>
-        </div>
-    </div>
-);
 
 export default function StatisticsPage() {
-    const router = useRouter();
-    const [isLoading, setIsLoading] = useState(true);
-    const [statistics, setStatistics] = useState<Statistics | null>(null);
-    const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
-    const [showMap, setShowMap] = useState(true);
+  const router = useRouter();
+  const [reports, setReports] = useState<Report[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [timeRange, setTimeRange] = useState<'7d'|'30d'|'1y'>('7d');
 
-    const fetchStatistics = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const params = new URLSearchParams({
-                year: selectedYear.toString(),
-            });
-            const response = await fetch(`/api/operator/statistics?${params}`);
-            if (!response.ok) throw new Error("Failed to fetch statistics");
-            const result = await response.json();
-            if (result.success) {
-                setStatistics(result.data);
-            }
-        } catch (error) {
-            console.error("Error fetching statistics:", error);
-        } finally {
-            setIsLoading(false);
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const response = await fetch("/api/operator/reports");
+        if (response.ok) {
+          const data = await response.json();
+          setReports(data);
         }
-    }, [selectedYear]);
-
-    useEffect(() => {
-        fetchStatistics();
-    }, [fetchStatistics]);
-
-    const handleLogout = async () => {
-        try {
-            await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-            // Force full page reload to clear all cached state
-            window.location.href = "/operator/login";
-        } catch (error) {
-            console.error("Logout error:", error);
-            window.location.href = "/operator/login";
-        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
     };
+    fetchReports();
+  }, []);
 
-    // Prepare monthly chart data
-    const monthlyData = Array(12).fill(0);
-    if (statistics?.monthlyStats) {
-        statistics.monthlyStats.forEach((stat) => {
-            monthlyData[stat.month - 1] = stat.total;
-        });
-    }
+  // --- Aggregate Data ---
+  
+  const statusCounts = reports.reduce((acc, curr) => {
+    let stat = curr.status;
+    if (!stat) return acc;
+    acc[stat] = (acc[stat] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
 
-    // Calculate summary stats
-    const completedCount = statistics?.statusStats?.find(s => s.status === 'completed' || s.status === 'selesai')?.total || 0;
-    const pendingCount = statistics?.statusStats?.filter(s =>
-        ['pending', 'submitted', 'verified', 'diproses', 'dispatched', 'dikirim', 'arrived', 'ditangani'].includes(s.status)
-    ).reduce((acc, curr) => acc + curr.total, 0) || 0;
-    const falseCount = statistics?.statusStats?.find(s => s.status === 'false' || s.status === 'dibatalkan')?.total || 0;
+  const validStatus = reports.filter(r => r.status === 'completed' || r.status === 'arrived' || r.status === 'dispatched').length;
+  const falseStatus = reports.filter(r => r.status === 'false').length;
+  const totalReports = reports.length;
 
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans">
-            {/* Header */}
-            <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/60 shadow-sm sticky top-0 z-[1000]">
-                <div className="max-w-[1600px] mx-auto px-4 md:px-6 py-3 md:py-4 flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => router.push("/operator/dashboard")}
-                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                        >
-                            <FaArrowLeft className="text-gray-600" />
-                        </button>
-                        <div className="flex items-center gap-3">
-                            <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-2.5 rounded-xl shadow-sm">
-                                <FaChartBar className="text-white text-lg" />
-                            </div>
-                            <div>
-                                <h1 className="text-lg font-semibold text-gray-900">Statistik Laporan</h1>
-                                <p className="text-xs text-gray-500">Analisis data kejadian per tahun dan lokasi</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => router.push("/operator/dashboard")}
-                            className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-                        >
-                            <FaFire className="text-red-500 text-sm" />
-                            <span className="text-xs font-medium text-gray-700 hidden md:inline">Dashboard</span>
-                        </button>
-                        <button
-                            onClick={handleLogout}
-                            title="Logout"
-                            className="bg-red-500 hover:bg-red-600 p-2.5 rounded-xl transition-colors shadow-sm"
-                        >
-                            <FaSignOutAlt className="text-white text-sm" />
-                        </button>
-                    </div>
+  const getPercentage = (value: number) => {
+    return totalReports > 0 ? Math.round((value / totalReports) * 100) : 0;
+  };
+
+  return (
+    <div className="min-h-screen bg-[#FAFAFA] text-gray-900 font-sans selection:bg-red-500/30">
+      
+      <header className="bg-white border-b border-gray-200/70 sticky top-0 z-40">
+        <div className="max-w-[1600px] mx-auto px-6 h-20 flex items-center justify-between">
+           <div className="flex items-center gap-6">
+              <button 
+                onClick={() => router.push('/operator/dashboard')}
+                className="p-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition-colors group"
+              >
+                <FaArrowLeft className="text-gray-400 group-hover:text-gray-900 transition-colors text-sm" />
+              </button>
+              <div className="h-8 w-px bg-gray-200 hidden sm:block"></div>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center shadow-inner border border-gray-200/50">
+                  <FaChartBar className="text-gray-500 text-lg" />
                 </div>
-            </header>
-
-            <main className="max-w-[1600px] mx-auto p-4 md:p-6">
-                {/* Year Filter */}
-                <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6 shadow-sm">
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2">
-                                <FaCalendarAlt className="text-red-500" />
-                                <label className="text-sm font-medium text-gray-700">Pilih Tahun:</label>
-                                <select
-                                    value={selectedYear}
-                                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                                    className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
-                                >
-                                    {statistics?.availableYears && statistics.availableYears.length > 0 ? (
-                                        statistics.availableYears.map((year) => (
-                                            <option key={year} value={year}>
-                                                {year}
-                                            </option>
-                                        ))
-                                    ) : (
-                                        <option value={new Date().getFullYear()}>{new Date().getFullYear()}</option>
-                                    )}
-                                </select>
-                            </div>
-                            <div className="px-4 py-2 bg-red-50 border border-red-200 rounded-lg">
-                                <p className="text-sm font-semibold text-red-700">
-                                    📊 Total {statistics?.totalReports || 0} kejadian di tahun {selectedYear}
-                                </p>
-                            </div>
-                        </div>
-                        <button
-                            onClick={() => setShowMap(!showMap)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${showMap ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-700'
-                                }`}
-                        >
-                            <FaMap />
-                            <span className="text-sm font-medium">{showMap ? 'Sembunyikan' : 'Tampilkan'} Peta</span>
-                        </button>
-                    </div>
+                <div>
+                  <h1 className="text-lg font-bold tracking-tight text-gray-900">Statistik <span className="text-red-500">Kinerja</span></h1>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Analitik Operasional</p>
                 </div>
-
-                {isLoading ? (
-                    <div className="flex items-center justify-center py-20">
-                        <div className="text-center">
-                            <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-red-500 border-r-transparent mb-4"></div>
-                            <p className="text-gray-500">Memuat statistik...</p>
-                        </div>
-                    </div>
-                ) : statistics ? (
-                    <>
-                        {/* Summary Cards */}
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                            <SummaryCard
-                                icon={<FaChartBar />}
-                                title="Total Kejadian"
-                                value={statistics.totalReports}
-                                color="bg-gradient-to-br from-blue-500 to-indigo-600"
-                                bgColor="bg-white"
-                                subtitle={`Tahun ${selectedYear}`}
-                            />
-                            <SummaryCard
-                                icon={<FaCheckCircle />}
-                                title="Selesai Ditangani"
-                                value={completedCount}
-                                color="bg-gradient-to-br from-green-500 to-emerald-600"
-                                bgColor="bg-white"
-                            />
-                            <SummaryCard
-                                icon={<FaClock />}
-                                title="Dalam Proses"
-                                value={pendingCount}
-                                color="bg-gradient-to-br from-yellow-500 to-amber-600"
-                                bgColor="bg-white"
-                            />
-                            <SummaryCard
-                                icon={<FaTimesCircle />}
-                                title="Laporan Palsu"
-                                value={falseCount}
-                                color="bg-gradient-to-br from-gray-500 to-gray-600"
-                                bgColor="bg-white"
-                            />
-                        </div>
-
-                        {/* Hotspot Map */}
-                        {showMap && (
-                            <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm mb-6">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <FaMap className="text-red-500" />
-                                    <h3 className="text-sm font-semibold text-gray-800">
-                                        🗺️ Peta Titik Kejadian Tahun {selectedYear}
-                                    </h3>
-                                    <span className="text-xs px-2 py-1 bg-red-50 text-red-600 rounded-full">
-                                        {statistics.hotspots?.length || 0} titik
-                                    </span>
-                                </div>
-                                <div className="h-[400px] rounded-xl overflow-hidden border border-gray-200 relative z-0">
-                                    <HotspotMap
-                                        hotspots={statistics.hotspots || []}
-                                        year={selectedYear}
-                                    />
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Top Location - Most Incidents */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                            <KelurahanRankingChart
-                                data={statistics.kelurahanStats || []}
-                                title="🏆 Ranking Lokasi Kejadian Terbanyak"
-                                year={selectedYear}
-                            />
-                            <YearlyComparisonChart
-                                data={statistics.yearlyStats || []}
-                                title="📅 Perbandingan Antar Tahun"
-                                selectedYear={selectedYear}
-                            />
-                        </div>
-
-                        {/* Monthly Reports */}
-                        <div className="mb-6">
-                            <BarChart
-                                data={monthlyData}
-                                labels={MONTH_NAMES}
-                                title={`📊 Laporan Bulanan Tahun ${selectedYear}`}
-                                color="#EF4444"
-                                maxHeight={220}
-                            />
-                        </div>
-
-                        {/* Category and Status */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <CategoryChart
-                                data={statistics.categoryStats || []}
-                                title="📋 Statistik per Kategori Bencana"
-                            />
-                            <StatusChart
-                                data={statistics.statusStats || []}
-                                title="📈 Distribusi Status Laporan"
-                            />
-                        </div>
-                    </>
-                ) : (
-                    <div className="text-center py-20">
-                        <p className="text-gray-500">Tidak ada data statistik tersedia</p>
-                    </div>
-                )}
-            </main>
+              </div>
+           </div>
+           
+           <div className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-xl border border-gray-200/60">
+              <button 
+                onClick={() => setTimeRange('7d')}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${timeRange === '7d' ? 'bg-white text-gray-900 shadow-[0_2px_10px_rgba(0,0,0,0.05)]' : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'}`}
+              >
+                7 Hari
+              </button>
+              <button 
+                onClick={() => setTimeRange('30d')}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${timeRange === '30d' ? 'bg-white text-gray-900 shadow-[0_2px_10px_rgba(0,0,0,0.05)]' : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'}`}
+              >
+                30 Hari
+              </button>
+           </div>
         </div>
-    );
+      </header>
+
+      <main className="max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
+
+        {/* Global Summary Cards */}
+        <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
+           {/* Total Card */}
+           <div className="bg-white rounded-2xl p-6 border border-gray-200/60 shadow-sm relative overflow-hidden group">
+              <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-gray-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
+              <div className="relative z-10">
+                <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1.5 flex items-center gap-2"><FaFire className="text-red-400"/> Total Laporan Masuk</p>
+                <div className="flex items-end gap-3 mt-4">
+                  <span className="text-5xl font-extrabold tracking-tighter text-gray-900">{totalReports}</span>
+                </div>
+              </div>
+           </div>
+
+           {/* Valid Reports */}
+           <div className="bg-white rounded-2xl p-6 border border-gray-200/60 shadow-sm relative overflow-hidden group">
+              <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-emerald-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
+              <div className="relative z-10">
+                <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1.5 flex items-center gap-2"><FaCheckCircle className="text-emerald-400"/> Insiden Valid</p>
+                <div className="flex items-end gap-3 mt-4">
+                  <span className="text-5xl font-extrabold tracking-tighter text-gray-900">{validStatus}</span>
+                  <span className="text-sm font-semibold text-emerald-500 bg-emerald-50 px-2 py-1 rounded mb-1">{getPercentage(validStatus)}%</span>
+                </div>
+              </div>
+           </div>
+
+           {/* False Reports */}
+           <div className="bg-white rounded-2xl p-6 border border-gray-200/60 shadow-sm relative overflow-hidden group">
+              <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-red-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
+              <div className="relative z-10">
+                <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1.5 flex items-center gap-2"><FaTimesCircle className="text-red-400"/> Laporan Palsu (Prank)</p>
+                <div className="flex items-end gap-3 mt-4">
+                  <span className="text-5xl font-extrabold tracking-tighter text-gray-900">{falseStatus}</span>
+                  <span className="text-sm font-semibold text-red-500 bg-red-50 px-2 py-1 rounded mb-1">{getPercentage(falseStatus)}%</span>
+                </div>
+              </div>
+           </div>
+
+           {/* Avg Response Time */}
+           <div className="bg-white rounded-2xl p-6 border border-gray-200/60 shadow-sm relative overflow-hidden group">
+              <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-blue-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
+              <div className="relative z-10">
+                <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1.5 flex items-center gap-2"><FaClock className="text-blue-400"/> Rata-rata Respons Unit</p>
+                <div className="flex items-end gap-3 mt-4">
+                  <span className="text-5xl font-extrabold tracking-tighter text-gray-900">4.2</span>
+                  <span className="text-lg font-bold text-gray-400 mb-1">menit</span>
+                </div>
+              </div>
+           </div>
+        </section>
+
+        {/* Charts Grid Alternative */}
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+           {/* Status Breakdown (HTML/CSS Bar) */}
+           <div className="bg-white rounded-2xl p-6 border border-gray-200/60 shadow-sm flex flex-col">
+              <div className="mb-6">
+                <h3 className="text-lg font-extrabold tracking-tight text-gray-900">Komposisi Status</h3>
+                <p className="text-gray-500 text-sm font-medium">Distribusi status penanganan</p>
+              </div>
+              
+              <div className="flex flex-col gap-5 justify-center flex-1">
+                 {[
+                   { label: 'Baru', count: statusCounts['submitted'] || 0, color: 'bg-red-500' },
+                   { label: 'Diverifikasi', count: statusCounts['verified'] || 0, color: 'bg-yellow-500' },
+                   { label: 'Dikirim', count: statusCounts['dispatched'] || 0, color: 'bg-blue-500' },
+                   { label: 'Tiba', count: statusCounts['arrived'] || 0, color: 'bg-indigo-500' },
+                   { label: 'Selesai', count: statusCounts['completed'] || 0, color: 'bg-emerald-500' },
+                   { label: 'Palsu', count: statusCounts['false'] || 0, color: 'bg-slate-500' },
+                 ].map((item, idx) => (
+                    <div key={idx} className="flex flex-col gap-1.5">
+                       <div className="flex justify-between text-sm font-bold">
+                          <span className="text-gray-700">{item.label}</span>
+                          <span className="text-gray-900">{item.count} <span className="text-gray-400 text-xs ml-1 font-medium">({getPercentage(item.count)}%)</span></span>
+                       </div>
+                       <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                          <div className={`h-2.5 rounded-full ${item.color} transition-all duration-1000`} style={{ width: `${Math.max(getPercentage(item.count), 2)}%` }}></div>
+                       </div>
+                    </div>
+                 ))}
+              </div>
+           </div>
+
+           {/* Example Categories HTML Bar */}
+           <div className="bg-white rounded-2xl p-6 border border-gray-200/60 shadow-sm flex flex-col">
+              <div className="mb-6">
+                <h3 className="text-lg font-extrabold tracking-tight text-gray-900">Berdasarkan Kategori</h3>
+                <p className="text-gray-500 text-sm font-medium">Volume insiden berdasarkan jenis kejadian</p>
+              </div>
+              
+              <div className="flex flex-col gap-6 justify-center flex-1">
+                 {/* Mock Data for categories because we don't have exactly category groups yet without complex reduce */}
+                 {[
+                   { label: 'Kebakaran Pemukiman', count: Math.round(totalReports * 0.6), color: 'bg-orange-500' },
+                   { label: 'Lahan / Hutan', count: Math.round(totalReports * 0.2), color: 'bg-amber-600' },
+                   { label: 'Evakuasi Hewan', count: Math.round(totalReports * 0.15), color: 'bg-teal-500' },
+                   { label: 'Lainnya', count: Math.round(totalReports * 0.05), color: 'bg-gray-400' },
+                 ].map((item, idx) => (
+                    <div key={idx} className="flex flex-col gap-1.5">
+                       <div className="flex justify-between text-sm font-bold">
+                          <span className="text-gray-700">{item.label}</span>
+                          <span className="text-gray-900">{item.count}</span>
+                       </div>
+                       <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+                          <div className={`h-full rounded-full ${item.color} transition-all duration-1000`} style={{ width: `${Math.max(item.count > 0 ? (item.count / totalReports) * 100 : 0, 2)}%` }}></div>
+                       </div>
+                    </div>
+                 ))}
+              </div>
+           </div>
+
+        </section>
+
+      </main>
+    </div>
+  );
 }

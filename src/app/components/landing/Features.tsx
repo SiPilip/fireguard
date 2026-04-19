@@ -1,14 +1,15 @@
 'use client';
 
 import { FaMapMarkerAlt, FaRoute, FaClock, FaMobileAlt } from 'react-icons/fa';
-import { motion } from 'framer-motion';
+import { motion, useMotionTemplate, useMotionValue } from 'framer-motion';
+import { MouseEvent } from 'react';
 
 const features = [
   {
     icon: <FaMapMarkerAlt className="w-6 h-6 text-red-500" />,
     title: "Lokasi Real-time",
     description: "Deteksi lokasi otomatis menggunakan GPS presisi tinggi untuk pelaporan yang akurat, langsung dari titik kejadian tanpa perlu mengetik alamat manual.",
-    glowColor: "group-hover:shadow-[0_0_30px_rgba(239,68,68,0.15)]",
+    glowColor: "rgba(239, 68, 68, 0.15)",
     iconBg: "bg-red-500/10",
     iconBorder: "border-red-500/20",
     colSpan: "md:col-span-2 lg:col-span-2"
@@ -17,7 +18,7 @@ const features = [
     icon: <FaRoute className="w-6 h-6 text-orange-500" />,
     title: "Rute Cerdas",
     description: "Algoritma routing dinamis yang menghindari kemacetan, menuntun armada langsung ke lokasi Anda melalui akses tercepat.",
-    glowColor: "group-hover:shadow-[0_0_30px_rgba(249,115,22,0.15)]",
+    glowColor: "rgba(249, 115, 22, 0.15)",
     iconBg: "bg-orange-500/10",
     iconBorder: "border-orange-500/20",
     colSpan: "md:col-span-1 lg:col-span-2"
@@ -26,7 +27,7 @@ const features = [
     icon: <FaClock className="w-6 h-6 text-blue-500" />,
     title: "Estimasi Presisi",
     description: "Kalkulasi Waktu Tiba (ETA) real-time berdasar lalu lintas, memberikan ketenangan sementara Anda menunggu bantuan datang.",
-    glowColor: "group-hover:shadow-[0_0_30px_rgba(59,130,246,0.15)]",
+    glowColor: "rgba(59, 130, 246, 0.15)",
     iconBg: "bg-blue-500/10",
     iconBorder: "border-blue-500/20",
     colSpan: "md:col-span-1 lg:col-span-2"
@@ -35,20 +36,84 @@ const features = [
     icon: <FaMobileAlt className="w-6 h-6 text-emerald-500" />,
     title: "Akses Universal",
     description: "Sistem PWA (Progressive Web App) yang ringan dan instan, dapat diakses dari perangkat apapun tanpa perlu mengunduh aplikasi besar.",
-    glowColor: "group-hover:shadow-[0_0_30px_rgba(16,185,129,0.15)]",
+    glowColor: "rgba(16, 185, 129, 0.15)",
     iconBg: "bg-emerald-500/10",
     iconBorder: "border-emerald-500/20",
     colSpan: "md:col-span-2 lg:col-span-2"
   }
 ];
 
+const FeatureCard = ({ feature, idx }: { feature: typeof features[0], idx: number }) => {
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  function handleMouseMove({ currentTarget, clientX, clientY }: MouseEvent) {
+    const { left, top } = currentTarget.getBoundingClientRect();
+    mouseX.set(clientX - left);
+    mouseY.set(clientY - top);
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "0px" }}
+      transition={{ 
+        duration: 0.5 
+      }}
+      onMouseMove={handleMouseMove}
+      className={`${feature.colSpan} group relative rounded-[2.5rem] bg-[#0A0A0A] border border-white/5 p-8 lg:p-12 overflow-hidden transition-all duration-500`}
+    >
+      {/* Spotlight Effect Overlay */}
+      <motion.div
+        className="pointer-events-none absolute -inset-px rounded-[2.5rem] opacity-0 group-hover:opacity-100 transition duration-300 z-10"
+        style={{
+          background: useMotionTemplate`
+            radial-gradient(
+              650px circle at ${mouseX}px ${mouseY}px,
+              ${feature.glowColor},
+              transparent 80%
+            )
+          `,
+        }}
+      />
+
+      {/* Subtle Grain/Noise Texture */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" 
+           style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
+
+      {/* Inner Glow/Glass reflection accent */}
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none" />
+      
+      <div className="relative z-20 flex flex-col h-full">
+        <div className={`w-16 h-16 rounded-2xl ${feature.iconBg} border ${feature.iconBorder} flex items-center justify-center mb-8 transition-all duration-700 group-hover:scale-110 group-hover:rotate-3 shadow-[0_0_20px_rgba(0,0,0,0.5)]`}>
+          {feature.icon}
+        </div>
+        
+        <h3 className="text-3xl font-bold text-white mb-5 tracking-tight group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-br group-hover:from-white group-hover:to-white/60 transition-all duration-500">
+          {feature.title}
+        </h3>
+        
+        <p className="text-gray-400 text-lg leading-relaxed font-normal mt-auto opacity-70 group-hover:opacity-100 transition-opacity duration-500">
+          {feature.description}
+        </p>
+      </div>
+
+      {/* Premium Border Aura */}
+      <div className="absolute inset-0 border border-white/5 rounded-[2.5rem] group-hover:border-white/20 transition-colors duration-500 pointer-events-none" />
+    </motion.div>
+  );
+};
+
 const Features = () => {
   return (
-    <section id="features" className="py-24 lg:py-32 bg-[#050505] relative overflow-hidden border-y border-white/5">
-      {/* Dark Mode Ambient Glows */}
-      <div className="absolute top-0 left-1/4 w-[40rem] h-[40rem] bg-red-600/10 rounded-full blur-[120px] pointer-events-none mix-blend-screen" />
-      <div className="absolute bottom-0 right-1/4 w-[30rem] h-[30rem] bg-orange-600/10 rounded-full blur-[100px] pointer-events-none mix-blend-screen" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.02)_0%,transparent_100%)] pointer-events-none" />
+    <section id="features" className="py-24 lg:py-40 bg-[#050505] relative overflow-hidden">
+      {/* Dynamic Background elements */}
+      <div className="absolute top-0 left-1/4 w-[50rem] h-[50rem] bg-red-600/5 rounded-full blur-[160px] pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-[40rem] h-[40rem] bg-orange-600/5 rounded-full blur-[140px] pointer-events-none" />
+      
+      {/* Fine grid pattern for premium feel */}
+      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.02] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="mb-16 md:mb-24 flex flex-col md:flex-row md:items-end justify-between gap-10">
@@ -78,8 +143,8 @@ const Features = () => {
           </div>
           
           <motion.p 
-            initial={{ opacity: 0, opacity: 0 }}
-            whileInView={{ opacity: 1, opacity: 1 }}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
             className="text-gray-400 max-w-md text-lg md:text-xl leading-relaxed font-light"
@@ -88,34 +153,10 @@ const Features = () => {
           </motion.p>
         </div>
 
-        {/* Bento Grid Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 auto-rows-[minmax(0,1fr)]">
+        {/* Bento Grid Layout with refined spacing */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((feature, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.5, delay: idx * 0.1 }}
-              className={`${feature.colSpan} group relative rounded-[2rem] bg-[#0A0A0A] border border-white/5 p-8 lg:p-10 overflow-hidden transition-all duration-500 hover:bg-[#111111] hover:border-white/10 ${feature.glowColor}`}
-            >
-              {/* Subtle glass reflection effect inside card */}
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none bg-[linear-gradient(110deg,rgba(255,255,255,0.03)_0%,transparent_50%_,rgba(255,255,255,0)_100%)]" />
-
-              <div className="relative z-10 flex flex-col h-full">
-                <div className={`w-16 h-16 rounded-2xl ${feature.iconBg} border ${feature.iconBorder} flex items-center justify-center mb-8 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3`}>
-                  {feature.icon}
-                </div>
-                
-                <h3 className="text-2xl font-bold text-white mb-4 tracking-wide group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-gray-400 transition-all duration-300">
-                  {feature.title}
-                </h3>
-                
-                <p className="text-gray-400 leading-relaxed font-light mt-auto">
-                  {feature.description}
-                </p>
-              </div>
-            </motion.div>
+            <FeatureCard key={idx} feature={feature} idx={idx} />
           ))}
         </div>
       </div>

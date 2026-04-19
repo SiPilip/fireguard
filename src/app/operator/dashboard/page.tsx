@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -48,8 +48,7 @@ interface Report {
   kelurahan_name?: string;
   kecamatan?: string;
   kota?: string;
-  acknowledged?: boolean; // Properti UI-only
-  // Nested objects for component
+  acknowledged?: boolean;
   category?: {
     id: number;
     name: string;
@@ -82,7 +81,7 @@ const StatCard = ({
   value: string;
   color: string;
 }) => (
-  <div className="bg-white rounded-xl p-3 md:p-5 flex flex-col md:flex-row items-center md:gap-4 gap-2 border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-200">
+  <div className={`bg-white rounded-xl p-3 md:p-5 flex flex-col md:flex-row items-center md:gap-4 gap-2 border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-200`}>
     <div
       className={`w-10 h-10 md:w-11 md:h-11 rounded-lg flex items-center justify-center text-white text-base md:text-lg ${color} shadow-sm`}
     >
@@ -254,14 +253,12 @@ export default function OperatorDashboard() {
 
       if (!response.ok) throw new Error("Gagal update status");
 
-      // Update report di state
       setReports((prev) =>
         prev.map((r) =>
           r.id === reportId ? { ...r, status: newStatus } : r
         )
       );
 
-      // Update selected report jika masih dibuka
       if (selectedReport && selectedReport.id === reportId) {
         setSelectedReport({ ...selectedReport, status: newStatus });
       }
@@ -278,14 +275,14 @@ export default function OperatorDashboard() {
       const response = await fetch("/api/operator/reports");
       if (!response.ok) throw new Error("Gagal memuat laporan");
       const data = await response.json();
-      // Transform flat data to nested objects
+      
       const transformedReports = data.map((r: any) => ({
         ...r,
         acknowledged: true,
         category: r.category_id ? {
           id: r.category_id,
           name: r.category_name || 'Kebakaran',
-          icon: r.category_icon || '🔥',
+          icon: r.category_icon || 'ðŸ”¥',
         } : undefined,
         kelurahan: r.kelurahan_id ? {
           id: r.kelurahan_id,
@@ -294,7 +291,7 @@ export default function OperatorDashboard() {
       }));
       setReports(transformedReports);
     } catch (error) {
-      // Error loading reports
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -347,15 +344,14 @@ export default function OperatorDashboard() {
 
       socket.onclose = (event) => {
         setWsStatus(`Closed (${event.code})`);
-        // Implement reconnection logic
         reconnectionTimer = setTimeout(() => {
           connect();
-        }, 5000); // Try to reconnect every 5 seconds
+        }, 5000);
       };
 
       socket.onerror = (error) => {
         setWsStatus("Error");
-        socket.close(); // This will trigger the onclose event and reconnection logic
+        socket.close(); 
       };
     };
 
@@ -373,7 +369,6 @@ export default function OperatorDashboard() {
     try {
       stopAlarm();
       await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-      // Force full page reload to clear all cached state
       window.location.href = "/operator/login";
     } catch (error) {
       console.error("Logout error:", error);
@@ -422,152 +417,159 @@ export default function OperatorDashboard() {
         />
       )}
 
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans flex flex-col">
-        <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/60 shadow-sm sticky top-0 z-40">
-          <div className="max-w-[1600px] mx-auto px-4 md:px-6 py-3 md:py-4 flex justify-between items-center">
-            <div className="flex items-center gap-2 md:gap-4">
-              <div className="flex items-center gap-2 md:gap-3">
-                <div className="bg-gradient-to-br from-red-500 to-orange-600 p-1.5 md:p-2 rounded-xl shadow-sm">
-                  <FaFire className="text-white text-lg md:text-xl" />
+      <div className="min-h-screen bg-[#FAFAFA] text-gray-900 font-sans selection:bg-red-500/30 flex flex-col">
+        {/* Top Navigation */}
+        <header className="bg-white border-b border-gray-200/70 sticky top-0 z-40">
+          <div className="max-w-[1600px] mx-auto px-6 h-20 flex justify-between items-center">
+            
+            {/* Brand & Connection Status */}
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gray-900 rounded-xl flex items-center justify-center shadow-md">
+                  <FaFire className="text-white text-lg" />
                 </div>
                 <div>
-                  <h1 className="text-sm md:text-lg font-semibold text-gray-900">FireGuard Admin</h1>
-                  <p className="text-xs text-gray-500 hidden md:block">Dashboard Operator</p>
+                  <h1 className="text-lg font-bold tracking-tight text-gray-900">FireGuard <span className="text-red-500">Ops</span></h1>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-widest">Dashboard Operator</p>
                 </div>
               </div>
-              <div className="hidden sm:flex items-center gap-2 px-2 md:px-3 py-1.5 bg-gray-100 rounded-lg">
-                <span
-                  className={`w-2 h-2 rounded-full ${wsStatus === "Connected"
-                    ? "bg-green-500 animate-pulse"
-                    : wsStatus === "Connecting"
-                      ? "bg-yellow-500"
-                      : "bg-red-500"
-                    }`}
-                ></span>
-                <span className="text-xs font-medium text-gray-600">{wsStatus}</span>
+              
+              <div className="hidden md:flex items-center gap-2 pl-6 border-l border-gray-200">
+                <div className="relative flex h-2.5 w-2.5">
+                  {wsStatus === "Connected" && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}
+                  <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${wsStatus === "Connected" ? "bg-emerald-500" : wsStatus === "Connecting" ? "bg-amber-500" : "bg-red-500"}`}></span>
+                </div>
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{wsStatus === "Connected" ? 'System Online' : wsStatus}</span>
               </div>
             </div>
-            <div className="flex items-center gap-2 md:gap-4">
+
+            {/* Actions */}
+            <div className="flex items-center gap-3">
               <button
                 onClick={() => router.push('/operator/statistics')}
-                title="Lihat Statistik Laporan"
-                className="bg-indigo-500 hover:bg-indigo-600 p-2 md:p-2.5 rounded-xl transition-colors shadow-sm flex items-center gap-2"
+                className="px-4 py-2 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2"
               >
-                <FaChartBar className="text-white text-sm" />
-                <span className="hidden md:inline text-xs font-medium text-white">Statistik</span>
+                <FaChartBar className="text-gray-500" />
+                <span className="hidden lg:inline text-sm font-semibold text-gray-700">Statistik</span>
               </button>
+              
               <button
                 onClick={() => router.push('/operator/management')}
-                title="Kelola Kategori & Kelurahan"
-                className="bg-blue-500 hover:bg-blue-600 p-2 md:p-2.5 rounded-xl transition-colors shadow-sm flex items-center gap-2"
+                className="px-4 py-2 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2"
               >
-                <FaTags className="text-white text-sm" />
-                <span className="hidden md:inline text-xs font-medium text-white">Manajemen</span>
+                <FaTags className="text-gray-500" />
+                <span className="hidden lg:inline text-sm font-semibold text-gray-700">Manajemen</span>
               </button>
-              <div className="hidden md:flex items-center gap-2.5 px-3 py-2 bg-gray-100 rounded-xl">
-                <span className="text-xs font-medium text-gray-700">Mode Pantau</span>
+
+              <div className="h-8 w-px bg-gray-200 mx-2 hidden sm:block"></div>
+
+              <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200/60">
+                <span className="text-sm font-semibold text-gray-700">Auto-Alarm</span>
                 <button
                   onClick={() => setIsMonitorMode(!isMonitorMode)}
-                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${isMonitorMode ? "bg-green-500" : "bg-gray-300"
-                    }`}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${isMonitorMode ? "bg-red-500" : "bg-gray-300"}`}
                 >
                   <span
-                    className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform shadow-sm ${isMonitorMode ? "translate-x-5" : "translate-x-0.5"
-                      }`}
+                    className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${isMonitorMode ? "translate-x-4" : "translate-x-1"}`}
                   />
                 </button>
               </div>
-              <div className="hidden lg:flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-xl">
-                <FaUserShield className="text-gray-600 text-sm" />
-                <span className="text-xs font-medium text-gray-700">Operator Damkar</span>
+
+              <div className="hidden lg:flex items-center gap-2 px-4 py-2">
+                <div className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center">
+                  <FaUserShield className="text-gray-500 text-sm" />
+                </div>
               </div>
+
               <button
                 onClick={handleLogout}
-                title="Logout"
-                className="bg-red-500 hover:bg-red-600 p-2 md:p-2.5 rounded-xl transition-colors shadow-sm"
+                className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                title="Logout System"
               >
-                <FaSignOutAlt className="text-white text-sm" />
+                <FaSignOutAlt className="text-lg" />
               </button>
             </div>
           </div>
         </header>
 
-        <main className="max-w-[1600px] mx-auto p-4 md:p-6 flex-grow">
-          <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 mb-4 md:mb-6">
+        <main className="max-w-[1600px] w-full mx-auto p-4 sm:p-6 lg:p-8 flex-grow flex flex-col gap-6">
+          
+          {/* Top Stats Row */}
+          <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
-              icon={<FaFire />}
+              icon={<FaFire className="text-white" />}
               title="Laporan Aktif"
               value={activeReportsCount.toString()}
-              color="bg-gradient-to-br from-red-500 to-orange-600"
+              color="bg-red-500"
             />
             <StatCard
-              icon={<FaTruck />}
-              title="Unit Dikirim"
+              icon={<FaTruck className="text-white" />}
+              title="Unit Di Lapangan"
               value={dispatchedCount.toString()}
-              color="bg-gradient-to-br from-blue-500 to-cyan-600"
+              color="bg-blue-500"
             />
             <StatCard
-              icon={<FaClock />}
+              icon={<FaClock className="text-white" />}
               title="Rata-rata Respons"
-              value="- min"
-              color="bg-gradient-to-br from-yellow-500 to-amber-600"
+              value="< 5 min"
+              color="bg-amber-500"
             />
             <StatCard
-              icon={<FaBuilding />}
-              title="Total Pos Damkar"
-              value="8"
-              color="bg-gradient-to-br from-green-500 to-emerald-600"
+              icon={<FaBuilding className="text-white" />}
+              title="Total Posko"
+              value="8 Aktif"
+              color="bg-emerald-500"
             />
           </section>
 
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-5 h-full min-h-[70vh]">
-            <section className="lg:col-span-2 bg-white border border-gray-200/60 rounded-xl md:rounded-2xl shadow-sm flex flex-col overflow-hidden order-2 lg:order-1">
-              <div className="px-5 py-4 border-b border-gray-200/60 flex justify-between items-center flex-shrink-0 bg-gray-50/50">
-                <div className="flex items-center gap-2">
-                  <div className="w-1 h-5 bg-gradient-to-b from-red-500 to-orange-500 rounded-full"></div>
-                  <h2 className="text-base font-semibold text-gray-900">Daftar Laporan</h2>
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow h-[calc(100vh-16rem)] min-h-[600px]">
+            
+            {/* Left Queue Panel */}
+            <section className="lg:col-span-4 xl:col-span-3 bg-white border border-gray-200/80 rounded-2xl shadow-sm flex flex-col overflow-hidden h-full max-h-[800px]">
+              <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white shrink-0">
+                <div>
+                  <h2 className="text-base font-bold text-gray-900 tracking-tight">Antrean Darurat</h2>
+                  <p className="text-xs text-gray-500 mt-0.5">Laporan masuk real-time</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={fetchReports}
-                    className="text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                    title="Muat Ulang Laporan"
-                  >
+                <div className="flex items-center gap-1.5">
+                  <button onClick={fetchReports} className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all" title="Segarkan">
                     <FaSyncAlt className="text-sm" />
                   </button>
-                  <button
-                    onClick={handleDeleteAllReports}
-                    className="text-gray-500 hover:text-red-600 p-2 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Hapus Semua Laporan"
-                  >
+                  <button onClick={handleDeleteAllReports} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Kosongkan Semua">
                     <FaTrash className="text-sm" />
                   </button>
-                  <select
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    value={statusFilter}
-                    className="bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs font-medium text-gray-700 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all"
-                  >
-                    <option value="all">Semua Status</option>
-                    <option value="submitted">Baru</option>
-                    <option value="verified">Diverifikasi</option>
-                    <option value="dispatched">Dikirim</option>
-                    <option value="arrived">Tiba</option>
-                    <option value="completed">Selesai</option>
-                    <option value="false">Palsu</option>
-                  </select>
                 </div>
               </div>
-              <div className="overflow-y-auto p-4 space-y-2.5 flex-grow bg-gray-50/30">
+              
+              <div className="px-6 py-3 border-b border-gray-100 bg-gray-50/50 shrink-0">
+                <select
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  value={statusFilter}
+                  className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all appearance-none cursor-pointer"
+                >
+                  <option value="all">Semua Status Laporan</option>
+                  <option value="submitted">â³ Menunggu Verifikasi</option>
+                  <option value="verified">âœ… Tervalidasi</option>
+                  <option value="dispatched">ðŸš’ Unit Meluncur</option>
+                  <option value="arrived">ðŸ“ Unit Tiba</option>
+                  <option value="completed">â˜‘ï¸ Insiden Selesai</option>
+                  <option value="false">âŒ Laporan Palsu</option>
+                </select>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50/30 custom-scrollbar relative">
                 {isLoading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="text-center">
-                      <div className="inline-block h-8 w-8 animate-spin rounded-full border-3 border-solid border-red-500 border-r-transparent mb-3"></div>
-                      <p className="text-sm text-gray-500">Memuat laporan...</p>
-                    </div>
+                  <div className="flex flex-col items-center justify-center h-40 gap-3 text-gray-400">
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-red-500"></div>
+                    <span className="text-sm font-medium">Sinkronisasi data...</span>
                   </div>
                 ) : filteredReports.length === 0 ? (
-                  <div className="flex items-center justify-center py-12">
-                    <p className="text-sm text-gray-500">Tidak ada laporan</p>
+                  <div className="flex flex-col items-center justify-center h-40 gap-2 text-gray-400">
+                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-1">
+                       <FaCheck className="text-gray-300 text-xl" />
+                    </div>
+                    <span className="text-sm font-medium">Antrean bersih</span>
                   </div>
                 ) : (
                   filteredReports.map((report) => (
@@ -581,17 +583,19 @@ export default function OperatorDashboard() {
               </div>
             </section>
 
-            <section className="lg:col-span-3 bg-white border border-gray-200/60 rounded-xl md:rounded-2xl shadow-sm overflow-hidden flex flex-col order-1 lg:order-2 min-h-[400px] md:min-h-[500px]">
-              <div className="px-5 py-4 border-b border-gray-200/60 flex justify-between items-center flex-shrink-0 bg-gray-50/50">
-                <div className="flex items-center gap-2">
-                  <div className="w-1 h-5 bg-gradient-to-b from-red-500 to-orange-500 rounded-full"></div>
-                  <h2 className="text-base font-semibold text-gray-900">Peta Monitoring</h2>
+            {/* Right Map Panel */}
+            <section className="lg:col-span-8 xl:col-span-9 bg-white border border-gray-200/80 rounded-2xl shadow-sm overflow-hidden flex flex-col h-full relative min-h-[500px]">
+              <div className="absolute top-4 left-4 z-[400] bg-white/90 backdrop-blur px-4 py-2.5 rounded-xl shadow-lg border border-gray-200/50 pointer-events-none">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                  <span className="text-sm font-bold tracking-tight text-gray-900">Live Command Map</span>
                 </div>
               </div>
-              <div className="flex-grow h-full w-full">
+              <div className="flex-grow w-full h-full bg-gray-100 rounded-xl overflow-hidden shadow-inner">
                 <AdminMap reports={reports} onReportClick={handleSelectReport} selectedReport={selectedReport} />
               </div>
             </section>
+
           </div>
         </main>
       </div>

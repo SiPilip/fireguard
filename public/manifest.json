@@ -17,13 +17,13 @@
     ],
     "icons": [
         {
-            "src": "/logofireguard.png",
+            "src": "/favicon.png",
             "sizes": "192x192",
             "type": "image/png",
             "purpose": "any maskable"
         },
         {
-            "src": "/logofireguard.png",
+            "src": "/favicon.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "any maskable"
@@ -37,7 +37,7 @@
             "url": "/report/new",
             "icons": [
                 {
-                    "src": "/logofireguard.png",
+                    "src": "/favicon.png",
                     "sizes": "192x192",
                     "type": "image/png"
                 }
@@ -50,7 +50,7 @@
             "url": "/dashboard",
             "icons": [
                 {
-                    "src": "/logofireguard.png",
+                    "src": "/favicon.png",
                     "sizes": "192x192",
                     "type": "image/png"
                 }

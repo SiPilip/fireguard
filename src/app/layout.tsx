@@ -21,8 +21,8 @@ export const metadata: Metadata = {
   description: 'Sistem Cepat Tanggap Kebakaran Plaju Darat, Palembang - Laporkan dan pantau insiden kebakaran secara real-time',
   manifest: '/manifest.json',
   icons: {
-    icon: '/logofireguard.png',
-    apple: '/logofireguard.png',
+    icon: '/favicon.png',
+    apple: '/favicon.png',
   },
   appleWebApp: {
     capable: true,
@@ -77,44 +77,44 @@ export default function RootLayout({
         <meta name="theme-color" content="#ef4444" />
 
         {/* Apple Touch Icons */}
-        <link rel="apple-touch-icon" href="/logofireguard.png" />
-        <link rel="apple-touch-icon" sizes="152x152" href="/logofireguard.png" />
-        <link rel="apple-touch-icon" sizes="192x192" href="/logofireguard.png" />
-        <link rel="apple-touch-icon" sizes="512x512" href="/logofireguard.png" />
+        <link rel="apple-touch-icon" href="/favicon.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/favicon.png" />
+        <link rel="apple-touch-icon" sizes="192x192" href="/favicon.png" />
+        <link rel="apple-touch-icon" sizes="512x512" href="/favicon.png" />
 
         {/* Manifest */}
         <link rel="manifest" href="/manifest.json" />
 
         {/* Favicon */}
-        <link rel="icon" type="image/png" sizes="32x32" href="/logofireguard.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/logofireguard.png" />
-        <link rel="shortcut icon" href="/logofireguard.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png" />
+        <link rel="shortcut icon" href="/favicon.png" />
 
         {/* Splash Screens for iOS */}
         <link
           rel="apple-touch-startup-image"
           media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
-          href="/logofireguard.png"
+          href="/favicon.png"
         />
         <link
           rel="apple-touch-startup-image"
           media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
-          href="/logofireguard.png"
+          href="/favicon.png"
         />
         <link
           rel="apple-touch-startup-image"
           media="screen and (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
-          href="/logofireguard.png"
+          href="/favicon.png"
         />
         <link
           rel="apple-touch-startup-image"
           media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
-          href="/logofireguard.png"
+          href="/favicon.png"
         />
         <link
           rel="apple-touch-startup-image"
           media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
-          href="/logofireguard.png"
+          href="/favicon.png"
         />
       </head>
       <body className={`${poppins.variable} ${roboto.variable} antialiased`}>
