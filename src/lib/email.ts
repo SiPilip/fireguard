@@ -52,37 +52,62 @@ export async function sendEmailOTP(email: string, otp: string, type: 'register' 
     : 'https://fireguard-palembang.vercel.app/favicon.png';
 
   const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <div style="background: linear-gradient(135deg, #EF4444 0%, #F97316 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
-        <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
-          <img src="${logoUrl}" alt="FireGuard" width="48" height="48" style="border-radius: 12px; background: white; padding: 4px;" />
-          <h1 style="color: white; margin: 0; font-size: 28px;">FireGuard</h1>
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #F9FAFB; font-family: 'Roboto', Arial, sans-serif; color: #4B5563;">
+      <div style="max-width: 600px; margin: 40px auto; background-color: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);">
+        
+        <!-- Header -->
+        <div style="padding: 40px 30px; text-align: center; border-bottom: 1px solid #F3F4F6; background: radial-gradient(circle at top, rgba(239, 68, 68, 0.08) 0%, transparent 70%);">
+          <div style="display: inline-block; padding: 10px; background: linear-gradient(135deg, #EF4444 0%, #F97316 100%); border-radius: 16px; margin-bottom: 16px; box-shadow: 0 10px 20px rgba(239, 68, 68, 0.2);">
+            <img src="${logoUrl}" alt="FireGuard" width="40" height="40" style="display: block; border-radius: 8px; background: #FFFFFF; padding: 4px;" />
+          </div>
+          <h1 style="margin: 0; font-family: 'Poppins', Arial, sans-serif; font-size: 28px; font-weight: 700; color: #111827; letter-spacing: -0.5px;">FireGuard</h1>
+          <p style="margin: 8px 0 0; font-size: 14px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; color: #EF4444;">Sistem Pelaporan Darurat</p>
         </div>
-        <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Sistem Pelaporan Bencana Kec. Plaju</p>
-      </div>
-      <div style="background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none;">
-        <h2 style="color: #1f2937; margin-top: 0;">
-          ${type === 'register' ? 'Verifikasi Email Anda' : 'Kode Login Anda'}
-        </h2>
-        <p style="color: #6b7280; line-height: 1.6;">
-          ${type === 'register'
-      ? 'Gunakan kode berikut untuk menyelesaikan pendaftaran akun FireGuard Anda:'
-      : 'Gunakan kode berikut untuk login ke akun FireGuard Anda:'}
-        </p>
-        <div style="background: white; border: 2px dashed #EF4444; border-radius: 12px; padding: 20px; text-align: center; margin: 20px 0;">
-          <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #EF4444;">${otp}</span>
+
+        <!-- Body -->
+        <div style="padding: 40px 30px;">
+          <h2 style="margin: 0 0 16px; font-family: 'Poppins', Arial, sans-serif; font-size: 20px; font-weight: 600; color: #111827;">
+            ${type === 'register' ? 'Verifikasi Email Anda' : 'Kode Login Anda'}
+          </h2>
+          <p style="margin: 0 0 32px; font-size: 16px; line-height: 1.6; color: #4B5563;">
+            ${type === 'register'
+      ? 'Gunakan kode OTP berikut untuk menyelesaikan pendaftaran akun FireGuard Anda. Kode ini bersifat rahasia.'
+      : 'Gunakan kode OTP berikut untuk masuk ke akun FireGuard Anda. Kode ini bersifat rahasia.'}
+          </p>
+
+          <!-- OTP Box -->
+          <div style="background-color: rgba(239, 68, 68, 0.05); border: 1px dashed rgba(239, 68, 68, 0.5); border-radius: 16px; padding: 24px; text-align: center; margin-bottom: 32px;">
+            <span style="font-family: 'Poppins', monospace; font-size: 42px; font-weight: 700; letter-spacing: 12px; color: #EF4444;">${otp}</span>
+          </div>
+
+          <div style="background-color: #F9FAFB; border: 1px solid #F3F4F6; border-radius: 12px; padding: 16px;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td width="30" valign="top" style="font-size: 20px;">⏱️</td>
+                <td valign="top">
+                  <p style="margin: 0 0 4px; font-size: 14px; color: #374151;">Berlaku selama <strong>5 menit</strong></p>
+                  <p style="margin: 0; font-size: 12px; color: #6B7280;">Jangan bagikan kode ini kepada siapapun, termasuk pihak FireGuard.</p>
+                </td>
+              </tr>
+            </table>
+          </div>
         </div>
-        <p style="color: #9ca3af; font-size: 14px;">
-          ⏱️ Kode ini berlaku selama <strong>5 menit</strong>.<br>
-          ⚠️ Jangan bagikan kode ini kepada siapapun.
-        </p>
+
+        <!-- Footer -->
+        <div style="padding: 24px 30px; background-color: #F9FAFB; border-top: 1px solid #E5E7EB; text-align: center;">
+          <p style="margin: 0; font-size: 12px; color: #9CA3AF; line-height: 1.6;">
+            &copy; ${new Date().getFullYear()} FireGuard.<br>Mengabdi untuk publik. Hak Cipta Dilindungi.<br>Kec. Plaju, Palembang.
+          </p>
+        </div>
       </div>
-      <div style="background: #1f2937; padding: 20px; border-radius: 0 0 12px 12px; text-align: center;">
-        <p style="color: #9ca3af; margin: 0; font-size: 12px;">
-          © 2026 FireGuard - Kec. Plaju, Palembang
-        </p>
-      </div>
-    </div>
+    </body>
+    </html>
   `;
 
   try {
@@ -133,41 +158,68 @@ export async function sendStatusUpdateEmail(
     : 'https://fireguard-palembang.vercel.app/favicon.png';
 
   const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <div style="background: linear-gradient(135deg, #EF4444 0%, #F97316 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
-        <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
-          <img src="${logoUrl}" alt="FireGuard" width="48" height="48" style="border-radius: 12px; background: white; padding: 4px;" />
-          <h1 style="color: white; margin: 0; font-size: 28px;">FireGuard</h1>
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #F9FAFB; font-family: 'Roboto', Arial, sans-serif; color: #4B5563;">
+      <div style="max-width: 600px; margin: 40px auto; background-color: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);">
+        
+        <!-- Header -->
+        <div style="padding: 40px 30px; text-align: center; border-bottom: 1px solid #F3F4F6; background: radial-gradient(circle at top, rgba(239, 68, 68, 0.08) 0%, transparent 70%);">
+          <div style="display: inline-block; padding: 10px; background: linear-gradient(135deg, #EF4444 0%, #F97316 100%); border-radius: 16px; margin-bottom: 16px; box-shadow: 0 10px 20px rgba(239, 68, 68, 0.2);">
+            <img src="${logoUrl}" alt="FireGuard" width="40" height="40" style="display: block; border-radius: 8px; background: #FFFFFF; padding: 4px;" />
+          </div>
+          <h1 style="margin: 0; font-family: 'Poppins', Arial, sans-serif; font-size: 28px; font-weight: 700; color: #111827; letter-spacing: -0.5px;">FireGuard</h1>
+          <p style="margin: 8px 0 0; font-size: 14px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; color: #EF4444;">Update Laporan</p>
         </div>
-        <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Update Status Laporan</p>
-      </div>
-      <div style="background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none;">
-        <p style="color: #6b7280;">Halo <strong>${name}</strong>,</p>
-        <p style="color: #6b7280; line-height: 1.6;">
-          Status laporan Anda <strong>#${reportId}</strong> telah diperbarui:
-        </p>
-        <div style="background: white; border-left: 4px solid ${status.color}; border-radius: 8px; padding: 20px; margin: 20px 0;">
-          <p style="margin: 0; font-size: 24px;">
-            ${status.emoji} <strong style="color: ${status.color};">${status.label}</strong>
+
+        <!-- Body -->
+        <div style="padding: 40px 30px;">
+          <p style="margin: 0 0 16px; font-size: 16px; color: #374151;">Halo <strong style="color: #111827;">${name}</strong>,</p>
+          <p style="margin: 0 0 32px; font-size: 16px; line-height: 1.6; color: #4B5563;">
+            Status laporan darurat Anda dengan ID <strong style="color: #111827;">#${reportId}</strong> telah diperbarui oleh operator pusat:
+          </p>
+
+          <!-- Status Box -->
+          <div style="background-color: #F9FAFB; border: 1px solid #F3F4F6; border-left: 4px solid ${status.color}; border-radius: 0 12px 12px 0; padding: 20px 24px; margin-bottom: 32px;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td width="40" valign="middle" style="font-size: 28px;">${status.emoji}</td>
+                <td valign="middle">
+                  <p style="margin: 0; font-family: 'Poppins', Arial, sans-serif; font-size: 24px; font-weight: 600; color: ${status.color};">${status.label}</p>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          ${adminNotes ? `
+            <div style="background-color: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 12px; padding: 20px; margin-bottom: 32px;">
+              <p style="margin: 0 0 8px; font-size: 14px; font-weight: 600; color: #D97706;">
+                📝 Catatan Petugas:
+              </p>
+              <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #4B5563; font-style: italic;">
+                "${adminNotes}"
+              </p>
+            </div>
+          ` : ''}
+
+          <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #6B7280; text-align: center;">
+            Terima kasih telah menggunakan FireGuard untuk menjaga keselamatan lingkungan Anda.
           </p>
         </div>
-        ${adminNotes ? `
-          <div style="background: #FEF3C7; border-radius: 8px; padding: 15px; margin: 20px 0;">
-            <p style="margin: 0; color: #92400E; font-size: 14px;">
-              <strong>📝 Catatan Petugas:</strong><br>${adminNotes}
-            </p>
-          </div>
-        ` : ''}
-        <p style="color: #9ca3af; font-size: 14px;">
-          Terima kasih telah menggunakan FireGuard untuk melaporkan kejadian di lingkungan Anda.
-        </p>
+
+        <!-- Footer -->
+        <div style="padding: 24px 30px; background-color: #F9FAFB; border-top: 1px solid #E5E7EB; text-align: center;">
+          <p style="margin: 0; font-size: 12px; color: #9CA3AF; line-height: 1.6;">
+            &copy; ${new Date().getFullYear()} FireGuard.<br>Mengabdi untuk publik. Hak Cipta Dilindungi.<br>Kec. Plaju, Palembang.
+          </p>
+        </div>
       </div>
-      <div style="background: #1f2937; padding: 20px; border-radius: 0 0 12px 12px; text-align: center;">
-        <p style="color: #9ca3af; margin: 0; font-size: 12px;">
-          © 2026 FireGuard - Kec. Plaju, Palembang
-        </p>
-      </div>
-    </div>
+    </body>
+    </html>
   `;
 
   try {
