@@ -19,24 +19,21 @@ if (!admin.apps.length) {
   try {
     const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
     
-    if (!serviceAccountKey) {
-      throw new Error(
-        'FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set. ' +
-        'Please add your Firebase service account key to the .env file.'
-      );
+    if (serviceAccountKey) {
+      // Parse the service account key from JSON string
+      const serviceAccount = JSON.parse(serviceAccountKey);
+
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+      });
+
+      console.log('Firebase Admin SDK initialized successfully');
+    } else {
+      console.warn('FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set. Notifications will not work.');
     }
-
-    // Parse the service account key from JSON string
-    const serviceAccount = JSON.parse(serviceAccountKey);
-
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
-
-    console.log('Firebase Admin SDK initialized successfully');
   } catch (error) {
     console.error('Failed to initialize Firebase Admin SDK:', error);
-    throw error;
+    // DO NOT throw error here, it will break the build on Vercel
   }
 }
 

@@ -1,8 +1,10 @@
-import { NextRequest } from "next/server";
+import { createNotification } from "@/app/api/notifications/route";
 import { queryRow, execute, formatDateForMySQL } from "@/lib/db";
 import { getAuthPayloadFromRequest, handleCorsOptions, jsonWithCors } from "@/lib/cors";
 import { sendReportStatusNotification } from "@/services/notification-service";
-import { createNotification } from "@/app/api/notifications/route";
+import { NextRequest } from "next/server";
+
+export const dynamic = 'force-dynamic';
 
 // OPTIONS: CORS preflight
 export async function OPTIONS() {
