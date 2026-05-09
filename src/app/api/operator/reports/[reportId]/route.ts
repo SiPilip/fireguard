@@ -10,7 +10,9 @@ const ENABLE_WHATSAPP = process.env.ENABLE_WHATSAPP === "true";
 const ALLOWED_REPORT_STATUS = new Set([
   "pending",
   "submitted",
+  "approved",
   "verified",
+  "in_progress",
   "diproses",
   "dispatched",
   "dikirim",
@@ -18,9 +20,30 @@ const ALLOWED_REPORT_STATUS = new Set([
   "ditangani",
   "completed",
   "selesai",
+  "false_report",
   "dibatalkan",
   "false",
 ]);
+
+const NOTIFICATION_STATUS_MAP: Record<string, string> = {
+  approved: 'approved',
+  in_progress: 'in_progress',
+  completed: 'completed',
+  verified: 'verified',
+  false_report: 'false_report',
+  diproses: 'in_progress',
+  ditangani: 'in_progress',
+  dispatched: 'in_progress',
+  dikirim: 'in_progress',
+  arrived: 'in_progress',
+  selesai: 'completed',
+  false: 'false_report',
+};
+
+function normalizeNotificationStatus(status: string): string {
+  const normalized = status.trim().toLowerCase();
+  return NOTIFICATION_STATUS_MAP[normalized] || normalized;
+}
 
 /**
  * Fungsi untuk mengirim pesan WhatsApp melalui Fonnte (Opsional)
@@ -174,6 +197,8 @@ export async function PATCH(
     );
 
     if (report && newStatus) {
+      const canonicalStatus = normalizeNotificationStatus(String(newStatus));
+
       const user = await queryRow<{ name: string; email: string; phone_number: string }>(
         'SELECT name, email, phone_number FROM users WHERE id = ?',
         [report.user_id]
@@ -183,7 +208,9 @@ export async function PATCH(
       const statusLabels: Record<string, string> = {
         pending: '⏳ Menunggu Verifikasi',
         submitted: '📝 Baru Dikirim',
+        approved: '✅ Laporan Disetujui',
         verified: '✅ Terverifikasi',
+        in_progress: '🔄 Sedang Ditangani',
         diproses: '🔄 Sedang Diproses',
         dispatched: '🚒 Unit Dikirim',
         dikirim: '🚒 Tim Dikirim',
@@ -192,10 +219,11 @@ export async function PATCH(
         completed: '✅ Selesai',
         selesai: '✅ Selesai',
         dibatalkan: '❌ Dibatalkan',
+        false_report: '⚠️ Laporan Palsu',
         false: '⚠️ Laporan Palsu',
       };
 
-      const statusLabel = statusLabels[newStatus] || newStatus;
+      const statusLabel = statusLabels[canonicalStatus] || statusLabels[newStatus] || newStatus;
 
       // BARU: Simpan notifikasi ke database untuk web
       try {
@@ -218,13 +246,22 @@ export async function PATCH(
         // Lanjutkan meskipun gagal buat notifikasi
       }
 
+      // Trigger push notification asynchronously (hybrid mode: push + inbox table)
+      void import('@/services/notification-service')
+        .then(({ sendReportStatusNotification }) =>
+          sendReportStatusNotification(parsedReportId, report.user_id, canonicalStatus)
+        )
+        .catch((pushError) => {
+          console.error('Error triggering push notification:', pushError);
+        });
+
       if (user && user.email) {
         // UTAMA: Kirim notifikasi via Email
         sendStatusUpdateEmail(
           user.email,
           user.name,
           parsedReportId,
-          newStatus,
+          canonicalStatus,
           adminNotes
         );
 

@@ -116,10 +116,11 @@ export async function POST(request: NextRequest) {
         maxAge: USER_SESSION_MAX_AGE,
       });
 
-      // Return cookie-based auth for web. Token body is omitted to reduce exposure.
+      // Return token in body for Flutter (Bearer) AND set cookie for web browser.
       return new NextResponse(
         JSON.stringify({
           message: "Login berhasil!",
+          token,
           user: { id: user.id, name: user.name, email: user.email },
         }),
         {

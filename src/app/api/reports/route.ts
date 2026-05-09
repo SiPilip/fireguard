@@ -1,11 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import { executeAndGetLastInsertId, formatDateForMySQL } from "@/lib/db";
-import * as jose from "jose";
-import { serialize } from "cookie";
+import { NextRequest } from "next/server";
+import { executeAndGetLastInsertId, formatDateForMySQL, queryRow } from "@/lib/db";
 import path from "path";
 import { writeFile, mkdir } from "fs/promises";
-import { COOKIE_NAME } from "@/lib/session";
-import { getJwtSecretKey } from "@/lib/secrets";
 import { getAuthPayloadFromRequest, handleCorsOptions, jsonWithCors } from "@/lib/cors";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
@@ -31,7 +27,6 @@ export async function POST(request: NextRequest) {
     const user = await getAuthPayload(request);
 
     // Verify user exists in database
-    const { queryRow } = await import("@/lib/db");
     const dbUser = await queryRow("SELECT id FROM users WHERE id = ?", [user.id]);
 
     if (!dbUser) {

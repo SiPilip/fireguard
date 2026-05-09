@@ -2,17 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { queryRow, execute } from '@/lib/db';
 import { requireOperator } from '@/lib/api-security';
 
-interface Params {
-    params: { id: string };
-}
-
 // PUT: Update kategori
-export async function PUT(request: NextRequest, { params }: Params) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const auth = await requireOperator(request);
         if ("response" in auth) return auth.response;
 
-        const id = parseInt(params.id);
+        const { id: idStr } = await params;
+        const id = parseInt(idStr);
         const { name, icon, color, description } = await request.json();
 
         if (!name || !icon) {
@@ -35,12 +32,13 @@ export async function PUT(request: NextRequest, { params }: Params) {
 }
 
 // DELETE: Hapus kategori
-export async function DELETE(request: NextRequest, { params }: Params) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const auth = await requireOperator(request);
         if ("response" in auth) return auth.response;
 
-        const id = parseInt(params.id);
+        const { id: idStr } = await params;
+        const id = parseInt(idStr);
 
         // Cek apakah ada laporan yang menggunakan kategori ini
         const report = await queryRow<{ count: number }>(

@@ -116,6 +116,7 @@ export async function POST(request: NextRequest) {
         return new NextResponse(
             JSON.stringify({
                 message: "Registrasi berhasil!",
+                token,
                 user: { id: userId, name: name || email.split("@")[0], email },
             }),
             {

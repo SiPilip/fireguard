@@ -1,0 +1,246 @@
+/**
+ * Tests for Notification Service
+ * 
+ * Tests the main orchestration method sendReportStatusNotification
+ */
+
+// Mock dependencies before importing
+jest.mock('@/lib/db', () => ({
+  queryRows: jest.fn(),
+  execute: jest.fn(),
+  formatDateForMySQL: jest.fn((date: Date) => date.toISOString()),
+}));
+
+jest.mock('@/lib/firebase-admin', () => ({
+  messaging: {
+    send: jest.fn(),
+  },
+}));
+
+import * as notificationService from './notification-service';
+import * as db from '@/lib/db';
+import { messaging } from '@/lib/firebase-admin';
+
+describe('sendReportStatusNotification', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should send notification when user has active device tokens', async () => {
+    // Arrange
+    const reportId = 123;
+    const userId = 456;
+    const newStatus = 'approved';
+
+    const mockDeviceTokens = [
+      { device_token: 'token123', platform: 'android' }
+    ];
+
+    const mockPreferences = [
+      {
+        approved: true,
+        in_progress: true,
+        completed: true,
+        verified: true,
+        false_report: true
+      }
+    ];
+
+    (db.queryRows as jest.Mock)
+      .mockResolvedValueOnce(mockDeviceTokens)
+      .mockResolvedValueOnce(mockPreferences);
+    (db.execute as jest.Mock).mockResolvedValue(1);
+    (messaging.send as jest.Mock).mockResolvedValue('message-id');
+
+    // Act
+    await notificationService.sendReportStatusNotification(reportId, userId, newStatus);
+
+    // Assert
+    expect(db.queryRows).toHaveBeenCalledWith(
+      'SELECT device_token, platform FROM device_tokens WHERE user_id = ? AND is_active = TRUE',
+      [userId]
+    );
+    expect(messaging.send).toHaveBeenCalled();
+    expect(db.execute).toHaveBeenCalledWith(
+      expect.stringContaining('INSERT INTO notification_logs'),
+      expect.arrayContaining([reportId, userId, 'token123', newStatus])
+    );
+  });
+
+  it('should not send notification when user has no active device tokens', async () => {
+    // Arrange
+    const reportId = 123;
+    const userId = 456;
+    const newStatus = 'approved';
+
+    (db.queryRows as jest.Mock).mockResolvedValueOnce([]);
+
+    // Act
+    await notificationService.sendReportStatusNotification(reportId, userId, newStatus);
+
+    // Assert
+    expect(messaging.send).not.toHaveBeenCalled();
+  });
+
+  it('should not send notification when user has disabled that notification type', async () => {
+    // Arrange
+    const reportId = 123;
+    const userId = 456;
+    const newStatus = 'approved';
+
+    const mockDeviceTokens = [
+      { device_token: 'token123', platform: 'android' }
+    ];
+
+    const mockPreferences = [
+      {
+        approved: false, // User disabled approved notifications
+        in_progress: true,
+        completed: true,
+        verified: true,
+        false_report: true
+      }
+    ];
+
+    (db.queryRows as jest.Mock)
+      .mockResolvedValueOnce(mockDeviceTokens)
+      .mockResolvedValueOnce(mockPreferences);
+
+    // Act
+    await notificationService.sendReportStatusNotification(reportId, userId, newStatus);
+
+    // Assert
+    expect(messaging.send).not.toHaveBeenCalled();
+  });
+
+  it('should normalize legacy status before checking notification preferences', async () => {
+    // Arrange
+    const reportId = 123;
+    const userId = 456;
+    const newStatus = 'diproses';
+
+    const mockDeviceTokens = [
+      { device_token: 'token123', platform: 'android' }
+    ];
+
+    const mockPreferences = [
+      {
+        approved: true,
+        in_progress: false, // User disabled in_progress notifications
+        completed: true,
+        verified: true,
+        false_report: true
+      }
+    ];
+
+    (db.queryRows as jest.Mock)
+      .mockResolvedValueOnce(mockDeviceTokens)
+      .mockResolvedValueOnce(mockPreferences);
+
+    // Act
+    await notificationService.sendReportStatusNotification(reportId, userId, newStatus);
+
+    // Assert
+    expect(messaging.send).not.toHaveBeenCalled();
+  });
+
+  it('should send canonical status in payload for legacy status alias', async () => {
+    // Arrange
+    const reportId = 123;
+    const userId = 456;
+    const newStatus = 'false';
+
+    const mockDeviceTokens = [
+      { device_token: 'token123', platform: 'android' }
+    ];
+
+    const mockPreferences = [
+      {
+        approved: true,
+        in_progress: true,
+        completed: true,
+        verified: true,
+        false_report: true
+      }
+    ];
+
+    (db.queryRows as jest.Mock)
+      .mockResolvedValueOnce(mockDeviceTokens)
+      .mockResolvedValueOnce(mockPreferences);
+    (db.execute as jest.Mock).mockResolvedValue(1);
+    (messaging.send as jest.Mock).mockResolvedValue('message-id');
+
+    // Act
+    await notificationService.sendReportStatusNotification(reportId, userId, newStatus);
+
+    // Assert
+    expect(messaging.send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: 'false_report'
+        })
+      })
+    );
+  });
+
+  it('should handle errors gracefully without throwing', async () => {
+    // Arrange
+    const reportId = 123;
+    const userId = 456;
+    const newStatus = 'approved';
+
+    (db.queryRows as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
+
+    // Act & Assert - should not throw
+    await expect(
+      notificationService.sendReportStatusNotification(reportId, userId, newStatus)
+    ).resolves.not.toThrow();
+  });
+
+  it('should log notification attempt even if sending fails', async () => {
+    // Arrange
+    const reportId = 123;
+    const userId = 456;
+    const newStatus = 'approved';
+
+    const mockDeviceTokens = [
+      { device_token: 'token123', platform: 'android' }
+    ];
+
+    const mockPreferences = [
+      {
+        approved: true,
+        in_progress: true,
+        completed: true,
+        verified: true,
+        false_report: true
+      }
+    ];
+
+    (db.queryRows as jest.Mock)
+      .mockResolvedValueOnce(mockDeviceTokens)
+      .mockResolvedValueOnce(mockPreferences);
+    (db.execute as jest.Mock).mockResolvedValue(1);
+    (messaging.send as jest.Mock).mockRejectedValue(new Error('FCM error'));
+
+    // Act
+    await notificationService.sendReportStatusNotification(reportId, userId, newStatus);
+
+    // Assert - should still log the attempt
+    expect(db.execute).toHaveBeenCalledWith(
+      expect.stringContaining('INSERT INTO notification_logs'),
+      expect.arrayContaining([
+        reportId,
+        userId,
+        'token123',
+        newStatus,
+        expect.any(String), // title
+        expect.any(String), // body
+        'failed',
+        expect.any(String), // error message
+        expect.any(Number), // retry count
+        expect.any(String)  // timestamp
+      ])
+    );
+  });
+});

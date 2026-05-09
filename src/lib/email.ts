@@ -143,11 +143,19 @@ export async function sendStatusUpdateEmail(
 ) {
   const statusLabels: Record<string, { label: string; color: string; emoji: string }> = {
     pending: { label: 'Menunggu', color: '#F59E0B', emoji: '⏳' },
+    approved: { label: 'Laporan Disetujui', color: '#2563EB', emoji: '✅' },
+    in_progress: { label: 'Sedang Ditangani', color: '#3B82F6', emoji: '🔄' },
+    completed: { label: 'Selesai', color: '#10B981', emoji: '✅' },
+    verified: { label: 'Terverifikasi', color: '#0EA5E9', emoji: '✅' },
+    false_report: { label: 'Laporan Palsu', color: '#EF4444', emoji: '⚠️' },
     diproses: { label: 'Sedang Diproses', color: '#3B82F6', emoji: '🔄' },
     dikirim: { label: 'Tim Dikirim', color: '#8B5CF6', emoji: '🚒' },
     ditangani: { label: 'Sedang Ditangani', color: '#06B6D4', emoji: '👨‍🚒' },
+    dispatched: { label: 'Unit Dikirim', color: '#8B5CF6', emoji: '🚒' },
+    arrived: { label: 'Unit Tiba', color: '#6366F1', emoji: '📍' },
     selesai: { label: 'Selesai', color: '#10B981', emoji: '✅' },
     dibatalkan: { label: 'Dibatalkan', color: '#EF4444', emoji: '❌' },
+    false: { label: 'Laporan Palsu', color: '#EF4444', emoji: '⚠️' },
   };
 
   const status = statusLabels[newStatus] || { label: newStatus, color: '#6B7280', emoji: '📋' };

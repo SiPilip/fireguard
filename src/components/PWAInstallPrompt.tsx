@@ -155,8 +155,8 @@ export default function PWAInstallPrompt() {
                                         ⬆️
                                     </span>
                                 </li>
-                                <li>Scroll dan pilih "Add to Home Screen"</li>
-                                <li>Tap "Add" di pojok kanan atas</li>
+                                <li>Scroll dan pilih &quot;Add to Home Screen&quot;</li>
+                                <li>Tap &quot;Add&quot; di pojok kanan atas</li>
                             </ol>
                         </div>
                     ) : (

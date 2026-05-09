@@ -49,7 +49,7 @@ const Hero = () => {
         <motion.div
            initial={{ opacity: 0, y: 30 }}
            animate={{ opacity: 1, y: 0 }}
-           transition={{ duration: 0.8, delay: 0.2, cubicBezier: [0.16, 1, 0.3, 1] }}
+           transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
         >
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[5rem] font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-gray-200 to-gray-500 mb-6 drop-shadow-sm leading-[1.15] md:leading-[1.1]">
             Respons Cepat.<br /> 
