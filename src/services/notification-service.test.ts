@@ -12,14 +12,14 @@ jest.mock('@/lib/db', () => ({
 }));
 
 jest.mock('@/lib/firebase-admin', () => ({
-  messaging: {
+  getMessaging: jest.fn(() => ({
     send: jest.fn(),
-  },
+  })),
 }));
 
 import * as notificationService from './notification-service';
 import * as db from '@/lib/db';
-import { messaging } from '@/lib/firebase-admin';
+import { getMessaging } from '@/lib/firebase-admin';
 
 describe('sendReportStatusNotification', () => {
   beforeEach(() => {
@@ -50,7 +50,8 @@ describe('sendReportStatusNotification', () => {
       .mockResolvedValueOnce(mockDeviceTokens)
       .mockResolvedValueOnce(mockPreferences);
     (db.execute as jest.Mock).mockResolvedValue(1);
-    (messaging.send as jest.Mock).mockResolvedValue('message-id');
+    const sendMock = jest.fn().mockResolvedValue('message-id');
+    (getMessaging as jest.Mock).mockReturnValue({ send: sendMock });
 
     // Act
     await notificationService.sendReportStatusNotification(reportId, userId, newStatus);
@@ -60,7 +61,8 @@ describe('sendReportStatusNotification', () => {
       'SELECT device_token, platform FROM device_tokens WHERE user_id = ? AND is_active = TRUE',
       [userId]
     );
-    expect(messaging.send).toHaveBeenCalled();
+    const messagingInstance = await getMessaging();
+    expect(messagingInstance?.send).toHaveBeenCalled();
     expect(db.execute).toHaveBeenCalledWith(
       expect.stringContaining('INSERT INTO notification_logs'),
       expect.arrayContaining([reportId, userId, 'token123', newStatus])
@@ -79,7 +81,8 @@ describe('sendReportStatusNotification', () => {
     await notificationService.sendReportStatusNotification(reportId, userId, newStatus);
 
     // Assert
-    expect(messaging.send).not.toHaveBeenCalled();
+    const messagingInstance = await getMessaging();
+    expect(messagingInstance?.send).not.toHaveBeenCalled();
   });
 
   it('should not send notification when user has disabled that notification type', async () => {
@@ -110,7 +113,8 @@ describe('sendReportStatusNotification', () => {
     await notificationService.sendReportStatusNotification(reportId, userId, newStatus);
 
     // Assert
-    expect(messaging.send).not.toHaveBeenCalled();
+    const messagingInstance = await getMessaging();
+    expect(messagingInstance?.send).not.toHaveBeenCalled();
   });
 
   it('should normalize legacy status before checking notification preferences', async () => {
@@ -141,7 +145,8 @@ describe('sendReportStatusNotification', () => {
     await notificationService.sendReportStatusNotification(reportId, userId, newStatus);
 
     // Assert
-    expect(messaging.send).not.toHaveBeenCalled();
+    const messagingInstance = await getMessaging();
+    expect(messagingInstance?.send).not.toHaveBeenCalled();
   });
 
   it('should send canonical status in payload for legacy status alias', async () => {
@@ -168,13 +173,15 @@ describe('sendReportStatusNotification', () => {
       .mockResolvedValueOnce(mockDeviceTokens)
       .mockResolvedValueOnce(mockPreferences);
     (db.execute as jest.Mock).mockResolvedValue(1);
-    (messaging.send as jest.Mock).mockResolvedValue('message-id');
+    const sendMock = jest.fn().mockResolvedValue('message-id');
+    (getMessaging as jest.Mock).mockReturnValue({ send: sendMock });
 
     // Act
     await notificationService.sendReportStatusNotification(reportId, userId, newStatus);
 
     // Assert
-    expect(messaging.send).toHaveBeenCalledWith(
+    const messagingInstance = await getMessaging();
+    expect(messagingInstance?.send).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           status: 'false_report'
@@ -221,7 +228,8 @@ describe('sendReportStatusNotification', () => {
       .mockResolvedValueOnce(mockDeviceTokens)
       .mockResolvedValueOnce(mockPreferences);
     (db.execute as jest.Mock).mockResolvedValue(1);
-    (messaging.send as jest.Mock).mockRejectedValue(new Error('FCM error'));
+    const sendMock = jest.fn().mockRejectedValue(new Error('FCM error'));
+    (getMessaging as jest.Mock).mockReturnValue({ send: sendMock });
 
     // Act
     await notificationService.sendReportStatusNotification(reportId, userId, newStatus);

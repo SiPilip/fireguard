@@ -11,7 +11,6 @@ import {
   FaShieldAlt,
   FaUserShield,
 } from "react-icons/fa";
-import { isStandaloneApp } from "@/lib/app-mode";
 import { hasCompletedOnboarding, markOnboardingCompleted } from "@/lib/onboarding";
 
 type OnboardingSlide = {
@@ -53,12 +52,6 @@ export default function OnboardingPage() {
     let active = true;
 
     const initialize = async () => {
-      const standalone = isStandaloneApp();
-
-      if (!standalone) {
-        router.replace("/");
-        return;
-      }
 
       if (hasCompletedOnboarding()) {
         router.replace("/login");
@@ -189,9 +182,8 @@ export default function OnboardingPage() {
             {SLIDES.map((item, index) => (
               <span
                 key={item.id}
-                className={`h-2.5 rounded-full transition-all ${
-                  index === currentIndex ? "w-8 bg-[#b7131a]" : "w-2.5 bg-[#d8e6ef]"
-                }`}
+                className={`h-2.5 rounded-full transition-all ${index === currentIndex ? "w-8 bg-[#b7131a]" : "w-2.5 bg-[#d8e6ef]"
+                  }`}
               />
             ))}
           </div>

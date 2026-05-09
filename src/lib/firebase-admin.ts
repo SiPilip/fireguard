@@ -18,7 +18,7 @@ import * as admin from 'firebase-admin';
 if (!admin.apps.length) {
   try {
     const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-    
+
     if (serviceAccountKey) {
       // Parse the service account key from JSON string
       const serviceAccount = JSON.parse(serviceAccountKey);
@@ -37,11 +37,12 @@ if (!admin.apps.length) {
   }
 }
 
-/**
- * Firebase Messaging instance for sending push notifications
- * Use this to send notifications to mobile devices via FCM
- */
-export const messaging = admin.messaging();
+export const getMessaging = () => {
+  if (admin.apps.length > 0) {
+    return admin.messaging();
+  }
+  return null;
+};
 
 /**
  * Firebase Admin instance

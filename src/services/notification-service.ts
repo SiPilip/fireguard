@@ -6,7 +6,7 @@
  * Handles FCM notification sending with retry logic and error handling.
  */
 
-import { messaging } from '@/lib/firebase-admin';
+import { getMessaging } from '@/lib/firebase-admin';
 import { execute, queryRows, formatDateForMySQL } from '@/lib/db';
 
 interface NotificationContent {
@@ -80,31 +80,31 @@ export function getNotificationContent(status: string): NotificationContent {
         title: 'Laporan Disetujui',
         body: 'Laporan Anda telah disetujui dan sedang diproses'
       };
-    
+
     case 'in_progress':
       return {
         title: 'Laporan Sedang Ditangani',
         body: 'Petugas sedang menangani laporan Anda'
       };
-    
+
     case 'completed':
       return {
         title: 'Laporan Selesai',
         body: 'Laporan Anda telah diselesaikan'
       };
-    
+
     case 'verified':
       return {
         title: 'Laporan Terverifikasi',
         body: 'Laporan Anda telah diverifikasi oleh petugas'
       };
-    
+
     case 'false_report':
       return {
         title: 'Laporan Ditolak',
         body: 'Laporan Anda ditandai sebagai laporan palsu'
       };
-    
+
     default:
       return {
         title: 'Pembaruan Laporan',
@@ -146,6 +146,11 @@ export async function sendToDevice(
       },
     };
 
+    const messaging = getMessaging();
+    if (!messaging) {
+      console.warn('Firebase Messaging not initialized. Cannot send notification.');
+      return false;
+    }
     await messaging.send(message);
     return true;
   } catch (error: any) {
@@ -316,7 +321,7 @@ export async function sendReportStatusNotification(
 
     // Step 4: Send notification to each device token (Requirement 2.1, 5.1)
     const currentTimestamp = new Date();
-    
+
     for (const token of deviceTokens) {
       let deliveryStatus: 'sent' | 'failed' | 'retry' = 'failed';
       let errorMessage: string | null = null;

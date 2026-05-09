@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FaFire, FaUser, FaLock, FaUserShield, FaArrowLeft, FaEye, FaEyeSlash } from "react-icons/fa";
-import { isStandaloneApp } from "@/lib/app-mode";
 import { hasCompletedOnboarding } from "@/lib/onboarding";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -19,7 +18,7 @@ export default function OperatorLoginPage() {
 
   useEffect(() => {
     const verifySession = async () => {
-      if (isStandaloneApp() && !hasCompletedOnboarding()) {
+      if (!hasCompletedOnboarding()) {
         router.replace("/onboarding");
         return;
       }
@@ -82,13 +81,13 @@ export default function OperatorLoginPage() {
 
   return (
     <main className="min-h-screen flex bg-white text-gray-900 font-sans selection:bg-red-500/30">
-      
+
       {/* Left: Form Area */}
       <div className="w-full md:w-[45%] lg:w-[40%] flex flex-col px-8 sm:px-16 md:px-20 py-12 relative z-10 justify-center">
         <Link href="/" className="absolute top-8 left-8 sm:left-16 md:left-20 flex items-center gap-3 text-gray-400 hover:text-gray-900 transition-colors">
-          <FaArrowLeft className="text-sm" /> 
+          <FaArrowLeft className="text-sm" />
         </Link>
-        
+
         <div className="inline-flex items-center gap-3 mb-16 group w-fit mt-10 md:mt-0">
           <div className="p-2.5 bg-gray-900 rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.2)] group-hover:scale-105 transition-transform">
             <FaUserShield className="text-xl text-white" />
@@ -107,16 +106,16 @@ export default function OperatorLoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-1 group">
-             <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest pl-1 group-focus-within:text-red-500 transition-colors">Username ID</label>
-             <input 
-                type="text" 
-                value={username} 
-                onChange={(e) => setUsername(e.target.value)} 
-                className="w-full bg-gray-50/50 border border-gray-200 text-gray-900 px-5 py-4 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-medium placeholder:text-gray-300 placeholder:font-normal" 
-                placeholder="admin_plaju" 
-                required 
-                disabled={isLoading}
-             />
+            <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest pl-1 group-focus-within:text-red-500 transition-colors">Username ID</label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full bg-gray-50/50 border border-gray-200 text-gray-900 px-5 py-4 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-medium placeholder:text-gray-300 placeholder:font-normal"
+              placeholder="admin_plaju"
+              required
+              disabled={isLoading}
+            />
           </div>
 
           <div className="space-y-1 group">
@@ -133,9 +132,9 @@ export default function OperatorLoginPage() {
                 required
                 disabled={isLoading}
               />
-              <button 
-                type="button" 
-                onClick={() => setShowPassword(!showPassword)} 
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-900 p-1"
                 disabled={isLoading}
               >
@@ -171,25 +170,25 @@ export default function OperatorLoginPage() {
         <div className="absolute top-[-10%] right-[-10%] w-[40rem] h-[40rem] bg-indigo-600/20 rounded-full blur-[100px] pointer-events-none mix-blend-screen" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[30rem] h-[30rem] bg-teal-500/10 rounded-full blur-[80px] pointer-events-none mix-blend-screen" />
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none mix-blend-overlay"></div>
-        
+
         <div className="relative z-10 w-full max-w-lg border border-white/10 bg-white/5 backdrop-blur-3xl p-12 rounded-[2rem] shadow-2xl">
           <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-8 border border-white/10">
-             <FaUserShield className="text-white text-xl" />
+            <FaUserShield className="text-white text-xl" />
           </div>
           <h2 className="text-3xl font-bold text-white mb-4 leading-tight tracking-tight">Pusat Komando & Kontrol.</h2>
           <p className="text-gray-400 text-lg font-light leading-relaxed">
             Monitor peta langsung, kelola pelaporan kebakaran dari masyarakat, dan koordinasikan unit respons secepat mungkin.
           </p>
-          
+
           <div className="mt-10 grid grid-cols-2 gap-4">
-             <div className="p-5 bg-white/5 rounded-2xl border border-white/5 flex flex-col">
-                <span className="text-2xl font-extrabold text-white">Intel</span>
-                <span className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Area Mapping</span>
-             </div>
-             <div className="p-5 bg-white/5 rounded-2xl border border-white/5 flex flex-col">
-                <span className="text-2xl font-extrabold text-white">Sistem</span>
-                <span className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Real-time Ops</span>
-             </div>
+            <div className="p-5 bg-white/5 rounded-2xl border border-white/5 flex flex-col">
+              <span className="text-2xl font-extrabold text-white">Intel</span>
+              <span className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Area Mapping</span>
+            </div>
+            <div className="p-5 bg-white/5 rounded-2xl border border-white/5 flex flex-col">
+              <span className="text-2xl font-extrabold text-white">Sistem</span>
+              <span className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Real-time Ops</span>
+            </div>
           </div>
         </div>
       </div>
