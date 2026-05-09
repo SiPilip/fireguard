@@ -1,4 +1,4 @@
-import { createNotification } from "@/app/api/notifications/route";
+import { createNotification } from "@/lib/notification-helpers";
 import { queryRow, execute, formatDateForMySQL } from "@/lib/db";
 import { getAuthPayloadFromRequest, handleCorsOptions, jsonWithCors } from "@/lib/cors";
 import { sendReportStatusNotification } from "@/services/notification-service";

@@ -28,4 +28,11 @@ const customJestConfig = {
 }
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
-module.exports = createJestConfig(customJestConfig)
+// We override transformIgnorePatterns after next/jest to ensure jose (ESM) gets transformed
+module.exports = async () => {
+  const jestConfig = await createJestConfig(customJestConfig)()
+  jestConfig.transformIgnorePatterns = [
+    '/node_modules/(?!(jose)/)',
+  ]
+  return jestConfig
+}

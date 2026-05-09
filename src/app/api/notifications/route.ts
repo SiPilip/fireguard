@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { queryRows, execute, executeAndGetLastInsertId, formatDateForMySQL } from '@/lib/db';
+import { NextRequest } from 'next/server';
+import { queryRows, execute } from '@/lib/db';
 import { getAuthPayloadFromRequest, handleCorsOptions, jsonWithCors } from '@/lib/cors';
 
 // OPTIONS: CORS preflight
@@ -106,24 +106,3 @@ export async function POST(request: NextRequest) {
     }
 }
 
-// Fungsi helper untuk membuat notifikasi (dipanggil dari API lain)
-export async function createNotification(
-    userId: number,
-    title: string,
-    message: string,
-    type: string = 'info',
-    reportId?: number
-) {
-    try {
-        const currentTimestamp = formatDateForMySQL(new Date());
-        await executeAndGetLastInsertId(
-            `INSERT INTO notifications (user_id, title, message, type, report_id, is_read, created_at) 
-       VALUES (?, ?, ?, ?, ?, FALSE, ?)`,
-            [userId, title, message, type, reportId || null, currentTimestamp]
-        );
-        return true;
-    } catch (error) {
-        console.error('Error creating notification:', error);
-        return false;
-    }
-}

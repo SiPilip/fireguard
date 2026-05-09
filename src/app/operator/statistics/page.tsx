@@ -38,7 +38,7 @@ export default function StatisticsPage() {
   // --- Aggregate Data ---
   
   const statusCounts = reports.reduce((acc, curr) => {
-    let stat = curr.status;
+    const stat = curr.status;
     if (!stat) return acc;
     acc[stat] = (acc[stat] || 0) + 1;
     return acc;

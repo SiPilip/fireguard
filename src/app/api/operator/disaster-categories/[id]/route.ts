@@ -8,8 +8,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         const auth = await requireOperator(request);
         if ("response" in auth) return auth.response;
 
-        const { id: idStr } = await params;
-        const id = parseInt(idStr);
+        const { id: idParam } = await params;
+        const id = parseInt(idParam);
         const { name, icon, color, description } = await request.json();
 
         if (!name || !icon) {
@@ -37,8 +37,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
         const auth = await requireOperator(request);
         if ("response" in auth) return auth.response;
 
-        const { id: idStr } = await params;
-        const id = parseInt(idStr);
+        const { id: idParam } = await params;
+        const id = parseInt(idParam);
 
         // Cek apakah ada laporan yang menggunakan kategori ini
         const report = await queryRow<{ count: number }>(
