@@ -47,27 +47,27 @@ const Hero = () => {
 
         {/* Hero Typography */}
         <motion.div
-           initial={{ opacity: 0, y: 30 }}
-           animate={{ opacity: 1, y: 0 }}
-           transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
         >
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[5rem] font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-gray-200 to-gray-500 mb-6 drop-shadow-sm leading-[1.15] md:leading-[1.1]">
-            Respons Cepat.<br /> 
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-gray-200 to-gray-500 mb-6 drop-shadow-sm leading-[1.1] md:leading-[1.1]">
+            Respons Cepat.<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">Tanpa Panik.</span>
           </h1>
         </motion.div>
 
-        <motion.p 
+        <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-400 font-light max-w-2xl mx-auto px-4 mb-10 leading-relaxed"
+          className="text-sm sm:text-base md:text-lg text-gray-400 font-light max-w-2xl mx-auto px-4 mb-8 leading-relaxed"
         >
           Sistem pelaporan darurat terpadu untuk wilayah <strong className="text-white font-medium">Plaju, Palembang</strong>. Mendeteksi, merespons, dan mengamankan dengan presisi.
         </motion.p>
 
         {/* Action Buttons */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6 }}
@@ -102,15 +102,14 @@ const Hero = () => {
             className="relative h-1.5 focus:outline-none group flex items-center"
             aria-label={`Go to slide ${index + 1}`}
           >
-            <div className={`rounded-full transition-all duration-500 ${
-              index === currentSlide ? 'w-12 bg-red-500 h-1.5' : 'w-4 h-1.5 bg-white/30 group-hover:bg-white/50'
-            }`} />
+            <div className={`rounded-full transition-all duration-500 ${index === currentSlide ? 'w-12 bg-red-500 h-1.5' : 'w-4 h-1.5 bg-white/30 group-hover:bg-white/50'
+              }`} />
           </button>
         ))}
       </div>
-      
+
       {/* Scroll indicator */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 2, duration: 1 }}
@@ -118,7 +117,7 @@ const Hero = () => {
       >
         <span className="text-xs tracking-[0.2em] text-white/50 uppercase origin-left rotate-90 mb-8 translate-x-3">Scroll</span>
         <div className="w-px h-16 bg-white/10 relative overflow-hidden">
-          <motion.div 
+          <motion.div
             animate={{ y: [0, 64] }}
             transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
             className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-transparent via-red-500 to-transparent"

@@ -112,195 +112,197 @@ export default function RegisterPage() {
 
   return (
     <main className="min-h-screen flex bg-white text-gray-900 font-sans selection:bg-red-500/30">
-      
+
       {/* Left: Form Area */}
       <div className="w-full md:w-[45%] lg:w-[40%] flex flex-col px-8 sm:px-16 md:px-20 py-12 relative z-10 overflow-y-auto">
         <Link href="/" className="absolute top-8 left-8 sm:left-16 md:left-20 flex items-center gap-3 text-gray-400 hover:text-gray-900 transition-colors">
-          <FaArrowLeft className="text-sm" /> 
+          <FaArrowLeft className="text-sm" />
         </Link>
-        
+
         <div className="mt-14 md:mt-8 pb-8">
-            <Link href="/" className="inline-flex items-center gap-3 mb-10 group w-fit">
-              <div className="p-2.5 bg-red-500 rounded-xl shadow-[0_0_15px_rgba(239,68,68,0.4)] group-hover:scale-105 transition-transform">
-                <FaFire className="text-xl text-white" />
-              </div>
-              <span className="text-2xl font-bold tracking-tight">FireGuard</span>
-            </Link>
+          <Link href="/" className="inline-flex items-center gap-3 mb-10 group w-fit">
+            <div className="p-2.5 bg-red-500 rounded-xl shadow-[0_0_15px_rgba(239,68,68,0.4)] group-hover:scale-105 transition-transform">
+              <FaFire className="text-xl text-white" />
+            </div>
+            <span className="text-2xl font-bold tracking-tight">FireGuard</span>
+          </Link>
 
-            <AnimatePresence mode="wait">
-              {step === "form" ? (
-                <motion.div 
-                  key="form"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <div className="mb-10">
-                    <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tighter mb-4 text-gray-900">
-                      Buat Akun.
-                    </h1>
-                    <p className="text-gray-500 text-lg leading-relaxed font-light">
-                      Bergabung dengan jaringan tanggap darurat Palembang.
-                    </p>
+          <AnimatePresence mode="wait">
+            {step === "form" ? (
+              <motion.div
+                key="form"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="mb-10">
+                  <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tighter mb-4 text-gray-900">
+                    Buat Akun.
+                  </h1>
+                  <p className="text-gray-500 text-lg leading-relaxed font-light">
+                    Bergabung dengan jaringan tanggap darurat Palembang.
+                  </p>
+                </div>
+
+                <form onSubmit={handleSendOTP} className="space-y-4">
+                  <div className="space-y-1 group">
+                    <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest pl-1 group-focus-within:text-red-500 transition-colors">Nama Lengkap *</label>
+                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Ali Siregar" className="w-full bg-gray-50/50 border border-gray-200 text-gray-900 px-5 py-3.5 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-medium placeholder:text-gray-300 placeholder:font-normal" />
                   </div>
 
-                  <form onSubmit={handleSendOTP} className="space-y-4">
-                    <div className="space-y-1 group">
-                      <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest pl-1 group-focus-within:text-red-500 transition-colors">Nama Lengkap *</label>
-                      <input type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Ali Siregar" className="w-full bg-gray-50/50 border border-gray-200 text-gray-900 px-5 py-3.5 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-medium placeholder:text-gray-300 placeholder:font-normal" />
-                    </div>
-
-                    <div className="space-y-1 group">
-                      <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest pl-1 group-focus-within:text-red-500 transition-colors">Email *</label>
-                      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="nama@email.com" className="w-full bg-gray-50/50 border border-gray-200 text-gray-900 px-5 py-3.5 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-medium placeholder:text-gray-300 placeholder:font-normal" />
-                    </div>
-
-                    <div className="space-y-1 group">
-                      <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest pl-1 group-focus-within:text-red-500 transition-colors">No WhatsApp (Opsional)</label>
-                      <input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="0812..." className="w-full bg-gray-50/50 border border-gray-200 text-gray-900 px-5 py-3.5 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-medium placeholder:text-gray-300 placeholder:font-normal" />
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-1 group">
-                        <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest pl-1 mb-2 block group-focus-within:text-red-500 transition-colors">Password *</label>
-                        <div className="relative">
-                          <input 
-                            type={showPassword ? "text" : "password"} 
-                            value={password} 
-                            onChange={(e) => setPassword(e.target.value)} 
-                            required 
-                            minLength={8} 
-                            placeholder={showPassword ? "Minimal 8 char" : "••••••••"}
-                            className={`w-full bg-gray-50/50 border border-gray-200 text-gray-900 pl-5 pr-10 py-3.5 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-medium placeholder:text-gray-300 placeholder:font-normal ${!showPassword ? 'tracking-wider' : ''}`} 
-                          />
-                          <button 
-                            type="button" 
-                            onClick={() => setShowPassword(!showPassword)} 
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-900 transition-colors"
-                          >
-                            {showPassword ? <FaEyeSlash /> : <FaEye />}
-                          </button>
-                        </div>
-                      </div>
-                      <div className="space-y-1 group">
-                        <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest pl-1 mb-2 block group-focus-within:text-red-500 transition-colors">Konfirmasi *</label>
-                        <div className="relative">
-                          <input 
-                            type={showConfirmPassword ? "text" : "password"} 
-                            value={confirmPassword} 
-                            onChange={(e) => setConfirmPassword(e.target.value)} 
-                            required 
-                            minLength={8}
-                            placeholder={showConfirmPassword ? "Ulangi kata sandi" : "••••••••"} 
-                            className={`w-full bg-gray-50/50 border border-gray-200 text-gray-900 pl-5 pr-10 py-3.5 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-medium placeholder:text-gray-300 placeholder:font-normal ${!showConfirmPassword ? 'tracking-wider' : ''}`} 
-                          />
-                          <button 
-                            type="button" 
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)} 
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-900 transition-colors"
-                          >
-                            {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {error && (
-                      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-red-50 text-red-600 px-5 py-4 rounded-2xl text-sm font-medium border border-red-100">
-                        {error}
-                      </motion.div>
-                    )}
-
-                    <button type="submit" disabled={isLoading} className="w-full bg-[#111] hover:bg-[#e63946] text-white py-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-center shadow-lg shadow-black/5 hover:shadow-red-500/25 active:scale-[0.98] disabled:opacity-50 mt-6">
-                      {isLoading ? <span className="flex items-center gap-2"><FaSpinner className="animate-spin" /> Sedang Mengirim...</span> : "Lanjut Verifikasi OTP"}
-                    </button>
-                    
-                    <p className="mt-8 text-center text-gray-500 font-medium">
-                      Punya akun? <Link href="/login" className="text-[#e63946] hover:underline decoration-2 underline-offset-4">Masuk di sini</Link>
-                    </p>
-                  </form>
-                </motion.div>
-              ) : (
-                <motion.div 
-                  key="otp"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <button onClick={() => setStep("form")} className="flex items-center gap-2 text-sm font-semibold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-widest mb-10">
-                    <FaArrowLeft /> Kembali 
-                  </button>
-
-                  <div className="mb-10">
-                    <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tighter mb-4 text-gray-900">
-                      Cek Email.
-                    </h1>
-                    <p className="text-gray-500 text-lg leading-relaxed font-light">
-                      Kami mengirim 6 digit kode OTP ke <b className="text-gray-900 font-semibold">{email}</b>
-                    </p>
+                  <div className="space-y-1 group">
+                    <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest pl-1 group-focus-within:text-red-500 transition-colors">Email *</label>
+                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="nama@email.com" className="w-full bg-gray-50/50 border border-gray-200 text-gray-900 px-5 py-3.5 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-medium placeholder:text-gray-300 placeholder:font-normal" />
                   </div>
 
-                  {message && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-blue-50 text-blue-700 px-5 py-4 rounded-2xl text-sm font-medium border border-blue-100 mb-6">
-                      {message}
+                  <div className="space-y-1 group">
+                    <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest pl-1 group-focus-within:text-red-500 transition-colors">No WhatsApp (Opsional)</label>
+                    <input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="0812..." className="w-full bg-gray-50/50 border border-gray-200 text-gray-900 px-5 py-3.5 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-medium placeholder:text-gray-300 placeholder:font-normal" />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1 group">
+                      <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest pl-1 mb-2 block group-focus-within:text-red-500 transition-colors">Password *</label>
+                      <div className="relative">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          required
+                          minLength={8}
+                          placeholder={showPassword ? "Minimal 8 char" : "••••••••"}
+                          className={`w-full bg-gray-50/50 border border-gray-200 text-gray-900 pl-5 pr-10 py-3.5 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-medium placeholder:text-gray-300 placeholder:font-normal ${!showPassword ? 'tracking-wider' : ''}`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-900 transition-colors"
+                        >
+                          {showPassword ? <FaEyeSlash /> : <FaEye />}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="space-y-1 group">
+                      <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest pl-1 mb-2 block group-focus-within:text-red-500 transition-colors">Konfirmasi *</label>
+                      <div className="relative">
+                        <input
+                          type={showConfirmPassword ? "text" : "password"}
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          required
+                          minLength={8}
+                          placeholder={showConfirmPassword ? "Ulangi kata sandi" : "••••••••"}
+                          className={`w-full bg-gray-50/50 border border-gray-200 text-gray-900 pl-5 pr-10 py-3.5 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-medium placeholder:text-gray-300 placeholder:font-normal ${!showConfirmPassword ? 'tracking-wider' : ''}`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-900 transition-colors"
+                        >
+                          {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {error && (
+                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-red-50 text-red-600 px-5 py-4 rounded-2xl text-sm font-medium border border-red-100">
+                      {error}
                     </motion.div>
                   )}
 
-                  <form onSubmit={handleVerifyOTP} className="space-y-6">
-                    <div className="space-y-1 group">
-                      <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest pl-1 group-focus-within:text-red-500 transition-colors">Kode OTP</label>
-                      <input 
-                        type="text" 
-                        value={otp} 
-                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                        className="w-full bg-gray-50/50 border border-gray-200 text-gray-900 px-4 py-4 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-bold text-center text-4xl tracking-[0.5em] placeholder:text-gray-200 placeholder:font-light"
-                        placeholder="000000"
-                        maxLength={6}
-                        required
-                        autoFocus
-                      />
-                    </div>
+                  <button type="submit" disabled={isLoading} className="w-full bg-[#111] hover:bg-[#e63946] text-white py-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-center shadow-lg shadow-black/5 hover:shadow-red-500/25 active:scale-[0.98] disabled:opacity-50 mt-6">
+                    {isLoading ? <span className="flex items-center gap-2"><FaSpinner className="animate-spin" /> Sedang Mengirim...</span> : "Lanjut Verifikasi OTP"}
+                  </button>
 
-                    {error && (
-                      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-red-50 text-red-600 px-5 py-4 rounded-2xl text-sm font-medium border border-red-100">
-                        {error}
-                      </motion.div>
-                    )}
+                  <p className="mt-8 text-center text-gray-500 font-medium">
+                    Punya akun? <Link href="/login" className="text-[#e63946] hover:underline decoration-2 underline-offset-4">Masuk di sini</Link>
+                  </p>
+                </form>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="otp"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <button onClick={() => setStep("form")} className="flex items-center gap-2 text-sm font-semibold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-widest mb-10">
+                  <FaArrowLeft /> Kembali
+                </button>
 
-                    <div className="pt-2">
-                       <button type="submit" disabled={isLoading || otp.length !== 6} className="w-full bg-[#111] hover:bg-[#e63946] text-white py-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-center shadow-lg shadow-black/5 hover:shadow-red-500/25 active:scale-[0.98] disabled:opacity-50">
-                         {isLoading ? <span className="flex items-center gap-2"><FaSpinner className="animate-spin" /> Memverifikasi...</span> : "Selesaikan Pendaftaran"}
-                       </button>
-                    </div>
+                <div className="mb-10">
+                  <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tighter mb-4 text-gray-900">
+                    Cek Email.
+                  </h1>
+                  <p className="text-gray-500 text-lg leading-relaxed font-light">
+                    Kami mengirim 6 digit kode OTP ke <b className="text-gray-900 font-semibold">{email}</b>
+                  </p>
+                </div>
 
-                    <button type="button" onClick={handleSendOTP} disabled={isLoading} className="w-full text-center text-sm font-semibold text-gray-400 hover:text-gray-900 transition-colors mt-4">
-                      Belum menerima kode? Kirim ulang
+                {message && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-blue-50 text-blue-700 px-5 py-4 rounded-2xl text-sm font-medium border border-blue-100 mb-6">
+                    {message}
+                  </motion.div>
+                )}
+
+                <form onSubmit={handleVerifyOTP} className="space-y-6">
+                  <div className="space-y-1 group">
+                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest pl-1 group-focus-within:text-red-500 transition-colors">Kode OTP</label>
+                    <input
+                      type="text"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                      className="w-full bg-gray-50/50 border border-gray-200 text-gray-900 px-4 py-4 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-bold text-center text-4xl tracking-[0.5em] placeholder:text-gray-200 placeholder:font-light"
+                      placeholder="000000"
+                      maxLength={6}
+                      required
+                      autoFocus
+                    />
+                  </div>
+
+                  {error && (
+                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-red-50 text-red-600 px-5 py-4 rounded-2xl text-sm font-medium border border-red-100">
+                      {error}
+                    </motion.div>
+                  )}
+
+                  <div className="pt-2">
+                    <button type="submit" disabled={isLoading || otp.length !== 6} className="w-full bg-[#111] hover:bg-[#e63946] text-white py-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-center shadow-lg shadow-black/5 hover:shadow-red-500/25 active:scale-[0.98] disabled:opacity-50">
+                      {isLoading ? <span className="flex items-center gap-2"><FaSpinner className="animate-spin" /> Memverifikasi...</span> : "Selesaikan Pendaftaran"}
                     </button>
-                  </form>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  </div>
+
+                  <button type="button" onClick={handleSendOTP} disabled={isLoading} className="w-full text-center text-sm font-semibold text-gray-400 hover:text-gray-900 transition-colors mt-4">
+                    Belum menerima kode? Kirim ulang
+                  </button>
+                </form>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
-      {/* Right: Dark Cinematic Area */}
-      <div className="hidden md:flex flex-1 bg-[#050505] relative overflow-hidden flex-col items-center justify-center p-20">
-        <div className="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-orange-600/20 rounded-full blur-[100px] pointer-events-none mix-blend-screen" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[30rem] h-[30rem] bg-red-500/10 rounded-full blur-[80px] pointer-events-none mix-blend-screen" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none mix-blend-overlay"></div>
-        
-        <div className="relative z-10 w-full max-w-lg border border-white/10 bg-white/5 backdrop-blur-3xl p-12 rounded-[2rem] shadow-2xl">
-          <h2 className="text-4xl font-bold text-white mb-6 leading-tight tracking-tight">Kesiapsiagaan <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">Mulai dari Anda.</span></h2>
-          <div className="space-y-6">
-            <div className="flex gap-4">
-              <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-red-500 font-bold shrink-0">1</div>
-              <p className="text-gray-400 text-sm leading-relaxed">Buat akun untuk terdaftar sebagai pelapor tervalidasi dalam radius Palembang.</p>
+      {/* Right: Premium Minimalist Light Area */}
+      <div className="hidden md:flex flex-1 bg-[#fafafa] relative overflow-hidden flex-col items-center justify-center p-20">
+        <div className="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-orange-100/40 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[30rem] h-[30rem] bg-red-50/50 rounded-full blur-[80px] pointer-events-none" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
+
+        <div className="relative z-10 w-full max-w-lg border border-neutral-200/60 bg-white/80 backdrop-blur-3xl p-12 rounded-[2.5rem] shadow-[0_8px_40px_rgb(0,0,0,0.04)]">
+          <h2 className="text-4xl font-semibold text-neutral-900 mb-8 leading-[1.15] tracking-tight">
+            Kesiapsiagaan <br /><span className="text-red-500 font-bold">Mulai dari Anda.</span>
+          </h2>
+          <div className="space-y-8">
+            <div className="flex gap-5">
+              <div className="w-12 h-12 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center text-red-500 font-bold shrink-0 shadow-sm text-lg">1</div>
+              <p className="text-neutral-500 text-base leading-relaxed pt-3">Buat akun untuk terdaftar sebagai pelapor tervalidasi dalam radius Palembang.</p>
             </div>
-            <div className="flex gap-4">
-              <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-red-500 font-bold shrink-0">2</div>
-              <p className="text-gray-400 text-sm leading-relaxed">Laporkan insiden dengan satu ketukan dan lacak armada darurat secara real-time.</p>
+            <div className="flex gap-5">
+              <div className="w-12 h-12 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center text-red-500 font-bold shrink-0 shadow-sm text-lg">2</div>
+              <p className="text-neutral-500 text-base leading-relaxed pt-3">Laporkan insiden dengan satu ketukan dan lacak armada darurat secara real-time.</p>
             </div>
           </div>
         </div>

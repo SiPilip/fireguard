@@ -31,13 +31,13 @@ const FAQ = () => {
     };
 
     return (
-        <section id="faq" className="py-24 lg:py-32 bg-white relative overflow-hidden border-t border-gray-100">
+        <section id="faq" className="py-16 lg:py-24 bg-white relative overflow-hidden border-t border-gray-100">
             {/* Subtle Gradient Backdrop */}
             <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-gradient-to-bl from-gray-50 to-transparent rounded-full opacity-60 pointer-events-none -translate-y-1/2 translate-x-1/3" />
 
             <div className="max-w-7xl mx-auto px-6 relative z-10">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24 items-start">
-                    
+
                     {/* Typography & Header - Sticky on Desktop */}
                     <div className="lg:col-span-5 lg:sticky lg:top-32">
                         <motion.div
@@ -50,13 +50,13 @@ const FAQ = () => {
                                 <span className="w-8 h-px bg-red-500"></span>
                                 <span className="text-xs font-bold text-red-500 uppercase tracking-[0.2em]">Pertanyaan Umum</span>
                             </div>
-                            
-                            <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight leading-[1.1] mb-6">
-                                Sering <br className="hidden lg:block"/> Miskomunikasi? <br />
+
+                            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight leading-[1.1] mb-6">
+                                Sering <br className="hidden lg:block" /> Miskomunikasi? <br />
                                 <span className="text-gray-400 font-light">Kami Jelaskan.</span>
                             </h2>
-                            
-                            <p className="text-gray-500 leading-relaxed font-light text-lg max-w-md">
+
+                            <p className="text-gray-500 leading-relaxed font-light text-base max-w-md">
                                 Jawaban transparan seputar privasi, jangkauan, dan teknis operasional aplikasi perlindungan kebakaran Anda.
                             </p>
 
@@ -85,12 +85,12 @@ const FAQ = () => {
                                     >
                                         <button
                                             onClick={() => toggleAccordion(idx)}
-                                            className="w-full flex items-center justify-between py-6 md:py-8 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-red-100 rounded-lg"
+                                            className="w-full flex items-center justify-between py-5 md:py-6 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-red-100 rounded-lg"
                                         >
-                                            <span className={`text-lg md:text-xl lg:text-2xl font-semibold tracking-tight transition-colors duration-300 pr-8 ${isActive ? 'text-red-600' : 'text-gray-900 group-hover:text-red-500'}`}>
+                                            <span className={`text-base md:text-lg lg:text-xl font-semibold tracking-tight transition-colors duration-300 pr-8 ${isActive ? 'text-red-600' : 'text-gray-900 group-hover:text-red-500'}`}>
                                                 {faq.question}
                                             </span>
-                                            
+
                                             <div className="shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-50 group-hover:bg-red-50 transition-colors duration-300">
                                                 <motion.div
                                                     animate={{ rotate: isActive ? 45 : 0 }}
@@ -111,7 +111,7 @@ const FAQ = () => {
                                                     transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }} /* Custom spring ease */
                                                     className="overflow-hidden"
                                                 >
-                                                    <div className="pb-8 pr-12 text-gray-500 font-light leading-relaxed text-lg">
+                                                    <div className="pb-6 pr-12 text-gray-500 font-light leading-relaxed text-sm md:text-base">
                                                         {faq.answer}
                                                     </div>
                                                 </motion.div>
