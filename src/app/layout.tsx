@@ -55,12 +55,21 @@ export const metadata: Metadata = {
     siteName: 'FireGuard',
     locale: 'id_ID',
     type: 'website',
+    images: [
+      {
+        url: '/Fireguardthumbnail.png',
+        width: 1200,
+        height: 630,
+        alt: 'FireGuard Palembang Thumbnail',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'FireGuard Plaju Darat, Palembang',
     description: 'Sistem Cepat Tanggap Kebakaran Real-time untuk wilayah Plaju.',
-    creator: '@fireguard_id', // Placeholder
+    creator: '@fireguard_id',
+    images: ['/Fireguardthumbnail.png'],
   },
   alternates: {
     canonical: '/',
