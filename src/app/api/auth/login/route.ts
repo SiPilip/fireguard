@@ -139,9 +139,9 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     );
   } catch (error: any) {
-    console.error("Error in login:", error);
+    console.error("Error in login:", error?.message || error, { stack: error?.stack });
     return jsonWithCors(
-      { message: "Terjadi kesalahan pada server." },
+      { message: "Terjadi kesalahan pada server.", detail: process.env.NODE_ENV !== "production" ? error?.message : undefined },
       { status: 500 },
     );
   }

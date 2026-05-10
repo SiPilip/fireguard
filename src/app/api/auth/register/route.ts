@@ -24,15 +24,11 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const { name, email, phoneNumber, password } = await request.json();
+        const { name, email, phoneNumber } = await request.json();
 
         // Validasi input
         if (!name || !email) {
             return jsonWithCors({ message: "Nama dan email wajib diisi." }, { status: 400 });
-        }
-
-        if (!password || password.length < 6) {
-            return jsonWithCors({ message: "Password minimal 6 karakter." }, { status: 400 });
         }
 
         // Validasi format email
