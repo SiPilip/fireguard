@@ -6,10 +6,12 @@ import Stations from './components/landing/Stations';
 import FAQ from './components/landing/FAQ';
 import Contact from './components/landing/Contact';
 import Footer from './components/landing/Footer';
+import StructuredData from './components/landing/StructuredData';
 
 export default function LandingPage() {
   return (
     <div className="bg-white">
+      <StructuredData />
       <Navbar />
       <main>
         <Hero />

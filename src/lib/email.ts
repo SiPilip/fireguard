@@ -49,7 +49,7 @@ export async function sendEmailOTP(email: string, otp: string, type: 'register' 
   // Logo base URL - gunakan URL publik atau base64
   const logoUrl = process.env.NEXT_PUBLIC_BASE_URL
     ? `${process.env.NEXT_PUBLIC_BASE_URL}/favicon.png`
-    : 'https://fireguard-palembang.vercel.app/favicon.png';
+    : 'https://www.fireguard-palembang.my.id/favicon.png';
 
   const html = `
     <!DOCTYPE html>
@@ -163,7 +163,7 @@ export async function sendStatusUpdateEmail(
   // Logo base URL
   const logoUrl = process.env.NEXT_PUBLIC_BASE_URL
     ? `${process.env.NEXT_PUBLIC_BASE_URL}/favicon.png`
-    : 'https://fireguard-palembang.vercel.app/favicon.png';
+    : 'https://www.fireguard-palembang.my.id/favicon.png';
 
   const html = `
     <!DOCTYPE html>

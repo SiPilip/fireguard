@@ -17,28 +17,55 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: 'FireGuard Plaju Darat, Palembang',
-  description: 'Sistem Cepat Tanggap Kebakaran Plaju Darat, Palembang - Laporkan dan  pantau insiden kebakaran secara real-time',
+  metadataBase: new URL('https://www.fireguard-palembang.my.id'),
+  title: {
+    default: 'FireGuard Plaju Darat, Palembang - Sistem Cepat Tanggap Kebakaran',
+    template: '%s | FireGuard Palembang'
+  },
+  description: 'FireGuard adalah sistem peringatan dini dan pelaporan kebakaran real-time untuk wilayah Plaju Darat, Palembang. Lindungi lingkungan Anda dengan respon cepat dan akurat.',
+  applicationName: 'FireGuard Palembang',
+  authors: [{ name: 'FireGuard Team', url: 'https://www.fireguard-palembang.my.id' }],
+  generator: 'Next.js',
+  keywords: ['kebakaran', 'palembang', 'emergency', 'fire', 'report', 'pemadam', 'plaju', 'darurat', 'tanggap darurat', 'pemadam kebakaran palembang'],
+  referrer: 'origin-when-cross-origin',
+  creator: 'FireGuard Team',
+  publisher: 'FireGuard Plaju Darat',
+  robots: {
+    index: true,
+    follow: true,
+    nocache: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   icons: {
     icon: '/favicon.png',
+    shortcut: '/favicon.png',
+    apple: '/favicon.png',
   },
-  applicationName: 'FireGuard Plaju Darat, Palembang',
-  keywords: ['kebakaran', 'palembang', 'emergency', 'fire', 'report', 'pemadam'],
-  authors: [{ name: 'FireGuard Team' }],
-  creator: 'FireGuard Team',
-  publisher: 'FireGuard Plaju Darat, Palembang',
-  formatDetection: {
-    telephone: true,
-    email: true,
-    address: true,
-  },
+  manifest: '/manifest.json', // Basic manifest for SEO/icons
   openGraph: {
     title: 'FireGuard Plaju Darat, Palembang',
-    description: 'Sistem Cepat Tanggap Kebakaran Plaju Darat, Palembang',
-    type: 'website',
+    description: 'Sistem Cepat Tanggap Kebakaran Plaju Darat, Palembang - Laporkan insiden secara instan.',
+    url: 'https://www.fireguard-palembang.my.id',
+    siteName: 'FireGuard',
     locale: 'id_ID',
-    siteName: 'FireGuard Plaju Darat, Palembang',
+    type: 'website',
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'FireGuard Plaju Darat, Palembang',
+    description: 'Sistem Cepat Tanggap Kebakaran Real-time untuk wilayah Plaju.',
+    creator: '@fireguard_id', // Placeholder
+  },
+  alternates: {
+    canonical: '/',
+  },
+  category: 'emergency service',
 };
 
 export const viewport: Viewport = {
