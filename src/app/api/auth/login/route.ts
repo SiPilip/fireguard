@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return jsonWithCors(
-        { message: "Email belum terdaftar. Silakan daftar terlebih dahulu." },
+        { message: "Email tidak ditemukan. Belum punya akun? Silakan daftar terlebih dahulu." },
         { status: 404 },
       );
     }
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
       );
       if (!isValidPassword) {
         return jsonWithCors(
-          { message: "Email atau password salah." },
+          { message: "Password salah. Periksa kembali kata sandi Anda." },
           { status: 401 },
         );
       }

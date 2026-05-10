@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
         );
 
         if (existingUser) {
-            return jsonWithCors({ message: "Email sudah terdaftar." }, { status: 400 });
+            return jsonWithCors({ message: "Email ini sudah terdaftar. Silakan masuk menggunakan akun Anda." }, { status: 400 });
         }
 
         // Hash password
