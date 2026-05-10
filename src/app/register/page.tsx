@@ -48,8 +48,8 @@ export default function RegisterPage() {
     setError("");
 
     try {
-      if (password.length < 8) {
-        throw new Error("Password minimal 8 karakter.");
+      if (password.length < 6) {
+        throw new Error("Password minimal 6 karakter.");
       }
       if (password !== confirmPassword) {
         throw new Error("Konfirmasi password tidak cocok.");
@@ -170,8 +170,8 @@ export default function RegisterPage() {
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           required
-                          minLength={8}
-                          placeholder={showPassword ? "Minimal 8 char" : "••••••••"}
+                          minLength={6}
+                          placeholder={showPassword ? "Minimal 6 char" : "••••••••"}
                           className={`w-full bg-gray-50/50 border border-gray-200 text-gray-900 pl-5 pr-10 py-3.5 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-medium placeholder:text-gray-300 placeholder:font-normal ${!showPassword ? 'tracking-wider' : ''}`}
                         />
                         <button
@@ -191,7 +191,7 @@ export default function RegisterPage() {
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           required
-                          minLength={8}
+                          minLength={6}
                           placeholder={showConfirmPassword ? "Ulangi kata sandi" : "••••••••"}
                           className={`w-full bg-gray-50/50 border border-gray-200 text-gray-900 pl-5 pr-10 py-3.5 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-medium placeholder:text-gray-300 placeholder:font-normal ${!showConfirmPassword ? 'tracking-wider' : ''}`}
                         />
