@@ -1,51 +1,96 @@
-import * as admin from 'firebase-admin';
+import * as admin from "firebase-admin";
 
 /**
- * Initialize Firebase Admin SDK for server-side operations
- * This module provides access to Firebase services including Cloud Messaging (FCM)
- * for sending push notifications to mobile devices.
- * 
- * Configuration:
- * - Service account credentials are loaded from FIREBASE_SERVICE_ACCOUNT_KEY environment variable
- * - The environment variable should contain a JSON string with the service account key
- * 
- * Usage:
- * import { messaging } from '@/lib/firebase-admin';
- * await messaging.send(message);
+ * Initialize Firebase Admin SDK for server-side operations.
+ *
+ * Membaca FIREBASE_SERVICE_ACCOUNT_KEY dari environment variable.
+ * Mendukung beberapa format input yang umum salah dipaste ke Vercel:
+ *   ✅ {"type":"service_account",...}          ← format benar
+ *   🔧 FIREBASE_SERVICE_ACCOUNT_KEY={...}      ← strip key= prefix otomatis
+ *   🔧 "{\"type\":\"service_account\",...}"    ← strip extra quotes otomatis
  */
 
-// Initialize Firebase Admin SDK only once
-if (!admin.apps.length) {
-  try {
-    const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+/**
+ * Sanitasi raw string env var → JSON string yang siap di-parse.
+ * Menangani kesalahan format yang sering terjadi saat paste ke Vercel.
+ */
+function sanitizeServiceAccountKey(raw: string): string {
+  let value = raw.trim();
 
-    if (serviceAccountKey) {
-      // Parse the service account key from JSON string
-      const serviceAccount = JSON.parse(serviceAccountKey);
+  // Kasus 1: User paste seluruh baris .env → "FIREBASE_SERVICE_ACCOUNT_KEY={...}"
+  // Strip apapun sebelum tanda '=' pertama jika value belum dimulai dengan '{'
+  if (!value.startsWith("{") && value.includes("=")) {
+    const eqIdx = value.indexOf("=");
+    value = value.substring(eqIdx + 1).trim();
+  }
+
+  // Kasus 2: Value dibungkus dengan tanda kutip tunggal atau ganda → '"{"type":...}"'
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    value = value.slice(1, -1);
+  }
+
+  // Kasus 3: Escaped quotes dari shell → \"type\" menjadi "type"
+  // Ini terjadi kalau value di-set via CLI dengan escaping
+  if (value.includes('\\"')) {
+    value = value.replace(/\\"/g, '"');
+  }
+
+  return value;
+}
+
+// Initialize Firebase Admin SDK only once (module-level singleton)
+if (!admin.apps.length) {
+  const rawKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+
+  if (!rawKey) {
+    console.warn(
+      "[Firebase] ⚠️  FIREBASE_SERVICE_ACCOUNT_KEY belum di-set. " +
+        "Push notification tidak akan berfungsi. " +
+        "Set di Vercel: Settings → Environment Variables, isi VALUE dengan JSON saja (tanpa nama key).",
+    );
+  } else {
+    try {
+      const sanitized = sanitizeServiceAccountKey(rawKey);
+
+      if (!sanitized.startsWith("{")) {
+        throw new Error(
+          `Value tidak dimulai dengan '{'. Pastikan VALUE di Vercel adalah JSON murni, bukan "NAMA_KEY=JSON". ` +
+            `Karakter pertama yang diterima: '${sanitized.charAt(0)}'`,
+        );
+      }
+
+      const serviceAccount = JSON.parse(sanitized);
 
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
       });
 
-      console.log('Firebase Admin SDK initialized successfully');
-    } else {
-      console.warn('FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set. Notifications will not work.');
+      console.log(
+        `[Firebase] ✅ Firebase Admin SDK berhasil diinisialisasi. ` +
+          `Project: ${serviceAccount.project_id}`,
+      );
+    } catch (error: any) {
+      console.error(
+        "[Firebase] ❌ Gagal inisialisasi Firebase Admin SDK.",
+        "\nPenyebab umum:",
+        "\n  1. VALUE di Vercel salah format (harus JSON murni, bukan NAMA_KEY=JSON)",
+        "\n  2. JSON tidak valid (ada karakter tambahan)",
+        "\nDetail error:",
+        error?.message ?? error,
+      );
+      // Jangan throw — jangan sampai crash build
     }
-  } catch (error) {
-    console.error('Failed to initialize Firebase Admin SDK:', error);
-    // DO NOT throw error here, it will break the build on Vercel
   }
 }
 
-export const getMessaging = () => {
+export const getMessaging = (): admin.messaging.Messaging | null => {
   if (admin.apps.length > 0) {
     return admin.messaging();
   }
   return null;
 };
 
-/**
- * Firebase Admin instance
- * Provides access to all Firebase Admin services
- */
 export const firebaseAdmin = admin;
