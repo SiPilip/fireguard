@@ -106,6 +106,7 @@ export async function PUT(request: NextRequest) {
         const response = jsonWithCors({
             message: 'Profil berhasil diperbarui.',
             user: rows[0],
+            token: newToken,
         }, { request });
 
         response.cookies.set(COOKIE_NAME, newToken, {
