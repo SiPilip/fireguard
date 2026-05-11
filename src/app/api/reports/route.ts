@@ -1,9 +1,35 @@
 import { NextRequest } from "next/server";
 import { executeAndGetLastInsertId, formatDateForMySQL, queryRow } from "@/lib/db";
-import path from "path";
-import { writeFile, mkdir } from "fs/promises";
 import { getAuthPayloadFromRequest, handleCorsOptions, jsonWithCors } from "@/lib/cors";
 import { enforceRateLimit } from "@/lib/rate-limit";
+
+// Upload gambar ke Cloudinary menggunakan unsigned upload preset
+async function uploadToCloudinary(buffer: Buffer, filename: string): Promise<string> {
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+  const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET;
+
+  if (!cloudName || !uploadPreset) {
+    throw new Error('Cloudinary belum dikonfigurasi. Tambahkan CLOUDINARY_CLOUD_NAME dan CLOUDINARY_UPLOAD_PRESET ke environment variables.');
+  }
+
+  const formData = new FormData();
+  formData.append('file', new Blob([new Uint8Array(buffer)]), filename);
+  formData.append('upload_preset', uploadPreset);
+  formData.append('folder', 'fireguard/reports');
+
+  const response = await fetch(
+    `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+    { method: 'POST', body: formData }
+  );
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Cloudinary upload gagal: ${response.status} ${errText}`);
+  }
+
+  const data = await response.json();
+  return data.secure_url as string;
+}
 
 // OPTIONS: CORS preflight
 export async function OPTIONS() {
@@ -99,44 +125,35 @@ export async function POST(request: NextRequest) {
       return jsonWithCors({ message: "Kelurahan tidak valid." }, { status: 400, request });
     }
 
-    // Upload dan kompresi file jika ada (opsional)
+    // Upload dan kompresi file jika ada (opsional) — menggunakan Cloudinary
     let mediaUrl: string | null = null;
     if (mediaFile && mediaFile.size > 0) {
-      const uploadsDir = path.join(process.cwd(), "public", "uploads");
-      await mkdir(uploadsDir, { recursive: true });
-
       const originalBuffer = Buffer.from(await mediaFile.arrayBuffer());
       const isImage = mediaFile.type.startsWith('image/');
-      const isVideo = mediaFile.type.startsWith('video/');
 
-      let finalBuffer: Buffer | any = originalBuffer;
+      let finalBuffer: Buffer = originalBuffer;
       let extension = mediaFile.name.split('.').pop() || 'jpg';
 
-      // Kompresi hanya untuk gambar
+      // Kompresi hanya untuk gambar sebelum upload ke Cloudinary
       if (isImage) {
         try {
           const sharp = (await import('sharp')).default;
-
-          // Kompresi gambar: resize max 1200px dan quality 80%
           finalBuffer = await sharp(originalBuffer)
-            .resize(1200, 1200, {
-              fit: 'inside',
-              withoutEnlargement: true
-            })
+            .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
             .jpeg({ quality: 80 })
             .toBuffer();
-
-          extension = 'jpg'; // Konversi semua ke JPEG
-          console.log(`Image compressed: ${originalBuffer.length} -> ${finalBuffer.length} bytes (${Math.round((1 - finalBuffer.length / originalBuffer.length) * 100)}% reduction)`);
+          extension = 'jpg';
+          console.log(`[Media] Compressed: ${originalBuffer.length} -> ${finalBuffer.length} bytes`);
         } catch (compressError) {
-          console.error('Image compression failed, using original:', compressError);
+          console.error('[Media] Compression failed, using original:', compressError);
           finalBuffer = originalBuffer;
         }
       }
 
-      const filename = `${Date.now()}-${isImage ? 'img' : 'vid'}.${extension}`;
-      await writeFile(path.join(uploadsDir, filename), finalBuffer);
-      mediaUrl = `/uploads/${filename}`;
+      const filename = `${Date.now()}-report.${extension}`;
+      // Upload ke Cloudinary (berfungsi di Vercel serverless maupun VPS)
+      mediaUrl = await uploadToCloudinary(finalBuffer, filename);
+      console.log(`[Media] Uploaded to Cloudinary: ${mediaUrl}`);
     }
 
     const currentTimestamp = formatDateForMySQL(new Date());
@@ -210,21 +227,24 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error: any) {
-    if (error.message.includes("autentikasi")) {
+    console.error('[POST /api/reports] Error:', error?.message ?? error);
+
+    if (error.message?.includes("autentikasi")) {
       return jsonWithCors({ message: "Akses ditolak." }, { status: 401 });
     }
 
-    if (error.code === 'SQLITE_CONSTRAINT') {
+    if (error.message?.includes("Cloudinary")) {
       return jsonWithCors(
-        { message: "Terjadi kesalahan validasi data. Silakan login ulang dan coba lagi." },
-        { status: 400 }
+        { message: "Gagal mengupload foto. Coba lagi atau kirim tanpa foto." },
+        { status: 502 }
       );
     }
 
     return jsonWithCors(
       {
         message: "Terjadi kesalahan pada server.",
-        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        // Tampilkan detail error di semua environment untuk memudahkan debugging
+        error: error.message
       },
       { status: 500 }
     );
