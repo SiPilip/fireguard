@@ -58,11 +58,29 @@ describe('sendReportStatusNotification', () => {
 
     // Assert
     expect(db.queryRows).toHaveBeenCalledWith(
-      'SELECT device_token, platform FROM device_tokens WHERE user_id = ? AND is_active = TRUE',
-      [userId]
+      expect.stringContaining('platform IN (?, ?)'),
+      [userId, 'android', 'ios']
     );
     const messagingInstance = await getMessaging();
-    expect(messagingInstance?.send).toHaveBeenCalled();
+    expect(messagingInstance?.send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        notification: {
+          title: 'Laporan Disetujui',
+          body: 'Laporan Anda telah disetujui dan sedang diproses',
+        },
+        android: expect.objectContaining({
+          priority: 'high',
+          notification: expect.objectContaining({
+            channelId: 'fireguard_reports',
+            priority: 'high',
+            sound: 'default',
+          }),
+        }),
+        data: expect.objectContaining({
+          target: 'mobile',
+        }),
+      })
+    );
     expect(db.execute).toHaveBeenCalledWith(
       expect.stringContaining('INSERT INTO notification_logs'),
       expect.arrayContaining([reportId, userId, 'token123', newStatus])
@@ -97,7 +115,7 @@ describe('sendReportStatusNotification', () => {
 
     const mockPreferences = [
       {
-        approved: false, // User disabled approved notifications
+        approved: 0, // MySQL can return BOOLEAN as 0/1
         in_progress: true,
         completed: true,
         verified: true,

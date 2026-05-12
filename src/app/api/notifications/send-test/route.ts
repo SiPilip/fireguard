@@ -33,8 +33,12 @@ export async function POST(request: NextRequest) {
 
     // Ambil semua token aktif user ini
     const tokens = await queryRows<{ device_token: string; platform: string }>(
-      "SELECT device_token, platform FROM device_tokens WHERE user_id = ? AND is_active = TRUE",
-      [user.id]
+      `SELECT device_token, platform
+       FROM device_tokens
+       WHERE user_id = ?
+         AND is_active = TRUE
+         AND platform IN (?, ?)`,
+      [user.id, "android", "ios"]
     );
 
     if (!firebaseReady) {
@@ -51,7 +55,7 @@ export async function POST(request: NextRequest) {
     if (tokens.length === 0) {
       return jsonWithCors({
         success: false,
-        message: "Tidak ada device token terdaftar untuk user ini.",
+        message: "Tidak ada device token mobile terdaftar untuk user ini.",
         hint: "Pastikan app Flutter sudah di-rebuild dan user sudah login ulang setelah update terbaru.",
         firebase_ready: true,
         tokens_registered: 0,
@@ -73,6 +77,7 @@ export async function POST(request: NextRequest) {
             type: "test",
             reportId: "0",
             status: "test",
+            target: "mobile",
           },
           android: {
             priority: "high",

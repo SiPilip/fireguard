@@ -38,11 +38,11 @@ describe('Notification Preferences API', () => {
       const mockPreferences = {
         id: 1,
         user_id: mockUserId,
-        approved: true,
-        in_progress: false,
-        completed: true,
-        verified: false,
-        false_report: true,
+        approved: 1,
+        in_progress: 0,
+        completed: 1,
+        verified: 0,
+        false_report: 1,
         created_at: new Date(),
         updated_at: new Date()
       };

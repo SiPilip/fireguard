@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { queryRows, queryRow } from '@/lib/db';
 import { getAuthPayloadFromRequest, handleCorsOptions, jsonWithCors } from '@/lib/cors';
 
+export const revalidate = 0;
+
 // OPTIONS: CORS preflight
 export async function OPTIONS() {
   return handleCorsOptions();

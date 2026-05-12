@@ -11,13 +11,27 @@ export async function OPTIONS() {
 interface NotificationPreferences {
   id: number;
   user_id: number;
-  approved: boolean;
-  in_progress: boolean;
-  completed: boolean;
-  verified: boolean;
-  false_report: boolean;
+  approved: boolean | number;
+  in_progress: boolean | number;
+  completed: boolean | number;
+  verified: boolean | number;
+  false_report: boolean | number;
   created_at: Date;
   updated_at: Date;
+}
+
+function toBoolean(value: boolean | number | null | undefined): boolean {
+  return value === true || value === 1;
+}
+
+function serializePreferences(preferences: NotificationPreferences) {
+  return {
+    approved: toBoolean(preferences.approved),
+    inProgress: toBoolean(preferences.in_progress),
+    completed: toBoolean(preferences.completed),
+    verified: toBoolean(preferences.verified),
+    falseReport: toBoolean(preferences.false_report),
+  };
 }
 
 /**
@@ -72,13 +86,7 @@ export async function GET(request: NextRequest) {
     return jsonWithCors(
       {
         success: true,
-        preferences: {
-          approved: preferences!.approved,
-          inProgress: preferences!.in_progress,
-          completed: preferences!.completed,
-          verified: preferences!.verified,
-          falseReport: preferences!.false_report,
-        }
+        preferences: serializePreferences(preferences!)
       },
       { status: 200, request }
     );
@@ -122,7 +130,7 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     // Rate limiting
-    const limit = enforceRateLimit(request, "notifications-preferences-put", 10, 60_000);
+    const limit = enforceRateLimit(request, "notifications-preferences-put", 30, 60_000);
     if (!limit.allowed) {
       return jsonWithCors(
         { message: "Terlalu banyak permintaan. Coba lagi nanti." },
@@ -247,13 +255,7 @@ export async function PUT(request: NextRequest) {
       {
         success: true,
         message: "Preferensi notifikasi berhasil diperbarui.",
-        preferences: {
-          approved: updatedPreferences!.approved,
-          inProgress: updatedPreferences!.in_progress,
-          completed: updatedPreferences!.completed,
-          verified: updatedPreferences!.verified,
-          falseReport: updatedPreferences!.false_report,
-        }
+        preferences: serializePreferences(updatedPreferences!)
       },
       { status: 200, request }
     );

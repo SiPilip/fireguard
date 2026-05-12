@@ -22,6 +22,7 @@ interface NotificationPayload {
     reportId: string;
     status: string;
     type: string;
+    target?: string;
   };
 }
 
@@ -31,11 +32,11 @@ interface DeviceToken {
 }
 
 interface NotificationPreferences {
-  approved: boolean;
-  in_progress: boolean;
-  completed: boolean;
-  verified: boolean;
-  false_report: boolean;
+  approved: boolean | number;
+  in_progress: boolean | number;
+  completed: boolean | number;
+  verified: boolean | number;
+  false_report: boolean | number;
 }
 
 const STATUS_CANONICAL_MAP: Record<string, string> = {
@@ -54,17 +55,24 @@ const STATUS_CANONICAL_MAP: Record<string, string> = {
 };
 
 const STATUS_TO_PREFERENCE_KEY: Record<string, keyof NotificationPreferences> =
-  {
-    approved: "approved",
-    in_progress: "in_progress",
-    completed: "completed",
-    verified: "verified",
-    false_report: "false_report",
-  };
+{
+  approved: "approved",
+  in_progress: "in_progress",
+  completed: "completed",
+  verified: "verified",
+  false_report: "false_report",
+};
+
+const MOBILE_PLATFORMS = ["android", "ios"];
+const ANDROID_NOTIFICATION_CHANNEL_ID = "fireguard_reports";
 
 export function normalizeNotificationStatus(status: string): string {
   const normalized = status.trim().toLowerCase();
   return STATUS_CANONICAL_MAP[normalized] || normalized;
+}
+
+function isPreferenceEnabled(value: boolean | number | undefined): boolean {
+  return value === undefined || value === true || value === 1;
 }
 
 /**
@@ -135,12 +143,15 @@ export async function sendToDevice(
         title: payload.title,
         body: payload.body,
       },
-      data: payload.data,
+      data: {
+        ...payload.data,
+        title: payload.title,
+        body: payload.body,
+      },
       android: {
         priority: "high" as const,
         notification: {
-          // Gunakan channel yang sama dengan yang dibuat di fcm_service.dart
-          channelId: "fireguard_reports",
+          channelId: ANDROID_NOTIFICATION_CHANNEL_ID,
           priority: "high" as const,
           sound: "default",
           defaultSound: true,
@@ -300,20 +311,24 @@ export async function sendReportStatusNotification(
 
     // Step 1: Query user's active device tokens (Requirement 2.1)
     const deviceTokens = await queryRows<DeviceToken>(
-      "SELECT device_token, platform FROM device_tokens WHERE user_id = ? AND is_active = TRUE",
-      [userId],
+      `SELECT device_token, platform
+       FROM device_tokens
+       WHERE user_id = ?
+         AND is_active = TRUE
+         AND platform IN (?, ?)`,
+      [userId, ...MOBILE_PLATFORMS],
     );
 
     if (deviceTokens.length === 0) {
       console.warn(
-        `[Notification] No active device tokens for user ${userId}. ` +
-          `Make sure the user logged in after the FCM fix was deployed.`,
+        `[Notification] No active mobile device tokens for user ${userId}. ` +
+        `Make sure the user logged in after the FCM fix was deployed.`,
       );
       return;
     }
 
     console.info(
-      `[Notification] Found ${deviceTokens.length} device token(s) for user ${userId}`,
+      `[Notification] Found ${deviceTokens.length} mobile device token(s) for user ${userId}`,
     );
 
     // Step 2: Check user's notification preferences (Requirement 6.5)
@@ -341,7 +356,7 @@ export async function sendReportStatusNotification(
 
     // Check if user wants this notification type
     const preferenceKey = STATUS_TO_PREFERENCE_KEY[canonicalStatus];
-    if (preferenceKey && userPrefs[preferenceKey] === false) {
+    if (preferenceKey && !isPreferenceEnabled(userPrefs[preferenceKey])) {
       console.info(
         `User ${userId} has disabled notifications for status: ${canonicalStatus}`,
       );
@@ -357,6 +372,7 @@ export async function sendReportStatusNotification(
         reportId: reportId.toString(),
         status: canonicalStatus,
         type: "report_status_change",
+        target: "mobile",
       },
     };
 

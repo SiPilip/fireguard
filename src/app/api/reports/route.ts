@@ -12,18 +12,28 @@ async function uploadToCloudinary(buffer: Buffer, filename: string): Promise<str
     throw new Error('Cloudinary belum dikonfigurasi. Tambahkan CLOUDINARY_CLOUD_NAME dan CLOUDINARY_UPLOAD_PRESET ke environment variables.');
   }
 
+  // Gunakan FormData bawaan Next.js/Browser
   const formData = new FormData();
-  formData.append('file', new Blob([new Uint8Array(buffer)]), filename);
+
+  // Konversi buffer ke Blob agar FormData di Next.js/Node 18+ mengirimnya dengan benar sebagai multipart/form-data
+  // Gunakan Uint8Array dari buffer untuk kompatibilitas tipe data Blob
+  const blob = new Blob([new Uint8Array(buffer)]);
+
+  formData.append('file', blob, filename);
   formData.append('upload_preset', uploadPreset);
   formData.append('folder', 'fireguard/reports');
 
   const response = await fetch(
     `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-    { method: 'POST', body: formData }
+    {
+      method: 'POST',
+      body: formData
+    }
   );
 
   if (!response.ok) {
     const errText = await response.text();
+    console.error(`[Cloudinary] Error Response (${response.status}):`, errText);
     throw new Error(`Cloudinary upload gagal: ${response.status} ${errText}`);
   }
 
